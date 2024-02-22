@@ -1,0 +1,293 @@
+camadas uteis
+    // limit oficial de cada bioma
+    // 'Amazônia','Caatinga','Cerrado','Mata Atlântica','Pampa','Pantanal'
+    geometry:ee.FeatureCollection('projects/mapbiomas-workspace/AUXILIAR/biomas_IBGE_250mil')
+    
+            .filter(ee.Filter.eq('Biome','Cerrado')) 
+
+Revisão dos mosaicos (prioridade)
+
+
+coleta de amostras
+    cruzamento com areas onde o mapeamento de col5, col6, col7.1
+            ver pixels estables e pixels inestaveis
+    cruzamento nos mapas de transição
+    camada de pixels que não mudaram com as filtragens de pós-classifição
+
+criar a camada de alertas e de fogo anual
+    analisar que analises pode ser com esse cruzamento com os mapas de coberturas
+
+scalar o dado landsat
+    https://scikit-learn.org/stable/auto_examples/preprocessing/plot_scaling_importance.html
+
+fazer analises de saidas RAW do setOutputMode(mode) e a arvore explicada em explain() para juntar e selecionar novos modelos 
+you can serialize  Random Forest
+    https://code.earthengine.google.com/b13d5c453d1032943802a0f96e24d9e7
+
+data aumentation  with spectral parameters 
+    Normalized Difference Red/Green Redness Index  RI == isoil
+    Chlorophyll Index Green     - (NIR/green) - 1
+    Difference NIR/Green Green Difference Vegetation Index GDVI	
+    Chlorophyll vegetation index CVI  +
+    Global Environment Monitoring Index GEMI    + 
+            =>  ( 2 * ( NIR ^2 - RED ^2) + 1.5 * NIR + 0.5 * RED ) / ( NIR + RED + 0.5 )
+    Green leaf index  GLI  + => (2* green - red - blue) / (2 * green + red + blue)
+    Shape Index  IF +   => (2R - G - B)/ (G-B)
+    Aerosol Free Vegetation Index (2100 nm)   (N−0.5×S2)/(N+0.5×S2)
+    Advanced Vegetation Index + (N×(1.0−R)×(N−R))**(1/3)
+    Bare Soil Index  +  BI ((S1 + R) - (N + B))/((S1 + R) + (N + B))
+    BRBA	Band Ratio for Built-up Area  +   (R/S1)
+    DSWI5	Disease-Water Stress Index 5 + vegetation	(N + G)/(S1 + R)
+    não EMBI	Enhanced Modified Bare Soil Index	soil	((((S1 - S2 - N)/(S1 + S2 + N)) + 0.5) - ((G - S1)/(G + S1)) - 0.5)/((((S1 - S2 - N)/(S1 + S2 + N)) + 0.5) + ((G - S1)/(G + S1)) + 1.5)
+    LSWI	Land Surface Water Index +	water	(N - S1)/(N + S1)
+    MBI	Modified Bare Soil Index +	soil	((S1 - S2 - N)/(S1 + S2 + N)) + 0.5
+    OSAVI	Optimized Soil-Adjusted Vegetation Index	vegetation	(N - R) / (N + R + 0.16)
+    UI	Urban Index	urban	(S2 - N)/(S2 + N)
+
+NDWI: Normalized Difference Water Index   (N - S1)/(N + S1)
+
+
+
+"ratio","rvi","ndwi","awei","iia","lai",
+"gcvi","gemi","cvi","gli","shape","afvi",
+"avi","bsi","brba","dswi5","lswi","mbi","ui",
+"osavi","ri","brightness","wetness","msi","gvmi",
+"spri","nir_contrast","red_contrast"
+
+agregateBandsIndexGEMI
+agregateBandsIndexGLI
+agregateBandsIndexShapeI
+agregateBandsIndexAFVI
+agregateBandsIndexAVI
+agregateBandsIndexBSI
+agregateBandsIndexBRBA
+agregateBandsIndexDSWI5
+agregateBandsIndexLSWI
+agregateBandsIndexMBI
+agregateBandsIndexUI
+agregateBandsIndexRI
+agregateBandsTexturasGLCM
+agregateBandsgetFractions
+
+teste other feature selection in scikit learn 
+    https://scikit-learn.org/stable/auto_examples/feature_selection/index.html#feature-selection
+    https://towardsdatascience.com/5-feature-selection-method-from-scikit-learn-you-should-know-ed4d116e4172
+    https://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.RFECV.html
+    https://www.blog.trainindata.com/recursive-feature-elimination-with-python/
+    Guyon, et. al., Gene selection for cancer classification using support vector machines, Mach. Learn., 46, 389–422, 2002.
+    1ro = passo eliminar todas as variaveis correlaciondas 
+    https://www.blog.trainindata.com/recursive-feature-elimination-with-python/
+
+hyperparameter tuning
+https://aws.amazon.com/what-is/hyperparameter-tuning/
+https://mathworld.wolfram.com/SigmoidFunction.html
+# https://inria.github.io/scikit-learn-mooc/python_scripts/parameter_tuning_grid_search.html
+# 3.2.3. Searching for optimal parameters with successive halving
+# HalvingGridSearchCV 
+# https://scikit-learn.org/stable/modules/grid_search.html
+
+
+// export poligonos coletados manualmente
+get_ROIs_manual_Normalize_with_Spectral_inf.py
+save in: projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/ROIsXBaciasManual/pol_manual_7421_2016  
+tabela de correção
+https://docs.google.com/spreadsheets/d/11L_wTnkmjW9nRK7UgP6q6fkBOk8dElEyeQ3gnnJ2vUg/edit#gid=0
+// 
+convert ROIs => AMOSTRAS/col8/CAATINGA/ROIs/coletaROIsv4N4 Cluster 
+                AMOSTRAS/col8/CAATINGA/ROIs/coletaROIsv6N2cluster
+
+relatorios 
+  O ROIs  AMOSTRAS/col8/CAATINGA/ROIs/coletaROIsv5N2manual foi coletado e é Normalizado 
+  as amostras normalizadas tipo 
+            AMOSTRAS/col8/CAATINGA/ROIs/coletaROIsv4N4 Cluster 
+            AMOSTRAS/col8/CAATINGA/ROIs/coletaROIsv6N2cluster
+        tiverão pouco desempenho, ver isso em no colab 
+                https://drive.google.com/file/d/1U8n_Y6Els6MXaihCJN-x8vqtubj5uh5f/view?usp=sharing
+
+
+
+   até o momento classificações boas regulares 4,5,6
+
+
+pos classification
+AMOSTRAS/col8/CAATINGA/POS-CLASS
+    tem uma coleção mista que tem pixels das versões 5 e 10 corregidos com poligons 
+AMOSTRAS/col8/CAATINGA/POS-CLASS/Gap-fill
+    a partir da versão 3 do gap-fill os gap são preenchidos com os pixels da coleção 7.1 
+    e o ultimo ano com ano anterior da serie
+AMOSTRAS/col8/CAATINGA/POS-CLASS/Temporal
+    o filtro temporal passou a ser segundo e ele leva os pixels conectados para o filtro spacial
+
+AMOSTRAS/col8/CAATINGA/POS-CLASS/Spatial
+
+AMOSTRAS/col8/CAATINGA/POS-CLASS/Frequency
+AMOSTRAS/col8/CAATINGA/POS-CLASS/toJoin
+
+Random Forest explain()
+classes: [1,2,3,4]
+importance: Object (28 properties)
+numberOfTrees: 140
+outOfBagErrorEstimate: 0.02735562310030395
+trees: List (140 elements)
+
+
+
+
+earthengine authenticate --auth_mode=notebook
+
+
+
+
+
+
+rever depois 
+lstAllFeats = [
+    'afvi_median', 'afvi_median_dry', 'afvi_median_wet', 'avi_median', 'avi_median_dry',
+    'avi_median_wet', 'awei_median', 'awei_median_dry', 'awei_median_wet', 'blue_median',
+    'blue_median_dry', 'blue_median_wet', 'blue_min', 'blue_stdDev', 'brba_median',
+    'brba_median_dry', 'brba_median_wet', 'brightness_median', 'brightness_median_dry', 
+    'brightness_median_wet','bsi_median', 'bsi_median_dry', 'bsi_median_wet', 'cai_median', 
+    'cai_median_dry', 'cai_stdDev', 'class', 'cvi_median', 'cvi_median_dry', 'cvi_median_wet',
+    'dswi5_median', 'dswi5_median_dry', 'dswi5_median_wet', 'evi2_amp', 'evi2_median',
+    'evi2_median_dry', 'evi2_median_wet', 'evi2_stdDev', 'gcvi_median', 'gcvi_median_dry', 
+    'gcvi_median_wet', 'gcvi_stdDev', 'gemi_median', 'gemi_median_dry', 'gemi_median_wet', 
+    'gli_median', 'gli_median_dry', 'gli_median_wet', 'green_median', 'green_median_dry', 
+    'green_median_texture', 'green_median_wet', 'green_min', 'green_stdDev', 'iia_median', 
+    'iia_median_dry', 'iia_median_wet', 'lswi_median', 'lswi_median_dry', 'lswi_median_wet', 
+    'mbi_median', 'mbi_median_dry', 'mbi_median_wet', 'ndvi_amp', 'ndvi_median', 
+    'ndvi_median_dry', 'ndvi_median_wet', 'ndvi_stdDev', 'ndwi_amp', 'ndwi_median',  
+    'ndwi_median_dry', 'ndwi_median_wet', 'ndwi_stdDev', 'nir_contrast_median', 
+    'nir_contrast_median_dry', 'nir_contrast_median_wet', 'nir_median', 'nir_median_dry',
+    'nir_median_wet', 'nir_min', 'nir_stdDev', 'osavi_median', 'osavi_median_dry',
+    'osavi_median_wet', 'pri_median', 'pri_median_dry', 'pri_median_wet', 'ratio_median', 
+    'ratio_median_dry', 'ratio_median_wet', 'red_contrast_median', 'red_contrast_median_dry',
+    'red_contrast_median_wet', 'red_median', 'red_median_dry', 'red_median_wet', 'red_min',
+    'red_stdDev', 'ri_median', 'ri_median_dry', 'ri_median_wet', 'rvi_median',
+    'rvi_median_dry', 'rvi_median_wet', 'savi_median', 'savi_median_dry', 'savi_median_wet',
+    'savi_stdDev', 'shape_median', 'shape_median_dry', 'shape_median_wet', 'slope',
+    'swir1_median', 'swir1_median_dry', 'swir1_median_wet', 'swir1_min', 'swir1_stdDev',
+    'swir2_median', 'swir2_median_dry', 'swir2_median_wet', 'swir2_min', 'swir2_stdDev',
+    'ui_median', 'ui_median_dry', 'ui_median_wet', 'wetness_median', 'wetness_median_dry',
+    'wetness_median_wet'
+]
+
+
+regioão caatinga arvorea Serinha 
+https://code.earthengine.google.com/93400bdada2e6f87d59ab4379511d0e7
+
+versao 4 GTB -> gapfill (passo 1) - V1 
+versao 4 GTB -> Spatial (passo 2) - V1 
+versao 4 GTB -> Frequency (passo 3) - V1 
+versao 4 GTB -> Temporal (passo 4)- V1 
+
+versao 5 GTB -> gapfill (passo 1) - V2 
+versao 5 GTB -> Spatial (passo 2) - V2 
+versao 5 GTB -> Frequency (passo 3) - V2 
+versao 5 GTB -> Temporal (passo 4)- V2 
+
+versao 10 RF -> gapfill (passo 1) - V3
+versao 10 RF -> Spatial (passo 2) - V3 
+versao 10 RF -> Frequency (passo 3) - V3 
+versao 10 RF -> Temporal (passo 4)- V3
+
+
+
+pos-classificação, tabela de revisao das classificações por bacia 
+https://docs.google.com/spreadsheets/d/11L_wTnkmjW9nRK7UgP6q6fkBOk8dElEyeQ3gnnJ2vUg/edit#gid=1999040808
+
+os scripts utilizados estão na pasta corregir Areas 
+os mapas utilizados foram versão 5 e versão 10
+
+
+
+
+todas as bacias da costa só devem usdar amostras vizinhas da costa e não do interior
+
+
+https://lookerstudio.google.com/reporting/55b2fc1f-c058-47d4-bf4c-0810717fdb69/page/p_w32tqyu6wc
+
+
+refazer bacias hidrograficas do jeito que as que estão na costa não sejam tão cumpridas 
+e separar com o interior da caatinga
+
+
+dissagramen
+https://code.earthengine.google.com/21fae1a8c4d31a1d97540e0b671f5c9d
+
+toolkit 
+https://code.earthengine.google.com/b461ea7a9132d603988c8c1bf1060a36
+https://code.earthengine.google.com/?noload=1&scriptPath=users%2Fmapbiomas%2Fintegration%3Amapbiomas-integration-toolkit.js#lon=-36.36307974903075;lat=-9.993059222208077;zoom=12;
+
+ver diferencias 
+https://code.earthengine.google.com/89b3b3b55168471d8f00cfe15d10feba
+entre coleções
+https://code.earthengine.google.com/02507c48707d0f3cea6b465cae5b67cc
+
+novas paletas 
+https://docs.google.com/presentation/d/19MovdrBCTNSNBk51-5w6ZFtdu7efLH27/edit#slide=id.g25480e91d19_0_44
+
+
+
+scripts  comparação post classificação e antesintegração 
+https://drive.google.com/drive/folders/1nlGLZIZxcgSqAm_NuLgJcLtGso9Q069Q
+
+
+
+Drive de apresentação 
+https://drive.google.com/drive/folders/1nlGLZIZxcgSqAm_NuLgJcLtGso9Q069Q
+
+fazer um scripts ue consiga ver dois mapas de dois anos diferentes 
+https://drive.google.com/drive/folders/1nlGLZIZxcgSqAm_NuLgJcLtGso9Q069Q
+
+recorte de semiarido (ver quanto subeu de agricultura)
+ver os polos de petrolina e Juacero 
+
+
+free icones 
+https://fontawesome.com/search?p=2&o=r&m=free
+
+ver diferencias entre classe 
+https://code.earthengine.google.com/0e349c4b921fd0c3dced72b788b149f5?noload=1
+
+
+
+dict e lista de cores amppliada 
+
+    '3': 'Forest Formation', 
+    '4': 'Savanna Formation', 
+    '9': 'Forest Plantation',
+    '11': 'Wetland',
+    '12': 'Grassland', 
+    '15': 'Pasture', 
+    '18': 'Agriculture', 
+    '21': 'Mosaic of Uses',     
+    '24': 'Urban Area',
+    '25': 'Other non Vegetated Areas', 
+    '29': 'Rocky Outcrop', 
+    '33': 'Water'
+    
+    
+    
+"#1f8d49","#7dc975","#7a5900","#519799","#d6bc74","#edde8e","#e974ed",
+"#ffefc3","#d4271e","#db4d4f","#ffaa5f","#0000FF"
+
+
+    '3': 'Formação Florestal', 
+    '4': 'Formação Savânica', 
+    '9': 'Silvicultura',
+    '11': 'Campo Alagado e Área Pantanosa',
+    '12': 'Formação Campestre', 
+    '15': 'Pastagem', 
+    '18': 'Agricultura, 
+    '21': 'Mosaico de Usos', 
+    '22': 'Outras Áreas não Vegetadas', 
+    '24': 'Área Urbanizada',
+    '29': 'Afloramento Rochoso', 
+    '33': "Corpo D'água"
+
+
+acuracia Col8 
+https://mapbiomas-shinny-accuracy.shinyapps.io/MapBiomas_Col8b_EN_v2/
+
+áreas a a concertar 
+https://code.earthengine.google.com/7127cee9bb2915264c77cd68f70b4cba

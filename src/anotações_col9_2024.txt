@@ -1,0 +1,4 @@
+exportar as amostras Cluster e Manual 
+    'asset_ROIs_manual': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/coletaROIsv7N2manual'},
+    'asset_ROIs_cluster': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/coletaROIsv6N2cluster'}
+AMOSTRAS/col9/CAATINGA/ROIs/2023
