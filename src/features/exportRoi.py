@@ -12,7 +12,10 @@ import gee
 import json
 import csv
 import sys
-
+import os
+import glob
+from pathlib import Path
+from tqdm import tqdm
 try:
     ee.Initialize()
     print('The Earth Engine package initialized successfully!')
@@ -34,7 +37,8 @@ param = {
     'conta' : {
         '0': 'caatinga04'              
     },
-
+    'showFilesCSV' : False,
+    'showAssetFeat': False
 }
 
 #lista de anos
@@ -56,11 +60,12 @@ def GetPolygonsfromFolder(dictAsset):
     ColectionPtos = []
     # print("bacias vizinhas ", nBacias)
     lstROIsAg = [ ]
-    for idAsset in getlistPtos:         
+    for idAsset in tqdm(getlistPtos):         
         path_ = idAsset.get('id')        
         ColectionPtos.append(path_) 
         name = path_.split("/")[-1]
-        print("Reading ", name)
+        if param['showAssetFeat']:
+            print("Reading ", name)
         
     return ColectionPtos
 
@@ -98,22 +103,45 @@ def processoExportar(ROIsFeat, nameB, nfolder):
     task.start() 
     print("salvando ... " + nameB + "..!")    
 
+# get dir path of script 
+npath = os.getcwd()
+# get dir folder before to path scripts 
+npath = str(Path(npath).parents[0])
+# folder of CSVs ROIs
+roisPath = '/dados/Col9_ROIs_cluster/'
+npath += roisPath
+print("path of CSVs Rois is \n ==>",  npath)
 
+
+lstPathCSV = glob.glob(npath + "*.csv")
+lstNameFeat = []
+for xpath in tqdm(lstPathCSV):
+    nameCSV = xpath.split("/")[-1][:-4]
+    if param['showFilesCSV']:
+        print(" => " + nameCSV)
+    lstNameFeat.append(nameCSV)
+
+
+lstNameFeat = []
+# sys.exit()
+# iterando com cada uma das folders FeatC do asset
 lstKeysFolder = ['asset_ROIs_cluster', 'asset_ROIs_manual']
 for assetKey in lstKeysFolder:
     lstAssetFolder = GetPolygonsfromFolder(param[assetKey])
     list_baciaYearFaltan = []
     cont = 0
     cont = gerenciador(cont, param)
-    for assetFeats in lstAssetFolder[:]:
-        print("loading FeatureCollection => ", assetFeats)
+    for assetFeats in lstAssetFolder[:]:        
         nameFeat = assetFeats.split("/")[-1]
-        try: 
-            ROIs = ee.FeatureCollection(assetFeats)            
-            processoExportar(ROIs, nameFeat, assetKey.replace('asset_', 'Col9_'))               
-        except:
-            # list_baciaYearFaltan.append(nameFeat)
-            # arqFaltante.write(nameFeat + '\n')
-            print("faltando ... " + nameFeat)
+        if nameFeat not in lstNameFeat:
+            print("loading FeatureCollection => ", assetFeats)
+            try: 
+                ROIs = ee.FeatureCollection(assetFeats)       
+                print(nameFeat, " ", ROIs.size().getInfo())     
+                # processoExportar(ROIs, nameFeat, assetKey.replace('asset_', 'Col9_'))               
+            except:
+                # list_baciaYearFaltan.append(nameFeat)
+                # arqFaltante.write(nameFeat + '\n')
+                print("faltando ... " + nameFeat)
 
     # arqFaltante.close()
