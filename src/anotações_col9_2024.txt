@@ -7,4 +7,37 @@ exportar as amostras Cluster e Manual
     asset das novas amostras : AMOSTRAS/col9/CAATINGA/ROIs/2023
 
     Documentação 
+        https://scikit-learn.org/stable/modules/permutation_importance.html
         https://scikit-learn.org/stable/modules/generated/sklearn.inspection.permutation_importance.html#rd9e56ef97513-bre
+        https://scikit-learn.org/stable/modules/generated/sklearn.inspection.permutation_importance.html#sklearn.inspection.permutation_importance
+        https://scikit-learn.org/stable/auto_examples/ensemble/plot_forest_importances.html#sphx-glr-auto-examples-ensemble-plot-forest-importances-py
+        why permutation importance is better than Feature importance
+        https://scikit-learn.org/stable/auto_examples/inspection/plot_permutation_importance.html#sphx-glr-download-auto-examples-inspection-plot-permutation-importance-py
+
+
+
+classificações 
+    Versão 1
+    output: projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassV1
+    registro:
+        -------    classificando bacia 741-----------------
+    --------------------------------------------------------
+    lista de Bacias vizinhas ['741', '751', '752', '7421', '7422', '7492', '7611']
+    banda activa: classification_1985
+    Distribuição dos pontos na bacia << 741 >>
+    ===  {'12': 543, '15': 1019, '18': 492, '22': 804, '3': 687, '33': 937, '4': 846}  ===
+    bandas cruzadas <<   80  >> 
+    bandas ativas  [
+        'rvi_median', 'cvi_median_dry', 'shape_median_wet', 'ratio_median', 'swir1_stdDev', 'gcvi_median_wet', 'swir2_median',
+        'ndwi_median', 'blue_min', 'avi_median_wet', 'cvi_median', 'lswi_median_wet', 'afvi_median_wet', 'iia_median', 
+        'gemi_median_wet', 'ratio_median_wet', 'afvi_median', 'swir2_median_dry', 'mbi_median_wet', 'lswi_median_dry', 
+        'nir_median', 'shape_median_dry', 'mbi_median_dry', 'nir_median_wet', 'green_median_wet', 'avi_median', 'blue_median', 
+        'brightness_median', 'nir_stdDev', 'nir_min', 'swir2_median_wet', 'swir2_stdDev', 'swir2_min', 'brightness_median_wet', 
+        'ndwi_median_wet', 'green_median', 'swir1_median_dry', 'gemi_median', 'osavi_median_dry', 'gcvi_median_dry', 'dswi5_median_wet', 
+        'ndwi_median_dry', 'awei_median_wet', 'ratio_median_dry', 'gcvi_median', 'brba_median', 'ri_median_wet', 'rvi_median_wet', 
+        'brba_median_dry', 'red_median_dry', 'green_stdDev', 'iia_median_wet', 'green_min', 'ui_median_dry', 'ui_median', 'wetness_median_dry', 
+        'gli_median_dry', 'red_median_wet', 'dswi5_median', 'ri_median', 'mbi_median', 'red_min', 'green_median_texture', 'osavi_median_wet', 
+        'wetness_median_wet', 'ui_median_wet', 'wetness_median', 'avi_median_dry', 'dswi5_median_dry', 'bsi_median', 'awei_median_dry', 
+        'swir1_median_wet', 'gli_median_wet', 'gli_median', 'lswi_median', 'nir_median_dry', 'swir1_min', 'gemi_median_dry', 'red_median', 
+        'shape_median'
+    ]

@@ -8,6 +8,7 @@ import random
 from pathlib import Path
 import numpy as np
 import pandas as pd
+from icecream import ic
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.impute import SimpleImputer
@@ -19,34 +20,30 @@ from sklearn.inspection import permutation_importance
 
 class make_featureCollection_analises(object):
 
-    def __init__(self, nyear= 2022, aBacia= '741', npath=''):
+    def __init__(self, nyear= 2022, aBacia= '741', datapointsROIs= None, plotCurve= False):
 
         self.nyear = nyear
         self.nameBacia = aBacia
-        print(f"iniciar with bacia {aBacia} an year {nyear} ")
-
+        self.plotCurve = plotCurve
         nameCSV = f'/{aBacia}_{nyear}_c1.csv'
-        # /home/superusuario/Dados/mapbiomas/col8/features/        
-        lst_pathCSV = glob.glob(npath + '/*.csv')
-        # print(lst_pathCSV)
-        dirCSVs = [kk for kk in lst_pathCSV[:] if nameCSV in kk]
-
-        print("processing the file => ", dirCSVs)
-        dfROIs = pd.read_csv(dirCSVs[0])
-        print("the table dfROIs Shape = ", dfROIs.shape)
-        # removing unimportant columns of table files
-        dfROIs = dfROIs.drop(['system:index', '.geo'], axis=1)    
-        # dfROIs = dfROIs[dfROIs['year'] == year]
-        print("----> now shape is ", dfROIs.shape)
-        columns = [kk for kk in dfROIs.columns]
+        columns = [kk for kk in datapointsROIs.columns]
         print("columns ", columns)
-        # sys.exit()
         columns.remove('year')
         columns.remove('class')
         columns.remove('newclass')
+
+        if nyear!= None and aBacia != None:
+            self.nameExport = f'/{aBacia}_{nyear}_c1.csv'
+        elif nyear== None and aBacia != None:
+            self.nameExport = f'/{aBacia}_byYear_c1.csv'
+        elif nyear!= None and aBacia == None:
+            self.nameExport = f'/byBacia_{nyear}_c1.csv'
+        else:
+            self.nameExport = f'/byAll_CSVsROIs_c1.csv'
+
         print("=============== All columns ================ \n ", columns)
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
-                    dfROIs[columns], dfROIs['class'], stratify=dfROIs['class'], random_state=42)
+                    datapointsROIs[columns], datapointsROIs['class'], stratify=datapointsROIs['class'], random_state=42)
 
 
     def make_classification(self):
@@ -57,24 +54,26 @@ class make_featureCollection_analises(object):
         self.rf.fit(self.X_train, self.y_train)
 
         # Accuracy of the Model
-        print(f"RF train accuracy: {self.rf.score(self.X_train, self.y_train):.3f}")
-        print(f"RF test accuracy: {self.rf.score(self.X_test, self.y_test):.3f}")
+        ic(f"RF train accuracy: {self.rf.score(self.X_train, self.y_train):.3f}")
+        ic(f"RF test accuracy: {self.rf.score(self.X_test, self.y_test):.3f}")
 
-    def get_featuresImportance(self):
+    def get_featuresImportance(self, mpathParent):
 
         feature_names = self.rf[:-1].get_feature_names_out()
 
         mdi_importances = pd.Series(
                     self.rf[-1].feature_importances_, index=feature_names
                 ).sort_values(ascending=True)
+        nameExp = self.nameExport.replace(".csv", "_importance.csv")
+        mdi_importances.to_csv(mpathParent + "regPermutation/" + nameExp)
+        if self.plotCurve:
+            self.plot_feature_importancesRF_bar(mdi_importances)
 
-        self.plot_feature_importancesRF_bar(mdi_importances)
 
-
-    def get_permutation_Importance(self):
+    def get_permutation_Importance(self, mpathParent):
 
         result = permutation_importance(
-            self.rf, self.X_test, self.y_test, n_repeats=10, random_state=42, n_jobs=2
+            self.rf, self.X_test, self.y_test, n_repeats=10, random_state=42, n_jobs=-1
         )
         sorted_importances_idx = result.importances_mean.argsort()
         print("=====  sorted_importances_idx ===== \n", sorted_importances_idx)
@@ -82,8 +81,10 @@ class make_featureCollection_analises(object):
             result.importances[sorted_importances_idx].T,
             columns= self.X_train.columns[sorted_importances_idx],
         )
-
-        self.plot_permutation_importancesRF_blox(importances)
+        nameExp = self.nameExport.replace(".csv", "_permuta.csv")
+        importances.to_csv(mpathParent + "regPermutation/" + nameExp)
+        if self.plotCurve:
+            self.plot_permutation_importancesRF_blox(importances)
 
     def changeParameters(self):
         # We can further retry the experiment by limiting 
@@ -119,8 +120,8 @@ class make_featureCollection_analises(object):
                         test_results.importances[sorted_importances_idx].T,
                         columns=self.X_test.columns[sorted_importances_idx],
                     )
-
-        self.plot_compare_permImport_featImport (train_importances, test_importances)
+        if self.plotCurve:
+            self.plot_compare_permImport_featImport (train_importances, test_importances)
 
     def plot_feature_importancesRF_bar (self, seriepdMDI):
         fig, ax = plt.subplots(figsize=(10,18))
@@ -156,12 +157,74 @@ def getPathCSV (nfolder):
     # get dir path of script 
     mpath = os.getcwd()
     # get dir folder before to path scripts 
-    mpath = str(Path(mpath).parents[0])
+    pathparent = str(Path(mpath).parents[0])
     # folder of CSVs ROIs
     roisPath = '/dados/' + nfolder
-    mpath += roisPath
+    mpath = pathparent + roisPath
     print("path of CSVs Rois is \n ==>",  mpath)
-    return mpath
+    return mpath, pathparent + '/dados/'
+
+def getOnlytableCSV(nyear= 2022, aBacia= '741', npath=''):
+
+    print(f"iniciar with bacia {aBacia} an year {nyear} ")
+    nameCSV = f'/{aBacia}_{nyear}_c1.csv'
+    # /home/superusuario/Dados/mapbiomas/col8/features/        
+    lst_pathCSV = glob.glob(npath + '/*.csv')
+    # print(lst_pathCSV)
+    dirCSVs = [kk for kk in lst_pathCSV[:] if nameCSV in kk]
+
+    print("processing the file => ", dirCSVs)
+    dfROIs = pd.read_csv(dirCSVs[0])
+    print("the table dfROIs Shape = ", dfROIs.shape)
+    # removing unimportant columns of table files
+    dfROIs = dfROIs.drop(['system:index', '.geo'], axis=1)    
+    # dfROIs = dfROIs[dfROIs['year'] == year]
+    print("----> now shape is ", dfROIs.shape)
+
+    return dfROIs
+    
+def JoinAlltablesCSVbyYears(aBacia= '741', npath=''):
+    # /home/superusuario/Dados/mapbiomas/col8/features/        
+    lst_pathCSV = glob.glob(npath + '/*.csv')
+    lstDataF = []
+    for csvPath in lst_pathCSV:
+        if aBacia in csvPath:
+            dftmp = pd.read_csv(csvPath)
+            dftmp = dftmp.drop(['system:index', '.geo'], axis=1)
+            lstDataF.append(dftmp)
+    
+    dfJoined  = pd.concat(lstDataF, axis=0, ignore_index=True)
+    print("temos {} filas e colunas".format(dfJoined.shape))
+    return dfJoined
+
+
+def JoinAlltablesCSVbyBacia(nyear= 2022, npath=''):
+    # /home/superusuario/Dados/mapbiomas/col8/features/        
+    lst_pathCSV = glob.glob(npath + '/*.csv')
+    lstDataF = []
+    for csvPath in lst_pathCSV:
+        if str(nyear) in csvPath:
+            dftmp = pd.read_csv(csvPath)
+            dftmp = dftmp.drop(['system:index', '.geo'], axis=1)
+            lstDataF.append(dftmp)
+    
+    dfJoined  = pd.concat(lstDataF, axis=0, ignore_index=True)
+    print("temos {} filas e colunas".format(dfJoined.shape))
+    return dfJoined
+
+def JoinAlltablesCSVs(npath=''):
+    # /home/superusuario/Dados/mapbiomas/col8/features/        
+    lst_pathCSV = glob.glob(npath + '/*.csv')
+    lstDataF = []
+    for csvPath in lst_pathCSV:        
+        dftmp = pd.read_csv(csvPath)
+        dftmp = dftmp.drop(['system:index', '.geo'], axis=1)
+        lstDataF.append(dftmp)
+    
+    dfJoined  = pd.concat(lstDataF, axis=0, ignore_index=True)
+    print("temos {} filas e colunas".format(dfJoined.shape))
+    return dfJoined
+
 #############################################################################
 
 lstBacias = [
@@ -174,35 +237,53 @@ lstBacias = [
 lstYears = [kk for kk in range(1985, 2023)]
 lstFolders =  ['Col9_ROIs_cluster/', 'Col9_ROIs_manual/']
 nameFolder = lstFolders[0]
-pathCSVs = getPathCSV(nameFolder)
-byYear = True
+pathCSVs, npathParent = getPathCSV(nameFolder)
+byYear = False
 byBacia = True
 #############################################################################
 
 
 if __name__ == '__main__':
+    numbBacias = len(lstBacias)
+    numbYears = len(lstYears)
     
     # sys.exit()
     if byBacia and byYear:
-        numbBacias = len(lstBacias)
-        numbYears = len(lstYears)
-        print(f"we have {numbBacias} bacias and {numbYears} years")
-
+        
+        ic(f"we have {numbBacias} bacias and {numbYears} years")
         baciaSel = lstBacias[random.randint(0, numbBacias - 1)]
         yearSel = lstYears[random.randint(0, numbYears - 1)]
-        print(f"loading .... Bacia < {baciaSel} > in Year < {yearSel} >")
+        ic(f"loading .... Bacia < {baciaSel} > in Year < {yearSel} >")
+        dfTesting = getOnlytableCSV(nyear= yearSel, aBacia= baciaSel, npath= pathCSVs)
+        makeROIs_analises = make_featureCollection_analises(nyear= yearSel, aBacia= baciaSel, datapointsROIs=dfTesting)
 
-        makeROIs_analises = make_featureCollection_analises(nyear= yearSel, aBacia= baciaSel, npath= pathCSVs)
-        makeROIs_analises.make_classification()
-        print("=========== SHOW FEATURES IMPORTANCE ===============")
-        makeROIs_analises.get_featuresImportance()
-        print("=========== SHOW PERMUTATION IMPORTANCE ===============")
-        makeROIs_analises.get_permutation_Importance()
-    
-    
-        print("================================================================")
-        print("<> We testing the permutation in training an testing sets <>")
-        makeROIs_analises.changeParameters()
-        makeROIs_analises.test_featureImport_permutation()
+    elif byBacia and not byYear:
+        #baciaSel = lstBacias[random.randint(0, numbBacias - 1)]
+        for baciaSel in lstBacias:
+            ic(f"loading .... Bacia < {baciaSel} > in all Year ")
+            dfTesting = JoinAlltablesCSVbyYears(aBacia= baciaSel, npath= pathCSVs)
+            makeROIs_analises = make_featureCollection_analises(nyear= None, aBacia= baciaSel, datapointsROIs=dfTesting)
+        
+    elif not byBacia and byYear:
+        # yearSel = lstYears[random.randint(0, numbYears - 1)]
+        for yearSel in lstYears:
+            ic(f"loading .... ALL Bacias in Year < {yearSel} >")
+            dfTesting = JoinAlltablesCSVbyBacia(nyear= yearSel, npath= pathCSVs)
+            makeROIs_analises = make_featureCollection_analises(nyear= yearSel, aBacia= None, datapointsROIs=dfTesting)
+    else:
+        ic("loading .... ALL CSVs ROIs ")
+        dfTesting = JoinAlltablesCSVbyBacia(npath= pathCSVs)
+        makeROIs_analises = make_featureCollection_analises(nyear= None, aBacia= None, datapointsROIs=dfTesting)
 
-    
+   
+    makeROIs_analises.make_classification()
+    print("=========== SHOW FEATURES IMPORTANCE ===============")
+    makeROIs_analises.get_featuresImportance(npathParent)
+    print("=========== SHOW PERMUTATION IMPORTANCE ===============")
+    makeROIs_analises.get_permutation_Importance(npathParent)    
+
+    print("================================================================")
+    print("<> We testing the permutation in training an testing sets <>")
+    # makeROIs_analises.changeParameters()
+    # makeROIs_analises.test_featureImport_permutation()
+    # regPermutation

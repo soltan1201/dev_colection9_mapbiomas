@@ -2,3 +2,7 @@ src/dados/*
 !src/dados/.gitkeep
 src/anotações_col9_2024.txt
 src/tarefas_para_col8_2023.txt
+src/testes
+src/testes/*
+src/utils
+src/utils/*
