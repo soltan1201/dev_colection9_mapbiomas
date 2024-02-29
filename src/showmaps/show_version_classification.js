@@ -24,11 +24,12 @@ var visualizar = {
 } 
 
 var param = { 
-    assetMap: 'projects/mapbiomas-workspace/public/collection7_1/mapbiomas_collection71_integration_v1',
+    assetMapC7: 'projects/mapbiomas-workspace/public/collection7_1/mapbiomas_collection71_integration_v1',
+    assetMapC8: 'projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1',
     asset_filted : {
-            'V3':'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/CLASS/ClassCol8V3',
-            'V4':'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/CLASS/ClassCol8V4',
-            'V5':'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/CLASS/ClassCol8V5',
+            'V1':'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassV1',
+        //    'V4':'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/CLASS/ClassCol8V4',
+        //    'V5':'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/CLASS/ClassCol8V5',
     },
     // assetclass : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/class_filtered_Fq',
     // assetclass : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/class_filtered_GF',    
@@ -51,36 +52,51 @@ var param = {
     classNew: [3, 4, 3, 3,12,12,21,21,21,21,21,22,22,22,22,33,29,22,33,12,33, 21,33,33,21,21,21,21,21,21,21]
 
 }
-var selBacia = '741';
+var selBacia = 'all';
 var yearcourrent = 2020;
 var banda_activa = 'classification_' + String(yearcourrent)
 var FeatColbacia = ee.FeatureCollection(param.assetBacia);
-var imgMapCol71= ee.Image(param.assetMap).clip(FeatColbacia.geometry());
-var imgMapCol8V3 =  ee.ImageCollection(param.asset_filted.V3).max();
-var imgMapCol8V4 =  ee.ImageCollection(param.asset_filted.V4).max();                                  
-var imgMapCol8V5 =  ee.ImageCollection(param.asset_filted.V5).max();
-                                 
+var imgMapCol71= ee.Image(param.assetMapC7);
+var imgMapCol8= ee.Image(param.assetMapC8);
+var imgMapCol9V1 =  ee.ImageCollection(param.asset_filted.V1);
+var Mosaicos = ee.ImageCollection(param.assetIm).filter(
+                        ee.Filter.eq('biome', 'CAATINGA')).select(param.bandas);
+
+if (selBacia === 'all'){
+    //  FeatColbacia geometria com todas as Bacias  
+    imgMapCol71 = imgMapCol71.clip(FeatColbacia.geometry());
+    imgMapCol8 = imgMapCol8.clip(FeatColbacia.geometry());
+    imgMapCol9V1 = imgMapCol9V1.max();
+
+}else{
+    FeatColbacia = FeatColbacia.filter(ee.Filter.eq('nunivotto3', _nbselBaciaacia));   
+    imgMapCol71 = imgMapCol71.clip(FeatColbacia.geometry());
+    imgMapCol8 = imgMapCol8.clip(FeatColbacia.geometry());
+    imgMapCol9V1 = imgMapCol9V1.filter(ee.Filter.eq("id_bacia", selBacia)); 
+    Mosaicos = Mosaicos.filterBounds(FeatColbacia);
+}
 
 
-var bacias = FeatColbacia.filterBounds(points)
-var lst = bacias.reduceColumns(ee.Reducer.toList(), ['nunivotto3']).get('list')
-print("bacias faltantes ", lst)
+var bacias = FeatColbacia.filterBounds(points);
+var lst = bacias.reduceColumns(ee.Reducer.toList(), ['nunivotto3']).get('list');
+print("bacias faltantes ", lst);
 
 
 print("imagem no Asset Geral Mapbiomas Col 7.1", imgMapCol71);
-print("imagem no Asset Geral X Bacias col 8", imgMapCol8V3);
+print("imagem no Asset Geral Mapbiomas Col 8.0", imgMapCol8);
+print("imagem no Asset Geral X Bacias col 9", imgMapCol9V1);
 
-var Mosaicos = ee.ImageCollection(param.assetIm).filter(
-                        ee.Filter.eq('biome', 'CAATINGA')).select(param.bandas);
-var mosaic_year = Mosaicos.filter(ee.Filter.eq('year', yearcourrent)).median()                     
-Map.addLayer(FeatColbacia, {color: 'green'}, 'bacia')
+
+var mosaic_year = Mosaicos.filter(ee.Filter.eq('year', yearcourrent)).median();                     
+Map.addLayer(FeatColbacia, {color: 'green'}, 'bacia');
 Map.addLayer(mosaic_year, visualizar.visMosaic,'Mosaic Col8');
 
 var imgMapCol71temp = imgMapCol71.select(banda_activa).remap(param.classMapB, param.classNew);
+var imgMapCol8temp = imgMapCol8.select(banda_activa).remap(param.classMapB, param.classNew);
 Map.addLayer(imgMapCol71temp, visualizar.visclassCC,'Col71_' + String(yearcourrent), false);
-Map.addLayer(imgMapCol8V3.select(banda_activa),  visualizar.visclassCC, 'Col8_ClassV3')
-Map.addLayer(imgMapCol8V4.select(banda_activa),  visualizar.visclassCC, 'Col8_ClassV4')
-Map.addLayer(imgMapCol8V5.select(banda_activa),  visualizar.visclassCC, 'Col8_ClassV5')
+Map.addLayer(imgMapCol8temp,  visualizar.visclassCC, 'Col8_'+ String(yearcourrent), false)
+Map.addLayer(imgMapCol9V1.select(banda_activa),  visualizar.visclassCC, 'Col9_ClassV1');
+
 
 
 

@@ -67,6 +67,7 @@ class ClassMosaic_indexs_Spectral(object):
                                                     ).filter(ee.Filter.inList('biome', self.options['biomes'])
                                                         ).select(arqParam.featuresreduce)
                                                     
+        
         # print("  ", self.imgMosaic.size().getInfo())
         print("see band Names the first ")
         # print(ee.Image(self.imgMosaic.first()).bandNames().getInfo())

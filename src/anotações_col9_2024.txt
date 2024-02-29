@@ -17,7 +17,9 @@ exportar as amostras Cluster e Manual
 
 
 classificações 
-    Versão 1
+    Versão 1 tanto com RF como BTG classificou as bacias com uma unica classe 
+    Versão 2 com GTB classifcou sem as amostras manuis... e confundeu muito as classes de floresta, savana e pastagem com agricultura
+    
     output: projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassV1
     registro:
         -------    classificando bacia 741-----------------

@@ -23,8 +23,8 @@ except:
     print("Unexpected error:", sys.exc_info()[0])
     raise
 
-path_asset = "projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1"
-# path_asset = "projects/mapbiomas-workspace/public/collection7_1/mapbiomas_collection71_integration_v1"
+# path_asset = "projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1"
+path_asset = "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassV1"
 param = {
     'lsBiomas': ['CAATINGA'],
     'asset_bacias': 'projects/mapbiomas-arida/ALERTAS/auxiliar/bacias_hidrografica_caatinga',
@@ -35,7 +35,7 @@ param = {
     # 'assetCol6': path_asset + "class_filtered/maps_caat_col6_v2_4",
     'classMapB': [3, 4, 5, 9,12,13,15,18,19,20,21,22,23,24,25,26,29,30,31,32,33,36,37,38,39,40,41,42,43,44,45],
     'classNew': [3, 4, 3, 3,12,12,21,21,21,21,21,22,22,22,22,33,29,22,33,12,33, 21,33,33,21,21,21,21,21,21,21],
-    'inBacia': False,
+    'inBacia': True,
     'pts_remap' : {
         "FORMAÇÃO FLORESTAL": 3,
         "FORMAÇÃO SAVÂNICA": 4,        
@@ -66,7 +66,7 @@ param = {
     'numeroTask': 6,
     'numeroLimit': 2,
     'conta' : {
-        '0': 'caatinga05'              
+        '0': 'caatinga04'              
     },
     'lsProp': ['ESTADO','LON','LAT','PESO_AMOS','PROB_AMOS','REGIAO','TARGET_FID','UF'],
     "amostrarImg": False,
@@ -195,8 +195,11 @@ mapClasses = ee.List([])
 
 if param['inBacia']:    
     print("##########  CARREGOU A VERSAO 4 ###############")
-    mapClass = ee.ImageCollection(param['assetCol']).filter(
-                        ee.Filter.eq('version', '5'))
+    mapClass = ee.ImageCollection(param['assetCol'])
+    #.filter(
+    #                    ee.Filter.eq('version', '5'))
+
+    print("número de imagens das bacias ", mapClass.size().getInfo())
 else:
     if param['isImgCol']:
         for yy in range(1985, 2023):
@@ -233,7 +236,7 @@ for cc, _nbacia in enumerate(nameBacias[:]):
     sizeFC += ptoSize
 
     if param['inBacia']:
-        mapClassBacia = ee.Image(mapClass.filter(ee.Filter.eq('id_bacia', _nbacia)).first())
+        mapClassBacia = ee.Image(mapClass.filter(ee.Filter.eq('id_bacia', _nbacia)).first())        
         pointAccTemp = mapClassBacia.sampleRegions(
             collection= pointTrueTemp, 
             properties= lsAllprop, 
@@ -248,7 +251,7 @@ for cc, _nbacia in enumerate(nameBacias[:]):
             geometries= True)
 
     pointAccTemp = pointAccTemp.map(lambda Feat: Feat.set('bacia', _nbacia))
-    if exportarAsset == False:
+    if not exportarAsset:
         name = 'occTab_corr_Caatinga_' + _nbacia + "_" + extra[-1]
         processoExportar(pointAccTemp, name, exportarAsset)
 
@@ -257,10 +260,12 @@ for cc, _nbacia in enumerate(nameBacias[:]):
                     pointAll,
                     ee.FeatureCollection(pointAll).merge(pointAccTemp)
                 )
+cont = 0
+cont = gerenciador(cont, param)
 
 # pointAll = ee.FeatureCollection(pointAll).flatten()
 # pointAll = pointAll.filter(ee.Filter.notNull(['CLASS_1990']))
-name = 'occTab_corr_Caatinga_' + extra[-1]
+name = 'occTab_corr_Caatinga_Col9_' + extra[-1]
 processoExportar(pointAll, name, exportarAsset)
 print()
 print("numero de ptos ", sizeFC)
