@@ -131,9 +131,9 @@ allFeatures = [
 
 featureBands = [
         'blue_median','blue_median_wet','blue_median_dry','blue_min','blue_stdDev', 
-        'green_median','green_median_wet','green_median_dry','green_min','green_stdDev','green_median_texture', 
-        'red_median','red_median_wet','red_median_dry','red_min', 'red_stdDev', 
-        'nir_median','nir_median_wet','nir_median_dry','nir_min','nir_stdDev', 
+        'green_median','green_median_wet','green_median_dry','green_min','green_stdDev',
+        'green_median_texture', 'red_median','red_median_wet','red_median_dry','red_min', 
+        'red_stdDev', 'nir_median','nir_median_wet','nir_median_dry','nir_min','nir_stdDev', 
         'swir1_median','swir1_median_wet','swir1_median_dry','swir1_min', 'swir1_stdDev', 
         'swir2_median', 'swir2_median_wet', 'swir2_median_dry','swir2_min', 'swir2_stdDev',
         'slope'

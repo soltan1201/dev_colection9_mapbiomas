@@ -277,46 +277,15 @@ lst_bandExt = [
         'red_min', 'red_stdDev','nir_min','nir_stdDev', 'swir1_min', 'swir1_stdDev', 
         'swir2_min', 'swir2_stdDev'
     ]
-#region functions apply Mosaic
-def process_normalized_img (imgA):
 
-    asset_Stats = 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/stats_mosaics/all_statisticsL8'
-    featCStat = ee.FeatureCollection([])
-    for yyear in range(1985, 2024):
-        if yyear == 1985:
-            featCStat = ee.FeatureCollection(asset_Stats + str(yyear))
-        else:
-            featCStat = featCStat.merge(
-                            ee.FeatureCollection(asset_Stats + str(yyear)))
-
-    idImg = imgA.id()
-    featSt = featCStat.filter(ee.Filter.eq('id_img', idImg)).first()
+def process_re_escalar_img (imgA):
     imgNormal = imgA.select(['slope'], ['slopeA']).divide(1500).toFloat()
     bandMos = copy.deepcopy(arqParams.featureBands)
     bandMos.remove('slope')
+    imgEscalada = imgA.select(bandMos).divide(10000);
 
-    for bnd in bandMos:
-        if bnd not in lst_bandExt:
-            bndMed = bnd + '_mean'
-            bndStd = bnd + '_stdDev'
-        else:
-            partes = bnd.split('_')
-            nbnd = partes[0] + '_median'
-            bndMed = nbnd + '_mean'
-            bndStd = nbnd + '_stdDev'
-
-        band_tmp = imgA.select(bnd)
-        # Normalizando a imagem 
-        # calcZ = (arrX - xmean) / xstd
-        calcZ = band_tmp.subtract(ee.Image.constant(featSt.get(bndMed))).divide(
-                    ee.Image.constant(featSt.get(bndStd)))
-        # expBandAft =  np.exp(-1 * calcZ)
-        expBandAft = calcZ.multiply(ee.Image.constant(-1)).exp()
-        # return 1 / (1 + expBandAft)
-        bndend = expBandAft.add(ee.Image.constant(1)).pow(ee.Image.constant(-1))
-        imgNormal = imgNormal.addBands(bndend.rename(bnd))
-
-    return imgA.select(['slope']).addBands(imgNormal.toFloat())#.select(bandMos + ['slopeA'])
+    return imgA.select(['slope']).addBands(imgEscalada.toFloat()).addBands(imgNormal)
+    #return imgEscalada.toFloat().addBands(imgNormal)
 
 def CalculateIndice(imagem):
 
@@ -331,9 +300,9 @@ def CalculateIndice(imagem):
     # imagem em Int16 com valores inteiros ate 10000        
     # imageF = self.agregateBandsgetFractions(imagem)        
     # print(imageF.bandNames().getInfo())
-    imageW = imagem.divide(10000)
+    # imageW = copy.deepcopy(imagem).divide(10000)
 
-    imageW = agregateBandsIndexRATIO(imageW)  #
+    imageW = agregateBandsIndexRATIO(imagem)  #
     imageW = agregateBandsIndexRVI(imageW)    #    
     imageW = agregateBandsIndexWater(imageW)  #      
     imageW = AutomatedWaterExtractionIndex(imageW)  #      
@@ -416,13 +385,13 @@ param = {
     'asset_bacias': "projects/mapbiomas-arida/ALERTAS/auxiliar/bacias_hidrografica_caatinga",
     'asset_bacias_buffer' : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/bacias_hidrograficaCaatbuffer5k',
     'asset_IBGE': 'users/SEEGMapBiomas/bioma_1milhao_uf2015_250mil_IBGE_geo_v4_revisao_pampa_lagoas',
-    'assetOut': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassV1/',
-    'assetROIs': {'id':'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/coletaROIsN2cluster'},
-    'assetROIsExt': {'id':'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/coletaROIsN2manual'},    
+    'assetOut': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVX/',
+    'assetROIs': {'id':'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN2clusterNN'},
+    'assetROIsExt': {'id':'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN2manualNN'},    
     'classMapB': [3, 4, 5, 9,12,13,15,18,19,20,21,22,23,24,25,26,29,30,31,32,33,36,37,38,39,40,41,42,43,44,45],
     'classNew': [3, 4, 3, 3,12,12,21,21,21,21,21,22,22,22,22,33,29,22,33,12,33, 21,33,33,21,21,21,21,21,21,21],
     'asset_mosaic': 'projects/nexgenmap/MapBiomas2/LANDSAT/BRAZIL/mosaics-2',
-    'version': 3,
+    'version': 5,
     'anoInicial': 1985,
     'anoFinal': 2023,
     'sufix': "_01",    
@@ -448,7 +417,7 @@ param = {
     },
     # https://scikit-learn.org/stable/modules/ensemble.html#gradient-boosting
     'pmtGTB': {
-        'numberOfTrees': 45, 
+        'numberOfTrees': 30, 
         'shrinkage': 0.1,         
         'samplingRate': 0.8, 
         'loss': "LeastSquares",#'Huber',#'LeastAbsoluteDeviation', 
@@ -685,12 +654,12 @@ dictPmtroArv = {
 lstSat = ["l5","l7","l8"];
 pathJson = getPathCSV("regJSON/")
 ftcol_bacias = ee.FeatureCollection(param['asset_bacias'])
-imagens_mosaic = ee.ImageCollection(param['asset_mosaic']).filter(
+imagens_mosaico = ee.ImageCollection(param['asset_mosaic']).filter(
                             ee.Filter.eq('biome', param['bioma'])).filter(
                                 ee.Filter.inList('satellite', lstSat)).select(
                                             arqParams.featuresreduce)
 # process_normalized_img
-imagens_mosaic = imagens_mosaic.map(lambda img: process_normalized_img(img))          
+imagens_mosaic = imagens_mosaico.map(lambda img: process_re_escalar_img(img))          
 # ftcol_baciasbuffer = ee.FeatureCollection(param['asset_bacias_buffer'])
 # print(imagens_mosaic.first().bandNames().getInfo())
 #nome das bacias que fazem parte do bioma7619
@@ -699,10 +668,9 @@ print("carregando {} bacias hidrograficas ".format(len(nameBacias)))
 # sys.exit()
 #lista de anos
 list_anos = [k for k in range(param['anoInicial'], param['anoFinal'] + 1)]
-print('lista de anos entre 1985 e 2022')
+print('lista de bandas anos entre 1985 e 2023')
 param['lsBandasMap'] = ['classification_' + str(kk) for kk in list_anos]
 print(param['lsBandasMap'])
-list_carta = arqParams.ls_cartas
 
 # @mosaicos: ImageCollection com os mosaicos de Mapbiomas 
 bandNames = ['awei_median_dry', 'blue_stdDev', 'brightness_median', 'cvi_median_dry',]
@@ -889,8 +857,8 @@ arqFeitos = open(path_MGRS, 'a+')
 
 # 100 arvores
 nameBacias = [
-    #'741','7421','7422','744','745','746','7492','751','752','753',
-    #'754','755','756','757','758','759','7621','7622','763','764',
+    '741','7421','7422','744','745','746','7492','751','752','753',
+    '754','755','756','757','758','759','7621','7622','763','764',
     '765','766','767','771','772','773', '7741','7742','775','776',
     '777','778','76111','76116','7612','7614','7615','7616','7617',
     '7618','7619', '7613'

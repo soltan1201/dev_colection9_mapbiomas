@@ -1,10 +1,17 @@
+// Mosaicos
+Processo de Normalização por super carta// Formato oficial dos mosaicos 
+Processo de Normalização do mosaico por Bacia Hidrografica (42 Bacias Caat)
+
 exportar as amostras Cluster e Manual 
-    'asset_ROIs_manual': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/coletaROIsv7N2manual'},
-    'asset_ROIs_cluster': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/coletaROIsv6N2cluster'}
+ROIs no asset da coleção 8 
+    'asset_ROIs_manual': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/coletaROIsv7N2manual'}, // normalizado
+    'asset_ROIs_cluster': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/coletaROIsv6N2cluster'} // normalizado
+ROIs no asset da coleção 9
+    'asset_ROIs_manual': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/coletaROIsN2manual'}, // normalizado
+    'asset_ROIs_cluster': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/coletaROIsN2cluster'} // normalizado
+    'asset_ROIs_manual': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/cROIsN2manualNN'}, // não normalizado
+    'asset_ROIs_cluster': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/cROIsN2clusterNN'} // não normalizado
 
-
-
-    asset das novas amostras : AMOSTRAS/col9/CAATINGA/ROIs/2023
 
     Documentação 
         https://scikit-learn.org/stable/modules/permutation_importance.html
@@ -43,3 +50,7 @@ classificações
         'swir1_median_wet', 'gli_median_wet', 'gli_median', 'lswi_median', 'nir_median_dry', 'swir1_min', 'gemi_median_dry', 'red_median', 
         'shape_median'
     ]
+
+As versões 5 com amostras não normalizadas nem todas foram salvas com os mesmos parametros de 
+classificação, por ter dado time out para algumas bacias o número de arvores foi reduzido 
+para 30 

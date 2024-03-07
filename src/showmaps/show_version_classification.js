@@ -58,7 +58,9 @@ var banda_activa = 'classification_' + String(yearcourrent)
 var FeatColbacia = ee.FeatureCollection(param.assetBacia);
 var imgMapCol71= ee.Image(param.assetMapC7);
 var imgMapCol8= ee.Image(param.assetMapC8);
-var imgMapCol9V1 =  ee.ImageCollection(param.asset_filted.V1);
+var imgMapCol9V1 =  ee.ImageCollection(param.asset_filted.V1)
+                            .filter(ee.filter.eq('version', 3))
+                            .filter(ee.Filter.eq("classifier", "GTB"));
 var Mosaicos = ee.ImageCollection(param.assetIm).filter(
                         ee.Filter.eq('biome', 'CAATINGA')).select(param.bandas);
 
@@ -75,11 +77,6 @@ if (selBacia === 'all'){
     imgMapCol9V1 = imgMapCol9V1.filter(ee.Filter.eq("id_bacia", selBacia)); 
     Mosaicos = Mosaicos.filterBounds(FeatColbacia);
 }
-
-
-var bacias = FeatColbacia.filterBounds(points);
-var lst = bacias.reduceColumns(ee.Reducer.toList(), ['nunivotto3']).get('list');
-print("bacias faltantes ", lst);
 
 
 print("imagem no Asset Geral Mapbiomas Col 7.1", imgMapCol71);
