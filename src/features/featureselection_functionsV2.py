@@ -152,24 +152,28 @@ def load_table_to_processing(cc, dir_fileCSV):
 def load_table_to_process(cc, dir_fileCSV):
     lstDF = []
     for dirCSV in dir_fileCSV:
-        df_tmp = pd.read_csv(dir_fileCSV)
-        df_tmp = df_tmp.drop(['system:index', '.geo','random'], axis=1) 
+        df_tmp = pd.read_csv(dirCSV[1])
+        df_tmp = df_tmp.drop(['system:index', '.geo'], axis=1) 
         lstDF.append(df_tmp)
     
     conDF  = pd.concat(lstDF, axis=0, ignore_index=True)
     print("temos {} filas ".format(conDF.shape))
     colunas = [kk for kk in conDF.columns]
-    print("========== columns ============== \n ", colunas)
+    
     # sys.exit()
     colunas.remove('year')
     colunas.remove('class')
-    colunas.remove('newclass')
-    # colunas.remove('random')
+    try:
+        colunas.remove('newclass')
+        colunas.remove('random')
+    except:
+        pass
+    print("============ columns ================") # \n , colunas
     print(f"# {cc} loading train DF {conDF[colunas].shape} and ref {conDF['class'].shape}")
     # X_train, X_test, y_train, y_test = train_test_split(df_tmp[colunas], df_tmp['class'], test_size=0.1, shuffle=False)
 
     min_features_to_select = 1
-    print("get variaveis")    
+    print("=========== get variaveis =============")    
     # gbm    
     skf = StratifiedKFold(n_splits=3)
     model = RandomForestClassifier()
@@ -178,22 +182,36 @@ def load_table_to_process(cc, dir_fileCSV):
             step=1,
             cv= skf,
             scoring= 'accuracy',
-            min_features_to_select=min_features_to_select,
+            min_features_to_select= min_features_to_select,
             n_jobs=2
         )
 
     rfecv.fit(conDF[colunas], conDF['class'])
     print(f"Optimal number of features: {rfecv.n_features_}")
-    print("ranking ", rfecv.ranking_)
-    print("")
-    print("Support ", rfecv.support_)
+    # print("ranking ", rfecv.ranking_)
+    # print("")
+    # print("Support ", rfecv.support_)
+    lstBandSelect = []
+    limear = 30 
+    if rfecv.n_features_ < 30: 
+        limear = 30 - int(rfecv.n_features_)
+    for cc, bndFeat in enumerate(colunas):
+        print("cc = ", cc, " <> ", bndFeat, " | ", rfecv.ranking_[cc], " | ", rfecv.support_[cc])
+        if limear < 30: 
+            if rfecv.ranking_[cc] < limear:
+                lstBandSelect.append(bndFeat)
+                print(' adding ')
+        else:
+            if rfecv.ranking_[cc] < 4:
+                lstBandSelect.append(bndFeat)
+                print(' adding ')
 
-    return rfecv.ranking_
+    return lstBandSelect, limear
 
 def filterLSTbyBacia_Year(lstDir, mbasin, nYear):
     lst_tmp = []
     for ndir in lstDir:
-        if mbasin in ndir and nYear in ndir:
+        if "/" + mbasin in ndir[1] and str(nYear) in ndir[1]:
             lst_tmp.append(ndir)
 
     return lst_tmp
@@ -209,15 +227,16 @@ def getPathCSV (lstfolders):
     roisPathMan = '/dados/' + lstfolders[1]
     mpathCC = pathparent + roisPathClus
     mpathMan = pathparent + roisPathMan
-    print("path of CSVs Rois is \n ==>",  mpath)
+    print("path of CSVs Rois is \n ==>",  mpathCC)
+    print(mpathMan)
     return mpathCC, mpathMan, pathparent + '/dados/'
 
 lstBacias = [
-    '741','7421','7422','744','745','746','7492','751','752','753',
-    '754','755','756','757','758','759','7621','7622','763','764',
-    '765','766','767','771','772','773', '7741','7742','775','776',
-    '777','778','76111','76116','7612','7614','7615','7616','7617',
-    '7618','7619', '7613'
+    '7421','741','7422','744','745','746','7492','751','752','753',
+    # '754','755','756','757','758','759','7621','7622','763','764',
+    # '765','766','767','771','772','773', '7741','7742','775','776',
+    # '777','778','76111','76116','7612','7614','7615','7616','7617',
+    # '7618','7619', '7613'
 ]
 lstYears = [kk for kk in range(1985, 2023)]
 lstFolders =  ['Col9_ROIs_cluster/', 'Col9_ROIs_manual/']
@@ -231,7 +250,7 @@ if __name__ == '__main__':
     lst_pathCSVman = glob.glob(pathCSVsMan + "*.csv")
     lst_pathCSV = lst_pathCSVcc + lst_pathCSVman
     dirCSVs = [(cc, kk) for cc, kk in enumerate(lst_pathCSV[:])]
-    # print(lst_pathCSV)
+    print(dirCSVs[0])
     # # Create a pool with 4 worker processes
     # with Pool(4) as procWorker:
     #     # The arguments are passed as tuples
@@ -239,22 +258,23 @@ if __name__ == '__main__':
     #                     load_table_to_processing, 
     #                     iterable= dirCSVs, 
     #                     chunksize=5)
-
+    cc = 0
     # for cc, mdir in dirCSVs:  
     for nbacia in lstBacias:
         for year in lstYears:
-            lstmDirs = ilterLSTbyBacia_Year(dirCSVs, nbacia, nYear)
+            lstmDirs = filterLSTbyBacia_Year(dirCSVs, nbacia, year)
             print("# ", cc, " processing = ", lstmDirs)
-        
-            # print(namebacia)
+
             if cc > -1:
                 print(f"========== executando ============ \n => {lstmDirs}")
-                lst_rank = load_table_to_process(cc, lstmDirs)
-
-                newdir = npathParent + "/results/" + dirCSVs[0].split("/")[-1][:-4] + '.txt'
-                filesave = open(newdir, 'w+')
-                for rank in lst_rank:
-                    print("número Rank ", rank)
-                    filesave.write(colunas[rank - 1] + '\n')
-                
-                filesave.close()
+                lst_bnd_rank, nlimear = load_table_to_process(cc, lstmDirs)
+                nameFileSaved = lstmDirs[0][1].split("/")[-1][:-4] + '.txt'
+                print(" ✍️ saving ... ", nameFileSaved)
+                newdir = npathParent + "/results/" + nameFileSaved
+                with open(newdir, 'w+') as filesave:
+                    for bndrank in lst_bnd_rank:
+                        # print("número Rank ", rank)
+                        filesave.write(bndrank + '\n')
+                    filesave.write("limear_" + str(nlimear))
+            cc += 1
+        # sys.exit()

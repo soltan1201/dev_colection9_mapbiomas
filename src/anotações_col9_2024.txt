@@ -34,6 +34,9 @@ ROIs no asset da coleção 9
         https://scikit-learn.org/stable/auto_examples/ensemble/plot_gradient_boosting_regression.html#sphx-glr-auto-examples-ensemble-plot-gradient-boosting-regression-py
         https://scikit-learn.org/stable/modules/generated/sklearn.inspection.permutation_importance.html
 
+        icons 
+        https://coolsymbol.com/
+        
 classificações 
     Versão 1 tanto com RF como BTG classificou as bacias com uma unica classe 
     Versão 2 com GTB classifcou sem as amostras manuis... e confundeu muito as classes de floresta, savana e pastagem com agricultura
