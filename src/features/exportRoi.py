@@ -27,15 +27,16 @@ except:
 # sys.setrecursionlimit(1000000000)
 
 
+
 param = {    
-    'asset_ROIs_manual': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/coletaROIsv7N2manual'},
-    'asset_ROIs_cluster': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/coletaROIsv6N2cluster'},
+    'asset_ROIs_manual': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN2manualNN'},
+    'asset_ROIs_cluster': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN2clusterNN'},
     'anoInicial': 1985,
     'anoFinal': 2022,
     'numeroTask': 6,
     'numeroLimit': 4,
     'conta' : {
-        '0': 'caatinga04'              
+        '0': 'caatinga02'              
     },
     'showFilesCSV' : False,
     'showAssetFeat': False
@@ -138,7 +139,7 @@ for assetKey in lstKeysFolder:
             try: 
                 ROIs = ee.FeatureCollection(assetFeats)       
                 print(nameFeat, " ", ROIs.size().getInfo())     
-                # processoExportar(ROIs, nameFeat, assetKey.replace('asset_', 'Col9_'))               
+                processoExportar(ROIs, nameFeat, assetKey.replace('asset_', 'Col9_'))               
             except:
                 # list_baciaYearFaltan.append(nameFeat)
                 # arqFaltante.write(nameFeat + '\n')

@@ -34,14 +34,13 @@ class ClassMosaic_indexs_Spectral(object):
         'bnd_L': ['blue','green','red','nir','swir1','swir2'],
         'bnd_fraction': ['gv','npv','soil'],
         'bioma': 'CAATINGA',
-        'classMapB': [3, 4, 5, 9, 12, 13, 15, 18, 19, 20, 21, 22, 23, 24, 25, 26, 29, 30, 31, 32, 33,
-                      36, 39, 40, 41, 46, 47, 48, 49, 50, 62],
-        'classNew':  [3, 4, 3, 3, 12, 12, 15, 18, 18, 18, 18, 22, 22, 22, 22, 33, 29, 22, 33, 12, 33,
-                      18, 18, 18, 18, 18, 18, 18,  4,  4, 21],
+        'classMapB': [3, 4, 5, 9, 12, 13, 15, 18, 19, 20, 21, 22, 23, 24, 25, 26, 29, 30, 31, 32, 33, 36, 39, 40, 41, 46, 47, 48, 49, 50, 62],
+        'classNew':  [3, 4, 3, 3, 12, 12, 15, 18, 18, 18, 18, 22, 22, 22, 22, 33, 29, 22, 33, 12, 33, 18, 18, 18, 18, 18, 18, 18,  4,  4, 21],
         'asset_baciasN2': 'projects/mapbiomas-arida/ALERTAS/auxiliar/bacias_hidrografica_caatinga',
+        'asset_cruzN245': 'projects/mapbiomas-arida/ALERTAS/auxiliar/bacias_hidrografica_caatinga_BdivN245',
         'asset_baciasN4': 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/bacias_hidrografica_caatingaN4',
         'outAssetROIs': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/',
-        'inputAssetStats': 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/stats_mosaics/all_statisticsL8',
+        'inputAssetStats': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/stats_mosaics_ba/all_statisticsMosaicC9_',
         'assetMapbiomasGF': 'projects/mapbiomas-workspace/AMOSTRAS/col6/CAATINGA/classificacoes/classesV5',
         'assetMapbiomas5': 'projects/mapbiomas-workspace/public/collection5/mapbiomas_collection50_integration_v1',
         'assetMapbiomas6': 'projects/mapbiomas-workspace/public/collection6/mapbiomas_collection60_integration_v1',
@@ -55,6 +54,7 @@ class ClassMosaic_indexs_Spectral(object):
         'assetrecorteCaatCerrMA' : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/recorteCaatCeMA',
         'asset_ROIs_manual': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/coletaROIsv7N2manual'},
         'asset_ROIs_cluster': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/coletaROIsv6N2cluster'},
+        'asset_baseROIs_col8': 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/',
         'lsClasse': [3, 4, 12, 15, 18, 21, 22, 33, 29],
         'lsPtos': [3000, 2000, 3000, 1500, 1500, 1000, 1500, 1000, 1000],
         "anoIntInit": 1985,
@@ -65,6 +65,17 @@ class ClassMosaic_indexs_Spectral(object):
         'blue_min','blue_stdDev','green_min','green_stdDev','green_median_texture', 
         'red_min', 'red_stdDev','nir_min','nir_stdDev', 'swir1_min', 'swir1_stdDev', 
         'swir2_min', 'swir2_stdDev'
+    ]
+    newlstNameBacin = [
+        '741_0','7421_0','7422_0','745_0','751_0','752_0',
+        '754_0','755_0','756_0','757_0','759_0', '7613_0', '76111_0',
+        '7612_0','7614_0','7616_0','7622_0','763_0','764_0','765_0',
+        '767_0','771_0','772_0','773_0','7742_0','775_0','776_0',
+        '777_0','778_0',
+        '744_0','746_0','7492_0','753_0','758_0','7621_0','766_0',
+        '7741_0','7615_0','76116_0','7617_0','7618_0','7619_0',
+        '744_1','746_1','7492_1','753_1','758_1','7621_1','766_1',
+        '7741_1','7615_1','76116_1','7617_1','7618_1','7619_1',
     ]
 
     # featureBands = [
@@ -86,7 +97,7 @@ class ClassMosaic_indexs_Spectral(object):
                                                     ).filter(ee.Filter.eq('biome', self.options['bioma'])
                                                         ).select(arqParam.featureBands)
 
-        self.imgMosaic = self.imgMosaic.map(lambda img: self.process_normalized_img(img))
+        # self.imgMosaic = self.imgMosaic.map(lambda img: self.process_normalized_img(img))
         self.nlstAssetsROIs = nlstAssetsROIs                                
         # print("  ", self.imgMosaic.size().getInfo())
         # print("see band Names the first ")
@@ -117,21 +128,16 @@ class ClassMosaic_indexs_Spectral(object):
         # self.imgMapbiomas = self.imgMapbiomas.updateMask(self.img_mask)
 
         self.baciasN2 = ee.FeatureCollection(self.options['asset_baciasN2'])
+        self.featCStat = None
         # colectAnos = []
 
-    def process_normalized_img (self, imgA):
+    def process_normalized_img (self, imgA):         
 
-        featCStat = ee.FeatureCollection([])
-        for yyear in range(1985, 2023):
-            if yyear == 1985:
-                featCStat = ee.FeatureCollection(self.options['inputAssetStats'] + str(yyear))
-            else:
-                featCStat = featCStat.merge(
-                                ee.FeatureCollection(self.options['inputAssetStats'] + str(yyear)))
-
-        idImg = imgA.id()
-        featSt = featCStat.filter(ee.Filter.eq('id_img', idImg)).first()
+        year = ee.Number(imgA.get('year'))
+        featSt = self.featCStat.filter(ee.Filter.eq('year', year)).first()
+        
         imgNormal = imgA.select(['slope'], ['slopeA']).divide(1500).toFloat()
+        
         bandMos = copy.deepcopy(arqParam.featureBands)
         bandMos.remove('slope')
 
@@ -710,7 +716,6 @@ class ClassMosaic_indexs_Spectral(object):
 
         return imageW#.select(band_feat)# .addBands(imageF)
 
-
     def calculate_indices_x_blocos(self, image):
 
         
@@ -762,57 +767,75 @@ class ClassMosaic_indexs_Spectral(object):
 
         return image_year
     
-    def iterate_bacias(self, nomeBacia):
-        
-        oneBacia = self.baciasN2.filter(ee.Filter.eq('nunivotto3', nomeBacia)).geometry()     
-        lstROIs_asset = []
-        for assetROIs in self.nlstAssetsROIs:
-            if nomeBacia in assetROIs:
-                lstROIs_asset.append(assetROIs)
+    def iterate_bacias(self, nomeBacia, secondSample):
+        # update the statistic mosaic Bacia a sere processada 
+        self.featCStat = ee.FeatureCollection(self.options['inputAssetStats'] + nomeBacia)
+        for nDiv in [0, 1]:
+            # loading geometry bacim
+            nomeBaciaEx = nomeBacia + '_' + str(nDiv)
+            if nomeBaciaEx in self.newlstNameBacin:
+                oneBacia = ee.FeatureCollection(self.options['asset_cruzN245']).filter(
+                                        ee.Filter.eq('wts_cd_pfa', nomeBaciaEx)).geometry()     
+                lstROIs_asset = []
+                for assetROIs in self.nlstAssetsROIs:
+                    if "/" + nomeBacia in assetROIs:
+                        lstROIs_asset.append(assetROIs)
 
-        for assetROIs in lstROIs_asset:    
-            print(" processing => ", assetROIs) 
-            parte = assetROIs.split("/")[-1].split("_")
-            anoCount = int(parte[1])
-            print("year ", anoCount)
-              
-            shpROIspoints = ee.FeatureCollection(assetROIs).select(['class', 'year'])
-            bandActiva = 'classification_' + str(anoCount)
+                for assetROIs in lstROIs_asset:                    
+                    parte = assetROIs.split("/")[-1].split("_")
+                    anoCount = int(parte[1])
+                    print(" processing bacia_year => ", assetROIs.replace(self.options['asset_baseROIs_col8'], ""), " <> ", anoCount)
+                    
+                    shpROIspoints = ee.FeatureCollection(assetROIs).select(['class'])
+                    shpROIspoints = shpROIspoints.filterBounds(oneBacia)
+                    bandActiva = 'classification_' + str(anoCount)
 
-            img_recMosaic = self.imgMosaic.filterBounds(oneBacia).filter(
-                                        ee.Filter.eq('year', anoCount)).median().toFloat()   
-
-            img_recMosaicnewB = self.CalculateIndice(img_recMosaic)
-            bndAdd = img_recMosaicnewB.bandNames().getInfo()
-            # print(f"know bands names {len(bndAdd)}")
-            # print("  ", bndAdd)
-            img_recMosaic = img_recMosaic.addBands(ee.Image(img_recMosaicnewB))
-
-            # print("numero de ptos controle ", roisAct.size().getInfo())
-            # opcoes para o sorteio estratificadoBuffBacia
-            # sampleRegions()
-            ptosTemp = img_recMosaic.sampleRegions(
-                                collection=  shpROIspoints, 
-                                properties= ['class', 'year'],                                
-                                scale= 30,   
-                                tileScale= 2,                             
-                                geometries= True
-                            )
-            # insere informacoes em cada ft
-            ptosTemp = ptosTemp.filter(ee.Filter.notNull(['blue_median']))
-            # merge com colecoes anteriores
-            # colecaoPontos = colecaoPontos.merge(ptosTemp)            
-            # sys.exit()
-            name_exp = str(nomeBacia) + "_" + str(anoCount) + "_" + parte[2]
-            self.save_ROIs_toAsset(ee.FeatureCollection(ptosTemp), name_exp, parte[2])        
-            
+                    img_recMosaic = self.imgMosaic.filterBounds(oneBacia).filter(
+                                                ee.Filter.eq('year', anoCount)).map(
+                                                    lambda img: self.process_normalized_img(img))
+                                                
+                    img_recMosaicNorm = img_recMosaic.median().toFloat()   
+                    # condição de addicionar novas bandas ou não 
+                    if not secondSample:
+                        print("---- CALCULING DATA AUMENTATION FROM SPECTRAL INDEX --- ")
+                        img_recMosaicnewB = self.CalculateIndice(img_recMosaicNorm)
+                        # bndAdd = img_recMosaicnewB.bandNames().getInfo()
+                        # print(f"know bands names {len(bndAdd)}")
+                        # print("  ", bndAdd)
+                        img_recMosaicNorm = img_recMosaicNorm.addBands(ee.Image(img_recMosaicnewB))
+                    
+                    # print("numero de ptos controle ", roisAct.size().getInfo())
+                    # opcoes para o sorteio estratificadoBuffBacia
+                    # sampleRegions()
+                    ptosTemp = img_recMosaicNorm.sampleRegions(
+                                        collection=  shpROIspoints, 
+                                        properties= ['class'],                                
+                                        scale= 30,   
+                                        # tileScale= 1,                             
+                                        geometries= True
+                                    )
+                    # insere informacoes em cada ft
+                    ptosTemp = ptosTemp.filter(ee.Filter.notNull(['blue_median']))
+                    ptosTemp = ptosTemp.map(lambda feat : feat.set('year', anoCount, 'wts_cd_pfa', nomeBaciaEx) )
+                    # merge com colecoes anteriores
+                    # colecaoPontos = colecaoPontos.merge(ptosTemp)            
+                    # sys.exit()
+                    name_exp = str(nomeBaciaEx) + "_" + str(anoCount) + "_" + parte[2]
+                    self.save_ROIs_toAsset(ee.FeatureCollection(ptosTemp), name_exp, parte[2], secondSample)        
+                
     
     # salva ftcol para um assetindexIni
-    def save_ROIs_toAsset(self, collection, name, sufix):
+    def save_ROIs_toAsset(self, collection, name, sufix, sSample):
         if sufix == 'man':
-            nfolder = "coletaROIsN2manual"
+            if sSample:
+                nfolder = "coletaROIsN2man6bnd" 
+            else:
+                nfolder = "coletaROIsNormN2manual"
         else:
-            nfolder = "coletaROIsN2cluster"
+            if sSample:
+                nfolder = "coletaROIsN2clus6bnd" 
+            else:
+                nfolder =  "coletaROIsNormN2cluster"
 
         optExp = {
             'collection': collection,
@@ -831,6 +854,7 @@ param = {
     'bioma': ["CAATINGA", 'CERRADO', 'MATAATLANTICA'],
     'asset_bacias': 'projects/mapbiomas-arida/ALERTAS/auxiliar/bacias_hidrografica_caatinga',
     'asset_IBGE': 'users/SEEGMapBiomas/bioma_1milhao_uf2015_250mil_IBGE_geo_v4_revisao_pampa_lagoas',
+    'outAssetROIs': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/',
     # 'outAsset': 'projects/mapbiomas-workspace/AMOSTRAS/col5/CAATINGA/PtosXBaciasBalanceados/',
     'asset_ROIs_manual': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/coletaROIsv7N2manual'},
     'asset_ROIs_cluster': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/coletaROIsv6N2cluster'},
@@ -855,15 +879,13 @@ param = {
         '24': 'caatinga05',
         '30': 'solkan1201',
         '36': 'diegoGmail',
-        # '20': 'rodrigo'
+        '60': 'superconta'
     },
 }
 def gerenciador(cont, param):
 
     numberofChange = [kk for kk in param['conta'].keys()]
-
     if str(cont) in numberofChange:
-
         gee.switch_user(param['conta'][str(cont)])
         gee.init()
         gee.tasks(n=param['numeroTask'], return_list=True)
@@ -888,30 +910,81 @@ def GetPolygonsfromFolder(dictAsset):
         
     return ColectionPtos
 
+def compare_nameFilefromAssets(assetsgeeSource, assetsgeeTarge):
+
+    listTarge = []
+    lstOut = []
+    pathroot = None
+    print("reading all list ...")
+    for idAsset in tqdm(assetsgeeTarge):  
+        name = idAsset.split("/")[-1] 
+        name = name.replace("_0", "").replace("_1", "")
+        listTarge.append(name)
+    print("list ROIs bacin did\n =>", listTarge)
+    for idAsset in tqdm(assetsgeeSource):  
+        name = idAsset.split("/")[-1]        
+        if name not in listTarge: 
+            print("    >> ", name)
+            lstOut.append(idAsset)    
+    
+    return lstOut 
+
+def getListBaciasSaved (nList):
+    lstB = []
+    dictBacin = {}
+    for namef in nList:
+        nameB = namef.split("/")[-1].split("_")[0]
+        if nameB not in lstB:
+            lstB.append(nameB)
+            dictBacin[nameB] = 1
+        else:
+            dictBacin[nameB] += 1
+    for nameB in lstB:
+        print(nameB, "  ", dictBacin[nameB])
+        if dictBacin[nameB] < 37:
+            lstB.remove(nameB)
+    return lstB
+
 listaNameBacias = [
     '741','7421','7422','744','745','746','7492','751','752','753',
-    '754','755','756','757','758','759','7621','7622','763','764',
-    '765','766','767','771','772','773', '7741','7742','775','776',
-    '777','778','76111','76116','7612','7614','7615','7616','7617',
-    '7618','7619', '7613'
+    '754','755','756','757','758','759', '7613', '76111','76116',
+    '7612','7614','7615','7616','7617', '7618','7619','7621','7622',
+    '763','764','765','766','767','771','772','773', '7741','7742',
+    '775','776','777','778',
 ]
-# listaNameBacias = ['765','766','759','7619','7422']
-cont = gerenciador(6, param)
+
+# listaNameBacias = ['765','766','759','7619','7422']   coletaROIsN2man6bnd
+cont = gerenciador(0, param)
 # revisao da coleção 8 
 # https://code.earthengine.google.com/5e8af5ef94684a5769e853ad675fc368
 
-lstKeysFolder = ['asset_ROIs_manual', 'asset_ROIs_cluster']  # 
+lstKeysFolder = ['asset_ROIs_cluster']  # , , 'asset_ROIs_manual'
+dictKeysF = {
+    'asset_ROIs_manual': "coletaROIsNormN2manual",
+    'asset_ROIs_cluster': "coletaROIsNormN2cluster"
+}
+sampleSecond = False
 for assetKey in lstKeysFolder:
     lstAssetFolder = GetPolygonsfromFolder(param[assetKey])
-    # for assetFolde in lstAssetFolder:
-    #    print(" > ", assetKey, " <=> ", assetFolde)
+    dictSHPsaved = {"id": param['outAssetROIs'] + dictKeysF[assetKey]}
+    print(" >>>", dictSHPsaved)
+    lstAssetFsaved = GetPolygonsfromFolder(dictSHPsaved)
+    lstAssetFolder = compare_nameFilefromAssets(lstAssetFolder, lstAssetFsaved)
+    
+    for cc, assetFolde in enumerate(lstAssetFsaved):
+       print("#", cc, " We saved features from > ", assetFolde.split("/")[-1] , " <=> in ", assetKey)
+
+    lstBaciasproc = getListBaciasSaved(lstAssetFsaved)
+    # sys.exit()
     objetoMosaic_exportROI = ClassMosaic_indexs_Spectral(lstAssetFolder)
+    newlistaNameBacias = [kk.split("/")[-1].split("_")[0] for kk in lstAssetFolder]
 
     for cc, item_bacia in enumerate(listaNameBacias[:]):
-        print(f"# {cc + 1} loading geometry bacia {item_bacia}")     
-        # geobacia, colAnos, nomeBacia, dict_nameBN4
-        objetoMosaic_exportROI.iterate_bacias(item_bacia)
-        cont = gerenciador(cont, param)
+        if item_bacia not in lstBaciasproc:
+            print(f"# {cc + 1} loading geometry bacia {item_bacia}")     
+            # geobacia, colAnos, nomeBacia, dict_nameBN4
+            objetoMosaic_exportROI.iterate_bacias(item_bacia, sampleSecond)
+            # cont = gerenciador(cont, param)
 
     # sys.exit()
 

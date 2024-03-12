@@ -24,6 +24,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.svm import SVC
 from multiprocessing import Pool
+
 # def plot_selectKBest(XValues, sscore):
 #     X_indices = np.arange(XValues.shape[-1])
 #     plt.figure(1)
@@ -149,16 +150,22 @@ def load_table_to_processing(cc, dir_fileCSV):
         print(scores)
 
 def load_table_to_process(cc, dir_fileCSV):
-    df_tmp = pd.read_csv(dir_fileCSV)
-    df_tmp = df_tmp.drop(['system:index', '.geo','random'], axis=1) 
-    colunas = [kk for kk in df_tmp.columns]
+    lstDF = []
+    for dirCSV in dir_fileCSV:
+        df_tmp = pd.read_csv(dir_fileCSV)
+        df_tmp = df_tmp.drop(['system:index', '.geo','random'], axis=1) 
+        lstDF.append(df_tmp)
+    
+    conDF  = pd.concat(lstDF, axis=0, ignore_index=True)
+    print("temos {} filas ".format(conDF.shape))
+    colunas = [kk for kk in conDF.columns]
     print("========== columns ============== \n ", colunas)
     # sys.exit()
     colunas.remove('year')
     colunas.remove('class')
     colunas.remove('newclass')
     # colunas.remove('random')
-    print(f"# {cc} loading train DF {df_tmp[colunas].shape} and ref {df_tmp['class'].shape}")
+    print(f"# {cc} loading train DF {conDF[colunas].shape} and ref {conDF['class'].shape}")
     # X_train, X_test, y_train, y_test = train_test_split(df_tmp[colunas], df_tmp['class'], test_size=0.1, shuffle=False)
 
     min_features_to_select = 1
@@ -175,7 +182,7 @@ def load_table_to_process(cc, dir_fileCSV):
             n_jobs=2
         )
 
-    rfecv.fit(df_tmp[colunas], df_tmp['class'])
+    rfecv.fit(conDF[colunas], conDF['class'])
     print(f"Optimal number of features: {rfecv.n_features_}")
     print("ranking ", rfecv.ranking_)
     print("")
@@ -183,16 +190,27 @@ def load_table_to_process(cc, dir_fileCSV):
 
     return rfecv.ranking_
 
-def getPathCSV (nfolder):
+def filterLSTbyBacia_Year(lstDir, mbasin, nYear):
+    lst_tmp = []
+    for ndir in lstDir:
+        if mbasin in ndir and nYear in ndir:
+            lst_tmp.append(ndir)
+
+    return lst_tmp
+
+def getPathCSV (lstfolders):
     # get dir path of script 
     mpath = os.getcwd()
     # get dir folder before to path scripts 
     pathparent = str(Path(mpath).parents[0])
+
     # folder of CSVs ROIs
-    roisPath = '/dados/' + nfolder
-    mpath = pathparent + roisPath
+    roisPathClus = '/dados/' + lstfolders[0]
+    roisPathMan = '/dados/' + lstfolders[1]
+    mpathCC = pathparent + roisPathClus
+    mpathMan = pathparent + roisPathMan
     print("path of CSVs Rois is \n ==>",  mpath)
-    return mpath, pathparent + '/dados/'
+    return mpathCC, mpathMan, pathparent + '/dados/'
 
 lstBacias = [
     '741','7421','7422','744','745','746','7492','751','752','753',
@@ -204,12 +222,14 @@ lstBacias = [
 lstYears = [kk for kk in range(1985, 2023)]
 lstFolders =  ['Col9_ROIs_cluster/', 'Col9_ROIs_manual/']
 nameFolder = lstFolders[0]
-pathCSVs, npathParent = getPathCSV(nameFolder)
+pathCSVsCC, pathCSVsMan, npathParent = getPathCSV(lstFolders)
 byYear = True
 byBacia = True
 
 if __name__ == '__main__':    
-    lst_pathCSV = glob.glob(pathCSVs + "*.csv")
+    lst_pathCSVcc = glob.glob(pathCSVsCC + "*.csv")
+    lst_pathCSVman = glob.glob(pathCSVsMan + "*.csv")
+    lst_pathCSV = lst_pathCSVcc + lst_pathCSVman
     dirCSVs = [(cc, kk) for cc, kk in enumerate(lst_pathCSV[:])]
     # print(lst_pathCSV)
     # # Create a pool with 4 worker processes
@@ -220,20 +240,21 @@ if __name__ == '__main__':
     #                     iterable= dirCSVs, 
     #                     chunksize=5)
 
-    for cc, mdir in dirCSVs:        
-        print("# ", cc, " processing = ", mdir.split("/")[-1])
-        parte = mdir.split("/")[-1]
-        namebacia = parte.split('_')[0]
-        myear = parte.split('_')[1]
-        # print(namebacia)
-        if cc > 221:
-            print(f"========== executando ============ \n => {mdir}")
-            lst_rank = load_table_to_process(cc, mdir)
+    # for cc, mdir in dirCSVs:  
+    for nbacia in lstBacias:
+        for year in lstYears:
+            lstmDirs = ilterLSTbyBacia_Year(dirCSVs, nbacia, nYear)
+            print("# ", cc, " processing = ", lstmDirs)
+        
+            # print(namebacia)
+            if cc > -1:
+                print(f"========== executando ============ \n => {lstmDirs}")
+                lst_rank = load_table_to_process(cc, lstmDirs)
 
-            newdir = npathParent + "/results/" + mdir.split("/")[-1][:-4] + '.txt'
-            filesave = open(newdir, 'w+')
-            for rank in lst_rank:
-                print("número Rank ", rank)
-                filesave.write(colunas[rank - 1] + '\n')
-            
-            filesave.close()
+                newdir = npathParent + "/results/" + dirCSVs[0].split("/")[-1][:-4] + '.txt'
+                filesave = open(newdir, 'w+')
+                for rank in lst_rank:
+                    print("número Rank ", rank)
+                    filesave.write(colunas[rank - 1] + '\n')
+                
+                filesave.close()

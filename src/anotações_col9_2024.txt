@@ -15,13 +15,24 @@ ROIs no asset da coleção 9
 
     Documentação 
         https://scikit-learn.org/stable/modules/permutation_importance.html
+        https://www.kaggle.com/code/kenmatsu4/sklearn-permutation-importance
         https://scikit-learn.org/stable/modules/generated/sklearn.inspection.permutation_importance.html#rd9e56ef97513-bre
         https://scikit-learn.org/stable/modules/generated/sklearn.inspection.permutation_importance.html#sklearn.inspection.permutation_importance
         https://scikit-learn.org/stable/auto_examples/ensemble/plot_forest_importances.html#sphx-glr-auto-examples-ensemble-plot-forest-importances-py
+        https://stackoverflow.com/questions/50387089/getting-features-in-rfecv-scikit-learn
+        https://scikit-learn.org/stable/auto_examples/inspection/plot_permutation_importance_multicollinear.html#sphx-glr-auto-examples-inspection-plot-permutation-importance-multicollinear-py
+        https://scikit-learn.org/stable/auto_examples/ensemble/plot_forest_importances.html#sphx-glr-auto-examples-ensemble-plot-forest-importances-py
+        https://machinelearningmastery.com/rfe-feature-selection-in-python/
+        https://medium.com/@GouthamPeri/pipeline-with-tuning-scikit-learn-b2789dca9dc2
         why permutation importance is better than Feature importance
         https://scikit-learn.org/stable/auto_examples/inspection/plot_permutation_importance.html#sphx-glr-download-auto-examples-inspection-plot-permutation-importance-py
+        
+        Sequencial Feature Selection 
+        https://rasbt.github.io/mlxtend/user_guide/feature_selection/SequentialFeatureSelector/
 
-
+        plot Gradients 
+        https://scikit-learn.org/stable/auto_examples/ensemble/plot_gradient_boosting_regression.html#sphx-glr-auto-examples-ensemble-plot-gradient-boosting-regression-py
+        https://scikit-learn.org/stable/modules/generated/sklearn.inspection.permutation_importance.html
 
 classificações 
     Versão 1 tanto com RF como BTG classificou as bacias com uma unica classe 
