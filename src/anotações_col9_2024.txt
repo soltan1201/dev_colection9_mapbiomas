@@ -12,30 +12,36 @@ ROIs no asset da coleção 9
     'asset_ROIs_manual': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/cROIsN2manualNN'}, // não normalizado
     'asset_ROIs_cluster': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/cROIsN2clusterNN'} // não normalizado
 
+    amostragem de amostras pelos criterios 
+        coincidencia com 
 
-    Documentação 
-        https://scikit-learn.org/stable/modules/permutation_importance.html
-        https://www.kaggle.com/code/kenmatsu4/sklearn-permutation-importance
-        https://scikit-learn.org/stable/modules/generated/sklearn.inspection.permutation_importance.html#rd9e56ef97513-bre
-        https://scikit-learn.org/stable/modules/generated/sklearn.inspection.permutation_importance.html#sklearn.inspection.permutation_importance
-        https://scikit-learn.org/stable/auto_examples/ensemble/plot_forest_importances.html#sphx-glr-auto-examples-ensemble-plot-forest-importances-py
-        https://stackoverflow.com/questions/50387089/getting-features-in-rfecv-scikit-learn
-        https://scikit-learn.org/stable/auto_examples/inspection/plot_permutation_importance_multicollinear.html#sphx-glr-auto-examples-inspection-plot-permutation-importance-multicollinear-py
-        https://scikit-learn.org/stable/auto_examples/ensemble/plot_forest_importances.html#sphx-glr-auto-examples-ensemble-plot-forest-importances-py
-        https://machinelearningmastery.com/rfe-feature-selection-in-python/
-        https://medium.com/@GouthamPeri/pipeline-with-tuning-scikit-learn-b2789dca9dc2
-        why permutation importance is better than Feature importance
-        https://scikit-learn.org/stable/auto_examples/inspection/plot_permutation_importance.html#sphx-glr-download-auto-examples-inspection-plot-permutation-importance-py
-        
-        Sequencial Feature Selection 
-        https://rasbt.github.io/mlxtend/user_guide/feature_selection/SequentialFeatureSelector/
+Documentação 
+    https://scikit-learn.org/stable/modules/permutation_importance.html
+    https://www.kaggle.com/code/kenmatsu4/sklearn-permutation-importance
+    https://scikit-learn.org/stable/modules/generated/sklearn.inspection.permutation_importance.html#rd9e56ef97513-bre
+    https://scikit-learn.org/stable/modules/generated/sklearn.inspection.permutation_importance.html#sklearn.inspection.permutation_importance
+    https://scikit-learn.org/stable/auto_examples/ensemble/plot_forest_importances.html#sphx-glr-auto-examples-ensemble-plot-forest-importances-py
+    https://stackoverflow.com/questions/50387089/getting-features-in-rfecv-scikit-learn
+    https://scikit-learn.org/stable/auto_examples/inspection/plot_permutation_importance_multicollinear.html#sphx-glr-auto-examples-inspection-plot-permutation-importance-multicollinear-py
+    https://scikit-learn.org/stable/auto_examples/ensemble/plot_forest_importances.html#sphx-glr-auto-examples-ensemble-plot-forest-importances-py
+    https://machinelearningmastery.com/rfe-feature-selection-in-python/
+    https://medium.com/@GouthamPeri/pipeline-with-tuning-scikit-learn-b2789dca9dc2
+    why permutation importance is better than Feature importance
+    https://scikit-learn.org/stable/auto_examples/inspection/plot_permutation_importance.html#sphx-glr-download-auto-examples-inspection-plot-permutation-importance-py
+    
+    Sequencial Feature Selection 
+    https://rasbt.github.io/mlxtend/user_guide/feature_selection/SequentialFeatureSelector/
 
-        plot Gradients 
-        https://scikit-learn.org/stable/auto_examples/ensemble/plot_gradient_boosting_regression.html#sphx-glr-auto-examples-ensemble-plot-gradient-boosting-regression-py
-        https://scikit-learn.org/stable/modules/generated/sklearn.inspection.permutation_importance.html
+    plot Gradients 
+    https://scikit-learn.org/stable/auto_examples/ensemble/plot_gradient_boosting_regression.html#sphx-glr-auto-examples-ensemble-plot-gradient-boosting-regression-py
+    https://scikit-learn.org/stable/modules/generated/sklearn.inspection.permutation_importance.html
 
-        icons 
-        https://coolsymbol.com/
+    icons 
+    https://coolsymbol.com/
+
+    biblioteca de índices 
+    https://eemont.readthedocs.io/en/latest/ 
+
         
 classificações 
     Versão 1 tanto com RF como BTG classificou as bacias com uma unica classe 
@@ -64,7 +70,36 @@ classificações
         'swir1_median_wet', 'gli_median_wet', 'gli_median', 'lswi_median', 'nir_median_dry', 'swir1_min', 'gemi_median_dry', 'red_median', 
         'shape_median'
     ]
+    
+
 
 As versões 5 com amostras não normalizadas nem todas foram salvas com os mesmos parametros de 
 classificação, por ter dado time out para algumas bacias o número de arvores foi reduzido 
 para 30 
+
+as bandas da biblioteca de índices eemont são: 
+print(eemont.listIndices())
+[
+    'AFRI1600', 'AFRI2100', 'ANDWI', 'ARI', 'ARI2', 'ARVI', 'ATSAVI', 'AVI', 'AWEInsh', 'AWEIsh', 'BAI', 
+    'BAIM', 'BAIS2', 'BCC', 'BI', 'BITM', 'BIXS', 'BLFEI', 'BNDVI', 'BRBA', 'BWDRVI', 'BaI', 'CIG', 'CIRE', 
+    'CSI', 'CSIT', 'CVI', 'DBI', 'DBSI', 'DPDD', 'DSI', 'DSWI1', 'DSWI2', 'DSWI3', 'DSWI4', 'DSWI5', 'DVI', 
+    'DVIplus', 'DpRVIHH', 'DpRVIVV', 'EBBI', 'EMBI', 'EVI', 'EVI2', 'ExG', 'ExGR', 'ExR', 'FCVI', 'GARI', 
+    'GBNDVI', 'GCC', 'GDVI', 'GEMI', 'GLI', 'GM1', 'GM2', 'GNDVI', 'GOSAVI', 'GRNDVI', 'GRVI', 'GSAVI', 
+    'GVMI', 'IAVI', 'IBI', 'IKAW', 'IPVI', 'IRECI', 'LSWI', 'MBI', 'MBWI', 'MCARI', 'MCARI1', 'MCARI2', 
+    'MCARI705', 'MCARIOSAVI', 'MCARIOSAVI705', 'MGRVI', 'MIRBI', 'MLSWI26', 'MLSWI27', 'MNDVI', 'MNDWI', 
+    'MNLI', 'MRBVI', 'MSAVI', 'MSI', 'MSR', 'MSR705', 'MTCI', 'MTVI1', 'MTVI2', 'MuWIR', 'NBAI', 'NBLI', 
+    'NBR', 'NBR2', 'NBRSWIR', 'NBRT1', 'NBRT2', 'NBRT3', 'NBRplus', 'NBSIMS', 'NBUI', 'ND705', 'NDBI', 
+    'NDBaI', 'NDCI', 'NDDI', 'NDGI', 'NDGlaI', 'NDII', 'NDISIb', 'NDISIg', 'NDISImndwi', 'NDISIndwi', 
+    'NDISIr', 'NDMI', 'NDPI', 'NDPolI', 'NDPonI', 'NDREI', 'NDSI', 'NDSII', 'NDSIWV', 'NDSInw', 'NDSWIR', 
+    'NDSaII', 'NDSoI', 'NDTI', 'NDVI', 'NDVI705', 'NDVIMNDWI', 'NDVIT', 'NDWI', 'NDWIns', 'NDYI', 'NGRDI', 
+    'NHFD', 'NIRv', 'NIRvH2', 'NIRvP', 'NLI', 'NMDI', 'NRFIg', 'NRFIr', 'NSDS', 'NSDSI1', 'NSDSI2', 'NSDSI3', 
+    'NSTv1', 'NSTv2', 'NWI', 'NormG', 'NormNIR', 'NormR', 'OCVI', 'OSAVI', 'PISI', 'PSRI', 'QpRVI', 'RCC', 'RDVI', 
+    'REDSI', 'RENDVI', 'RFDI', 'RGBVI', 'RGRI', 'RI', 'RI4XS', 'RVI', 'S2REP', 'S2WI', 'S3', 'SARVI', 'SAVI', 
+    'SAVI2', 'SAVIT', 'SEVI', 'SI', 'SIPI', 'SR', 'SR2', 'SR3', 'SR555', 'SR705', 'SWI', 'SWM', 'SeLI', 'TCARI', 
+    'TCARIOSAVI', 'TCARIOSAVI705', 'TCI', 'TDVI', 'TGI', 'TRRVI', 'TSAVI', 'TTVI', 'TVI', 'TriVI', 'UI', 'VARI', 
+    'VARI700', 'VDDPI', 'VHVVD', 'VHVVP', 'VHVVR', 'VI6T', 'VI700', 'VIBI', 'VIG', 'VVVHD', 'VVVHR', 'VVVHS', 
+    'VgNIRBI', 'VrNIRBI', 'WDRVI', 'WDVI', 'WI1', 'WI2', 'WI2015', 'WRI', 'kEVI', 'kIPVI', 'kNDVI', 'kRVI', 
+    'kVARI', 'mND705', 'mSR705'
+]
+>>> print("número de indices = ", len(eemont.listIndices()))
+número de indices =  228

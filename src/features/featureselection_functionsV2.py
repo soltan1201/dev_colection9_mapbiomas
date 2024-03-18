@@ -1,10 +1,6 @@
 # !/usr/bin/env python
 import glob
 import os
-import glob
-import sys
-import random
-import copy
 from pathlib import Path
 import pandas as pd
 import numpy as np
@@ -12,17 +8,14 @@ import matplotlib.pyplot as plt
 from itertools import starmap
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import RepeatedStratifiedKFold
+
 from sklearn.model_selection import StratifiedKFold
 
 from sklearn.pipeline import Pipeline
-from sklearn.feature_selection import RFE
 from sklearn.feature_selection import RFECV
-from sklearn.linear_model import Perceptron
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.svm import SVC
 from multiprocessing import Pool
 
 # def plot_selectKBest(XValues, sscore):
@@ -72,7 +65,7 @@ colunas =  [
     'swir2_min_1', 'swir2_stdDev', 'swir2_stdDev_1', 'ui_median', 'ui_median_dry', 'ui_median_wet', 
     'wetness_median', 'wetness_median_dry', 'wetness_median_wet'
 ]
-
+multiModels = False
 # get a list of models to evaluate
 def get_models():
     models = dict()    
@@ -108,7 +101,8 @@ def building_process_Model(X_train, y_train):
     # get the models to evaluate
     models = get_models()
     # evaluate the models and store results
-    
+    results = []
+    names = []
     nmodel = starmap(lambda name, model: evaluate_model(model, X_train, y_train), models.items())
     for cc in range(10):
         scores = next(nmodel)
@@ -125,29 +119,73 @@ def building_process_Model(X_train, y_train):
 
 # loading table of ROIs and begining testing analises
 def load_table_to_processing(cc, dir_fileCSV):
-    df_tmp = pd.read_csv(dir_fileCSV)
-    # removing unimportant columns of table files
-    df_tmp = df_tmp.drop(['system:index', '.geo'], axis=1) 
+    lstDF = []
+    for dirCSV in dir_fileCSV:
+        df_tmp = pd.read_csv(dirCSV[1])
+        # removing unimportant columns of table files
+        df_tmp = df_tmp.drop(['system:index', '.geo'], axis=1) 
+        lstDF.append(df_tmp)    
+    
+    conDF  = pd.concat(lstDF, axis=0, ignore_index=True)
+    print("temos {} filas ".format(conDF.shape))
+    
     colunas = [kk for kk in df_tmp.columns]
-    print("columns ", columns)
+    print("columns ", colunas)
     # sys.exit()
     colunas.remove('year')
     colunas.remove('class')
-    colunas.remove('newclass')
+    try:
+        colunas.remove('newclass')
+        colunas.remove('random')
+    except:
+        print("")
+    
     print(f"# {cc} loading train DF {df_tmp[colunas].shape} and ref {df_tmp['class'].shape}")
+    
     X_train, X_test, y_train, y_test = train_test_split(df_tmp[colunas], df_tmp['class'], test_size=0.1, shuffle=False)
-
 
     # print(df_tmp.columns)
     # building_process_Model(df_tmp[colunas], df_tmp['class'])
-    results, names = list(), list()
-    # get the models to evaluate
-    models = get_models()
+    if multiModels:        
+        # get the models to evaluate
+        models = get_models()
+        for name, model in models.items():
+            scores = evaluate_model(model, X_train, y_train)
+            print('>%s %.3f (%.3f)' % (name, np.mean(scores), np.std(scores)))
+            print(scores)
+    else:
+        min_features_to_select = 2
+        print("=========== get variaveis =============")    
+        # gbm    
+        skf = StratifiedKFold(n_splits=3)
+        model = RandomForestClassifier()
+        rfecv = RFECV(
+                estimator=model,
+                step=1,
+                cv= skf,
+                scoring= 'accuracy',
+                min_features_to_select= min_features_to_select,
+                n_jobs=2
+            )
 
-    for name, model in models.items():
-        scores = evaluate_model(model, X_train, y_train)
-        print('>%s %.3f (%.3f)' % (name, np.mean(scores), np.std(scores)))
-        print(scores)
+        rfecv.fit(conDF[colunas], conDF['class'])
+        print(f"Optimal number of features: {rfecv.n_features_}")
+        lstBandSelect = []
+        limear = 30 
+        if rfecv.n_features_ < 30: 
+            limear = 30 - int(rfecv.n_features_)
+        for cc, bndFeat in enumerate(colunas):
+            # print("cc = ", cc, " <> ", bndFeat, " | ", rfecv.ranking_[cc], " | ", rfecv.support_[cc])
+            if limear < 30: 
+                if rfecv.ranking_[cc] < limear:
+                    lstBandSelect.append(bndFeat)
+                    # print(' adding ')
+            else:
+                if rfecv.ranking_[cc] < 4:
+                    lstBandSelect.append(bndFeat)
+                    # print(' adding ')
+
+        return lstBandSelect, limear
 
 def load_table_to_process(cc, dir_fileCSV):
     lstDF = []
@@ -196,15 +234,15 @@ def load_table_to_process(cc, dir_fileCSV):
     if rfecv.n_features_ < 30: 
         limear = 30 - int(rfecv.n_features_)
     for cc, bndFeat in enumerate(colunas):
-        print("cc = ", cc, " <> ", bndFeat, " | ", rfecv.ranking_[cc], " | ", rfecv.support_[cc])
+        # print("cc = ", cc, " <> ", bndFeat, " | ", rfecv.ranking_[cc], " | ", rfecv.support_[cc])
         if limear < 30: 
             if rfecv.ranking_[cc] < limear:
                 lstBandSelect.append(bndFeat)
-                print(' adding ')
+                # print(' adding ')
         else:
             if rfecv.ranking_[cc] < 4:
                 lstBandSelect.append(bndFeat)
-                print(' adding ')
+                # print(' adding ')
 
     return lstBandSelect, limear
 
@@ -213,6 +251,15 @@ def filterLSTbyBacia_Year(lstDir, mbasin, nYear):
     for ndir in lstDir:
         if "/" + mbasin in ndir[1] and str(nYear) in ndir[1]:
             lst_tmp.append(ndir)
+
+    return lst_tmp
+
+def filterLSTbyBacia_YearTupla(lstDir, mbasin, nYear):
+    lst_tmp = []
+    cc = 0
+    for ndir in lstDir:
+        if "/" + mbasin in ndir[1] and str(nYear) in ndir[1]:
+            lst_tmp.append((cc, ndir))            
 
     return lst_tmp
 
@@ -233,10 +280,10 @@ def getPathCSV (lstfolders):
 
 lstBacias = [
     '7421','741','7422','744','745','746','7492','751','752','753',
-    # '754','755','756','757','758','759','7621','7622','763','764',
-    # '765','766','767','771','772','773', '7741','7742','775','776',
-    # '777','778','76111','76116','7612','7614','7615','7616','7617',
-    # '7618','7619', '7613'
+    '754','755','756','757','758','759','7621','7622','763','764',
+    '765','766','767','771','772','773', '7741','7742','775','776',
+    '777','778','76111','76116','7612', '7614','7615','7616','7617',
+    '7618','7619', '7613'
 ]
 lstYears = [kk for kk in range(1985, 2023)]
 lstFolders =  ['Col9_ROIs_cluster/', 'Col9_ROIs_manual/']
@@ -244,6 +291,7 @@ nameFolder = lstFolders[0]
 pathCSVsCC, pathCSVsMan, npathParent = getPathCSV(lstFolders)
 byYear = True
 byBacia = True
+multiprocess = False
 
 if __name__ == '__main__':    
     lst_pathCSVcc = glob.glob(pathCSVsCC + "*.csv")
@@ -251,30 +299,39 @@ if __name__ == '__main__':
     lst_pathCSV = lst_pathCSVcc + lst_pathCSVman
     dirCSVs = [(cc, kk) for cc, kk in enumerate(lst_pathCSV[:])]
     print(dirCSVs[0])
-    # # Create a pool with 4 worker processes
-    # with Pool(4) as procWorker:
-    #     # The arguments are passed as tuples
-    #     result = procWorker.starmap(
-    #                     load_table_to_processing, 
-    #                     iterable= dirCSVs, 
-    #                     chunksize=5)
-    cc = 0
-    # for cc, mdir in dirCSVs:  
-    for nbacia in lstBacias:
-        for year in lstYears:
-            lstmDirs = filterLSTbyBacia_Year(dirCSVs, nbacia, year)
-            print("# ", cc, " processing = ", lstmDirs)
+    if multiprocess:
+        # Create a pool with 4 worker processes 🍀
+        dict_Bacia_year = []
+        for nbacia in lstBacias:
+            for year in lstYears:
+                tpm_lsit = filterLSTbyBacia_YearTupla()
+        with Pool(4) as procWorker:
+            # The arguments are passed as tuples
+            result = procWorker.starmap(
+                            load_table_to_processing, 
+                            iterable= dirCSVs, 
+                            chunksize=5)
+    else:
+        cc = 0
+        # for cc, mdir in dirCSVs:  
+        for nbacia in lstBacias:
+            for year in lstYears:
+                lstmDirs = filterLSTbyBacia_Year(dirCSVs, nbacia, year)
+                print("# ", cc, " processing = ", lstmDirs)
 
-            if cc > -1:
-                print(f"========== executando ============ \n => {lstmDirs}")
-                lst_bnd_rank, nlimear = load_table_to_process(cc, lstmDirs)
-                nameFileSaved = lstmDirs[0][1].split("/")[-1][:-4] + '.txt'
-                print(" ✍️ saving ... ", nameFileSaved)
-                newdir = npathParent + "/results/" + nameFileSaved
-                with open(newdir, 'w+') as filesave:
-                    for bndrank in lst_bnd_rank:
-                        # print("número Rank ", rank)
-                        filesave.write(bndrank + '\n')
-                    filesave.write("limear_" + str(nlimear))
-            cc += 1
+                if cc > 27:
+                    print(f"========== executando ============ \n => {lstmDirs}")
+                    try:
+                        lst_bnd_rank, nlimear = load_table_to_process(cc, lstmDirs)
+                        nameFileSaved = lstmDirs[0][1].split("/")[-1][:-4] + '.txt'
+                        print(" ✍️ saving ... ", nameFileSaved)
+                        newdir = npathParent + "/results/" + nameFileSaved
+                        with open(newdir, 'w+') as filesave:
+                            for bndrank in lst_bnd_rank:
+                                # print("número Rank ", rank)
+                                filesave.write(bndrank + '\n')
+                            filesave.write("limear_" + str(nlimear))
+                    except:
+                        print("=== Dado com Gap ==== ")
+                cc += 1
         # sys.exit()

@@ -8,9 +8,7 @@ DISTRIBUIDO COM GPLv2
 
 import ee
 import gee
-import json
 import copy
-import csv
 import sys
 import arqParametros as arqParam
 import collections
@@ -19,7 +17,7 @@ try:
     ee.Initialize()
     print('The Earth Engine package initialized successfully!')
 except ee.EEException as e:
-    print('The Earth Engine package failed to initialize!')
+    print('The Earth Engine package failed to initialize!', e)
 except:
     print("Unexpected error:", sys.exc_info()[0])
     raise
