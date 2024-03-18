@@ -203,7 +203,7 @@ collection41 = None
 
 # colecao de integracao do mapbiomas
 # lista_janela = ee.List([]);
-#tamanho da janela de estabilidade
+#tamanho da janela de estabilidade 
 
 
 # trasforma a ftcol em lista para poder iterar nela com um loop nativo

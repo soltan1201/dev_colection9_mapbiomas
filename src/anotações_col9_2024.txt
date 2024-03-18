@@ -13,7 +13,7 @@ ROIs no asset da coleção 9
     'asset_ROIs_cluster': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/cROIsN2clusterNN'} // não normalizado
 
     amostragem de amostras pelos criterios 
-        coincidencia com 
+        coincidencia com a ultima versão da coleção 9 vr 5 e 6
 
 Documentação 
     https://scikit-learn.org/stable/modules/permutation_importance.html
