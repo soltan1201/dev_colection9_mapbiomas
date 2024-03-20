@@ -1,6 +1,7 @@
 # !/usr/bin/env python
 import glob
 import os
+import sys
 from pathlib import Path
 import pandas as pd
 import numpy as np
@@ -248,10 +249,9 @@ def load_table_to_process(cc, dir_fileCSV):
 
 def filterLSTbyBacia_Year(lstDir, mbasin, nYear):
     lst_tmp = []
-    for ndir in lstDir:
+    for ndir in lstDir:  # ndir[1] name path file
         if "/" + mbasin in ndir[1] and str(nYear) in ndir[1]:
             lst_tmp.append(ndir)
-
     return lst_tmp
 
 def filterLSTbyBacia_YearTupla(lstDir, mbasin, nYear):
@@ -285,7 +285,9 @@ lstBacias = [
     '777','778','76111','76116','7612', '7614','7615','7616','7617',
     '7618','7619', '7613'
 ]
-lstYears = [kk for kk in range(1985, 2023)]
+lstYears = [str(kk) for kk in range(1985, 2023)]
+print(lstYears)
+sys.exit()
 lstFolders =  ['Col9_ROIs_cluster/', 'Col9_ROIs_manual/']
 nameFolder = lstFolders[0]
 pathCSVsCC, pathCSVsMan, npathParent = getPathCSV(lstFolders)

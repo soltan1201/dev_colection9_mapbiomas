@@ -2,15 +2,13 @@
 # -*- coding: utf-8 -*-
 
 '''
-#SCRIPT DE CLASSIFICACAO POR BACIA
-#Produzido por Geodatin - Dados e Geoinformacao
-#DISTRIBUIDO COM GPLv2
+# SCRIPT DE CLASSIFICACAO POR BACIA
+# Produzido por Geodatin - Dados e Geoinformacao
+# DISTRIBUIDO COM GPLv2
 '''
 
 import ee 
 import gee
-import json
-import csv
 import sys
 import os
 import glob
@@ -25,8 +23,6 @@ except:
     print("Unexpected error:", sys.exc_info()[0])
     raise
 # sys.setrecursionlimit(1000000000)
-
-
 
 param = {    
     'asset_ROIs_manual': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN2manualNN'},

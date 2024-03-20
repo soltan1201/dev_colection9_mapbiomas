@@ -26,7 +26,7 @@ var visualizar = {
 var param = { 
     assetMapC7: 'projects/mapbiomas-workspace/public/collection7_1/mapbiomas_collection71_integration_v1',
     assetMapC8: 'projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1',
-    asset_filted : {
+    asset_MapC9 : {
             'V1':'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassV1',
         //    'V4':'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/CLASS/ClassCol8V4',
         //    'V5':'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/CLASS/ClassCol8V5',
@@ -58,8 +58,8 @@ var banda_activa = 'classification_' + String(yearcourrent)
 var FeatColbacia = ee.FeatureCollection(param.assetBacia);
 var imgMapCol71= ee.Image(param.assetMapC7);
 var imgMapCol8= ee.Image(param.assetMapC8);
-var imgMapCol9V1 =  ee.ImageCollection(param.asset_filted.V1)
-                            .filter(ee.filter.eq('version', 3))
+var imgMapCol9V1 =  ee.ImageCollection(param.asset_MapC9.V1)
+                            .filter(ee.Filter.eq('version', 5))
                             .filter(ee.Filter.eq("classifier", "GTB"));
 var Mosaicos = ee.ImageCollection(param.assetIm).filter(
                         ee.Filter.eq('biome', 'CAATINGA')).select(param.bandas);
