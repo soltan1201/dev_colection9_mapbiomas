@@ -27,6 +27,7 @@ except:
 param = {    
     'asset_ROIs_manual': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN2manualNN'},
     'asset_ROIs_cluster': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN2clusterNN'},
+    'asset_ROIs_automatic': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/coletaROIsv1N245'},
     'anoInicial': 1985,
     'anoFinal': 2022,
     'numeroTask': 6,
@@ -118,16 +119,15 @@ for xpath in tqdm(lstPathCSV):
         print(" => " + nameCSV)
     lstNameFeat.append(nameCSV)
 
-
+cont = 0
+cont = gerenciador(cont, param)
 lstNameFeat = []
 # sys.exit()
 # iterando com cada uma das folders FeatC do asset
-lstKeysFolder = ['asset_ROIs_cluster', 'asset_ROIs_manual']
+lstKeysFolder = ['asset_ROIs_automatic']   # ,'asset_ROIs_cluster', 'asset_ROIs_manual'
 for assetKey in lstKeysFolder:
     lstAssetFolder = GetPolygonsfromFolder(param[assetKey])
     list_baciaYearFaltan = []
-    cont = 0
-    cont = gerenciador(cont, param)
     for assetFeats in lstAssetFolder[:]:        
         nameFeat = assetFeats.split("/")[-1]
         if nameFeat not in lstNameFeat:
