@@ -6,6 +6,7 @@
 # Produzido por Geodatin - Dados e Geoinformacao
 # DISTRIBUIDO COM GPLv2
 '''
+import sys
 import os
 import json
 import glob
@@ -22,7 +23,9 @@ def get_bacias_year_faltam(ndictHist):
         '775','776','777','778',
     ]
     lstYear = [kk for kk in range(1985, 2023)]
-    lstKeysdict = [kkey for kkey in ndictHist.keys()]
+    lstKeysdict = [kkey[1:] for kkey in ndictHist.keys()]
+    # print("all keys ", lstKeysdict)
+    # sys.exit()
     lstFalta = []
     for nbacia in lstNBacias:
         for yyear in lstYear:
@@ -39,7 +42,7 @@ def getPathCSV():
     pathparent = str(Path(mpath).parents[0])
     print("path parents ", pathparent)
     # folder results of CSVs ROIs
-    mpath_bndImp = pathparent + '/dados/results'
+    mpath_bndImp = pathparent + '/dados/results2'
     print("path of CSVs Rois is \n ==>",  mpath_bndImp)
     return mpath_bndImp
 
@@ -59,7 +62,7 @@ def preencher_dict_historico(tmpDict, nameFiletxt):
 
 buildingJson = False
 pathResults = getPathCSV()
-pathjson = pathResults.replace("results","")
+pathjson = pathResults.replace("results2","")
 pathjsonRF = pathjson + "lst_features_selected_bndC8.json"
 jsonHistogram = pathjson + "historico_bacias_processFS.json"
 lstbndyearFalta = []
@@ -96,7 +99,7 @@ if buildingJson:
     ic(" -- historico_bacias_processFS.json saved ")
 
 else:
-    ic(f"file json readed {pathjson}")
+    ic(f"file json readed {pathjsonRF}")
     with open(pathjsonRF) as infile:
         dictFeatures = json.load(infile)
 
@@ -104,8 +107,10 @@ else:
         dictHist = json.load(infile)
 
     lstbndyearFalta = get_bacias_year_faltam(dictFeatures)
-    for cc, bndY in enumerate(lstbndyearFalta):
-        ic(cc, " falta ",bndY)
-
-    
+    if len(lstbndyearFalta) > 0:
+        print("lista de faltantes ", lstbndyearFalta)
+        for cc, bndY in enumerate(lstbndyearFalta):
+            ic(cc, " falta ",bndY)
+    else:
+        ic("********************* all features ROIs were analised 🍀🍀 *************")
 

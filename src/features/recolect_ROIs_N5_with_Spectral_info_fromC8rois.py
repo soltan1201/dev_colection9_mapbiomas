@@ -8,12 +8,16 @@ DISTRIBUIDO COM GPLv2
 
 import ee
 import gee
+import json
 import copy
+import csv
 from tqdm import tqdm
 import sys
 import arqParametros as arqParam
+import lstIdCodigoBacias as lstIdCodN5
 import collections
 collections.Callable = collections.abc.Callable
+from multiprocessing.pool import ThreadPool
 try:
     ee.Initialize()
     print('The Earth Engine package initialized successfully!')
@@ -39,6 +43,7 @@ class ClassMosaic_indexs_Spectral(object):
         'asset_baciasN2': 'projects/mapbiomas-arida/ALERTAS/auxiliar/bacias_hidrografica_caatinga',
         'asset_baciasN4': 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/bacias_hidrografica_caatingaN4',
         'asset_cruzN245': 'projects/mapbiomas-arida/ALERTAS/auxiliar/bacias_hidrografica_caatinga_BdivN245',
+        'asset_shpN5': 'projects/mapbiomas-arida/ALERTAS/auxiliar/bacias_nivel_5_clipReg_Caat',
         'outAssetROIs': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/',
         'inputAssetStats': 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/stats_mosaics/all_statisticsL8',
         'assetMapbiomasGF': 'projects/mapbiomas-workspace/AMOSTRAS/col6/CAATINGA/classificacoes/classesV5',
@@ -51,10 +56,10 @@ class ClassMosaic_indexs_Spectral(object):
         'asset_befFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/classification_Col71_S1v18',
         'asset_filtered': 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/class_filtered_Tp',
         'asset_alerts': 'users/data_sets_solkan/Alertas/layersClassTP',
-        'asset_input_mask' : 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/masks/maks_layers',
-        'asset_baseROIs_col9': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/',
         'asset_alerts_SAD': 'users/data_sets_solkan/Alertas/layersImgClassTP_2024_02',
         'asset_alerts_Desf': 'projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_deforestation_secondary_vegetation_v2',
+        'asset_input_mask' : 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/masks/maks_layers',
+        'asset_baseROIs_col9': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/',
         'assetrecorteCaatCerrMA' : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/recorteCaatCeMA',
         'asset_ROIs_manual': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/coletaROIsv7N2manual'},
         'asset_ROIs_cluster': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/coletaROIsv6N2cluster'}, 
@@ -65,7 +70,7 @@ class ClassMosaic_indexs_Spectral(object):
         'lsClasse': [3, 4, 12, 15, 18, 21, 22, 33, 29],
         'lsPtos': [3000, 2000, 3000, 1500, 1500, 1000, 1500, 1000, 1000],
         "anoIntInit": 1985,
-        "anoIntFin": 2022,
+        "anoIntFin": 2023,
         'janela': 3
     }
     lst_bandExt = [
@@ -73,22 +78,7 @@ class ClassMosaic_indexs_Spectral(object):
         'red_min', 'red_stdDev','nir_min','nir_stdDev', 'swir1_min', 'swir1_stdDev', 
         'swir2_min', 'swir2_stdDev'
     ]
-    newlstNameBacin = [
-<<<<<<< HEAD
-        '741_0',
-        '7421_0','7422_0','745_0','751_0','752_0',
-=======
-        '741_0','7421_0','7422_0','745_0','751_0','752_0',
->>>>>>> e245750315248ea091d20fb4d4c57b91d9e57aaa
-        '754_0','755_0','756_0','757_0','759_0', '7613_0', '76111_0',
-        '7612_0','7614_0','7616_0','7622_0','763_0','764_0','765_0',
-        '767_0','771_0','772_0','773_0','7742_0','775_0','776_0',
-        '777_0','778_0',
-        '744_0','746_0','7492_0','753_0','758_0','7621_0','766_0',
-        '7741_0','7615_0','76116_0','7617_0','7618_0','7619_0',
-        '744_1','746_1','7492_1','753_1','758_1','7621_1','766_1',
-        '7741_1','7615_1','76116_1','7617_1','7618_1','7619_1',
-    ]
+
     # featureBands = [
     #     'blue_median','blue_median_wet','blue_median_dry','blue_min','blue_stdDev', 
     #     'green_median','green_median_wet','green_median_dry','green_min','green_stdDev','green_median_texture', 
@@ -101,49 +91,42 @@ class ClassMosaic_indexs_Spectral(object):
     lst_properties = arqParam.allFeatures
     # MOSAIC WITH BANDA 2022 
     # https://code.earthengine.google.com/c3a096750d14a6aa5cc060053580b019
-    def __init__(self, lstFeatureSeaved):
-        self.lstlstFeatsSaved = lstFeatureSeaved
-        self.regionInterest = ee.FeatureCollection(self.options['asset_baciasN2'])#.geometry()
-        simgMosaic = ee.ImageCollection(self.options['asset_mosaic_mapbiomas']
-                                                    ).filter(ee.Filter.eq('biome', self.options['bioma'])
-                                                        ).select(arqParam.featureBands)
-        print(ee.Image(simgMosaic.first()).bandNames().getInfo())
-
-        self.imgMosaic = simgMosaic.map(lambda img: self.process_re_escalar_img(img))                          
-        # print("  ", self.imgMosaic.size().getInfo())
-        print("see band Names the first ")
-        print(" ==== ", ee.Image(self.imgMosaic.first()).bandNames().getInfo())
-        print("all images ", self.imgMosaic.size().getInfo())
-        print("==================================================")
+    def __init__(self):
 
         self.lst_year = [k for k in range(self.options['anoIntInit'], self.options['anoIntFin'] + 1)]
-        # # @collection6 bruta: mapas de uso e cobertura Mapbiomas ==> para masquear as amostra fora de mascara
-        # self.collection_bruta = ee.ImageCollection(self.options['assetMapbiomas71']).min()
-        # self.img_mask = self.collection_bruta.unmask(100).eq(100).reduce(ee.Reducer.sum())
-        # self.img_mask = self.img_mask.eq(0).selfMask()
+                                      
+        # # print("  ", self.imgMosaic.size().getInfo())
+        # print("see band Names the first ")
+        # print(" ==== ", ee.Image(self.imgMosaic.first()).bandNames().getInfo())
+        # print("all images ", self.imgMosaic.size().getInfo())
+        # print("==================================================")
+
         
-        # @collection71: mapas de uso e cobertura Mapbiomas ==> para extrair as areas estaveis
-        collection80 = ee.Image(self.options['assetMapbiomas80'])
+        # # # @collection6 bruta: mapas de uso e cobertura Mapbiomas ==> para masquear as amostra fora de mascara
+        # # self.collection_bruta = ee.ImageCollection(self.options['assetMapbiomas71']).min()
+        # # self.img_mask = self.collection_bruta.unmask(100).eq(100).reduce(ee.Reducer.sum())
+        # # self.img_mask = self.img_mask.eq(0).selfMask()
+        
+       
 
-        # # Remap todas as imagens mapbiomas
-        lsBndMapBiomnas = []
-        self.imgMapbiomas = ee.Image().toByte()
+        # # # Remap todas as imagens mapbiomas
+        # lsBndMapBiomnas = []
+        # self.imgMapbiomas = ee.Image().toByte()
 
-        for year in self.lst_year:
-            band = 'classification_' + str(year)
-            lsBndMapBiomnas.append(band)
-            imgTemp = collection80.select(band).remap(
-                self.options['classMapB'], self.options['classNew'])
-            self.imgMapbiomas = self.imgMapbiomas.addBands(
-                imgTemp.rename(band))
+        # for year in self.lst_year:
+        #     band = 'classification_' + str(year)
+        #     lsBndMapBiomnas.append(band)
+        #     if year < 2023:            
+        #         imgTemp = collection80.select(band).remap(
+        #                         self.options['classMapB'], self.options['classNew'])
+        #     self.imgMapbiomas = self.imgMapbiomas.addBands(
+        #                                 imgTemp.rename(band))
 
+        # self.imgMapbiomas = self.imgMapbiomas.select(lsBndMapBiomnas).clip(self.regionInterest.geometry())
+        # # self.imgMapbiomas = self.imgMapbiomas.updateMask(self.img_mask)
 
-
-        self.imgMapbiomas = self.imgMapbiomas.select(lsBndMapBiomnas).clip(self.regionInterest.geometry())
-        # self.imgMapbiomas = self.imgMapbiomas.updateMask(self.img_mask)
-
-        self.baciasN2 = ee.FeatureCollection(self.options['asset_baciasN2'])
-        # colectAnos = []
+        # self.baciasN2 = ee.FeatureCollection(self.options['asset_baciasN2'])
+        # # colectAnos = []
 
     def process_re_escalar_img (self, imgA):
         imgNormal = imgA.select(['slope'], ['slopeA']).divide(1500).toFloat()
@@ -654,6 +637,15 @@ class ClassMosaic_indexs_Spectral(object):
 
     #endregion
 
+    # https://code.earthengine.google.com/d5a965bbb6b572306fb81baff4bd401b
+    def get_class_maskAlerts(self, yyear):
+        #  get from ImageCollection 
+        janela = 5
+        intervalo_bnd_years = ['classification_' + str(kk) for kk in self.lst_year[1:] if kk <= yyear and kk > yyear - janela]
+        maskAlertyyear = ee.Image(self.options['asset_alerts_Desf']).select(intervalo_bnd_years)\
+                                    .divide(100).toUint16().eq(4).reduce(ee.Reducer.sum())
+        return maskAlertyyear.eq(0).rename('mask_alerta')   
+
 
     def get_class_maskFire(self, yyear):
         maskFireyyear = ee.Image(self.options['asset_fire']).select("burned_area_" + str(yyear)
@@ -770,98 +762,216 @@ class ClassMosaic_indexs_Spectral(object):
         else:
             return imgTemp
 
-    # https://code.earthengine.google.com/d5a965bbb6b572306fb81baff4bd401b
-    def get_class_maskAlerts(self, yyear):
-        #  get from ImageCollection 
-        janela = 5
-        intervalo_bnd_years = ['classification_' + str(kk) for kk in self.lst_year[1:] if kk <= yyear and kk > yyear - janela]
-        maskAlertyyear = ee.Image(self.options['asset_alerts_Desf']).select(intervalo_bnd_years)\
-                                    .divide(100).toUint16().eq(4).reduce(ee.Reducer.sum())
-        return maskAlertyyear.eq(0).rename('mask_alerta')    
+
     
-    def iterate_bacias(self, nomeBacia):
-        
-        for nDiv in [0, 1]:
-            # loading geometry bacim
-            nomeBaciaEx = nomeBacia + '_' + str(nDiv)
+    def iterate_bacias(self, paridCodVBacN5):
+        idCount = paridCodVBacN5[0]
+        idCodVBacN5 = paridCodVBacN5[1]
+        print(f"=============  processing {idCount} => {idCodVBacN5}")
+        simgMosaic = ee.ImageCollection(self.options['asset_mosaic_mapbiomas']
+                                                    ).filter(ee.Filter.eq('biome', self.options['bioma'])
+                                                        ).select(arqParam.featureBands)        
 
-            # oneBacia = self.baciasN2.filter(ee.Filter.eq('nunivotto3', nomeBacia)).geometry()     
-            oneBacia = ee.FeatureCollection(self.options['asset_cruzN245']).filter(
-                                            ee.Filter.eq('wts_cd_pfa', nomeBaciaEx)).geometry()  
+        imgMosaic = simgMosaic.map(lambda img: self.process_re_escalar_img(img))
+        # print(imgMosaic.first().bandNames().getInfo())
 
-            for anoCount in self.lst_year: 
-                name_exp = str(nomeBaciaEx) + "_" + str(anoCount) + "_wl"    
-                if name_exp not in self.lstlstFeatsSaved:
-                    print(" processing bacia_year => ",  " <> ", anoCount)             
-                    bandActiva = 'classification_' + str(anoCount)
 
-                    m_assetPixEst = self.options['asset_estaveis'] + '/masks_estatic_pixels_'+ str(anoCount)
-                    maksEstaveis = ee.Image(m_assetPixEst).rename('estatic')  
-                    # 1 Concordante, 2 concordante recente, 3 discordante recente,
-                    # 4 discordante, 5 muito discordante
-                    if anoCount < 2022:
-                        asset_PixCoinc = self.options['asset_Coincidencia'] + '/masks_pixels_incidentes_'+ str(anoCount)
-                        imMasCoinc = ee.Image(asset_PixCoinc).rename('coincident') 
-                    # mask de fogo com os ultimos 5 anos de fogo mapeado 
-                    imMaskFire = self.get_mask_Fire_estatics_pixels(anoCount, False)
-                    imMaskFire = ee.Image(imMaskFire)
-
-                    if anoCount > 1985:
-                        imMaksAlert = self.get_class_maskAlerts(anoCount)
-                    elif anoCount >= 2020:
-                        imMaksAlert = self.AlertasSAD  
-                    else:
-                        imMaksAlert = ee.Image.constant(1).rename('mask_alerta')   
-
-                    map_yearAct = self.imgMapbiomas.select(bandActiva).rename(['class'])
-                    areaColeta = maksEstaveis.multiply(imMaskFire).multiply(imMaksAlert) \
-                                    .multiply(imMasCoinc.lt(3))
-                    areaColeta = areaColeta.eq(1) # mask of the area for colects
-                    
-                    map_yearAct = map_yearAct.addBands(
-                                            ee.Image.constant(int(anoCount)).rename('year')).addBands(
-                                                imMasCoinc) 
-
-                    img_recMosaic = self.imgMosaic.filter(ee.Filter.eq('year', anoCount)
-                                            ).filterBounds(oneBacia).median() 
-                    # print("size ", img_recMosaic.size().getInfo())  
-                    # print("metadato ", img_recMosaic.first().getInfo())
-
-                    # print("img_recMosaic   ", img_recMosaic.bandNames().getInfo())
-                    img_recMosaicnewB = self.CalculateIndice(img_recMosaic)
-                    # bndAdd = img_recMosaicnewB.bandNames().getInfo()
-                    
-                    # print(f"know bands names {len(bndAdd)}")
-                    # print("  ", bndAdd)
-
-                    img_recMosaic = img_recMosaic.addBands(ee.Image(img_recMosaicnewB)).addBands(map_yearAct)
-                    img_recMosaic = img_recMosaic.updateMask(areaColeta)
-                    # print("numero de ptos controle ", roisAct.size().getInfo())
-                    # opcoes para o sorteio estratificadoBuffBacia
-                    # sampleRegions()
-                    # sample(region, scale, projection, factor, numPixels, seed, dropNulls, tileScale, geometries)
-                    ptosTemp = img_recMosaic.sample(
-                                        region=  oneBacia,                              
-                                        scale= 30,   
-                                        numPixels= 15000,
-                                        dropNulls= True,
-                                        # tileScale= 2,                             
-                                        geometries= True
-                                    )
-                    # insere informacoes em cada ft
-
-                    # merge com colecoes anteriores
-                    # colecaoPontos = colecaoPontos.merge(ptosTemp)            
-                    # sys.exit()
-                    
-                    self.save_ROIs_toAsset(ee.FeatureCollection(ptosTemp), name_exp)        
+        # @collection80: mapas de uso e cobertura Mapbiomas ==> para extrair as areas estaveis
+        collection80 = ee.Image(self.options['assetMapbiomas80'])
+        # print(collection80.bandNames().getInfo())
+        baciaN5 = ee.FeatureCollection(self.options['asset_shpN5']).filter(
+                                                ee.Filter.eq('wts_cd_pfa', idCodVBacN5)).geometry()
+        # print(baciaN5.getInfo())
+        imMasCoinc = None
+        maksEstaveis = None
+        areaColeta = None
+        # sys.exit()
+        for anoCount in self.lst_year:      
             
+            bandActiva = 'classification_' + str(anoCount)
+            
+            if anoCount < 2023:
+                # Loaded camadas de pixeles estaveis
+                m_assetPixEst = self.options['asset_estaveis'] + '/masks_estatic_pixels_' + str(anoCount)
+                maksEstaveis = ee.Image(m_assetPixEst).rename('estatic')  
+                # print("mascara maksEstaveis ", maksEstaveis.bandNames().getInfo())
 
+                # mask de fogo com os ultimos 5 anos de fogo mapeado 
+                imMaskFire = self.get_mask_Fire_estatics_pixels(anoCount, False)
+                imMaskFire = ee.Image(imMaskFire)
+                # print("mascara imMaskFire ", imMaskFire.bandNames().getInfo())
+                # loaded banda da coleção 
+                map_yearAct = collection80.select(bandActiva).rename(['class'])
+
+                # 1 Concordante, 2 concordante recente, 3 discordante recente,
+                # 4 discordante, 5 muito discordante
+                if anoCount < 2022:
+                    asset_PixCoinc = self.options['asset_Coincidencia'] + '/masks_pixels_incidentes_'+ str(anoCount)                     
+                else:
+                    asset_PixCoinc = self.options['asset_Coincidencia'] + '/masks_pixels_incidentes_2021'
+                
+                imMasCoinc = ee.Image(asset_PixCoinc).rename('coincident')
+                # print("mascara coincidentes ", imMasCoinc.bandNames().getInfo())
+
+                if anoCount > 1985:
+                    imMaksAlert = self.get_class_maskAlerts(anoCount)
+
+                elif anoCount >= 2020:
+                    imMaksAlert = self.AlertasSAD  
+                else:
+                    imMaksAlert = ee.Image.constant(1).rename('mask_alerta')   
+                
+                # print("mascara imMaksAlert ", imMaksAlert.bandNames().getInfo())
+                areaColeta = maksEstaveis.multiply(imMaskFire).multiply(imMaksAlert) \
+                                .multiply(imMasCoinc.lt(3))
+                areaColeta = areaColeta.eq(1) # mask of the area for colects
+            
+            map_yearAct = map_yearAct.addBands(
+                                    ee.Image.constant(int(anoCount)).rename('year')).addBands(
+                                        imMasCoinc)           
+
+            img_recMosaic = imgMosaic.filter(ee.Filter.eq('year', anoCount)
+                                        ).filterBounds(baciaN5).median() 
+            # print("size ", img_recMosaic.size().getInfo())  
+            # print("metadato ", img_recMosaic.first().getInfo())
+
+            # print("img_recMosaic   ", img_recMosaic.bandNames().getInfo())
+            img_recMosaicnewB = self.CalculateIndice(img_recMosaic)
+            # bndAdd = img_recMosaicnewB.bandNames().getInfo()
+                
+            # print(f"know bands names {len(bndAdd)}")
+            # print("  ", bndAdd)
+
+            img_recMosaic = img_recMosaic.addBands(ee.Image(img_recMosaicnewB)).addBands(map_yearAct)
+            img_recMosaic = img_recMosaic.updateMask(areaColeta)
+            nomeBaciaEx = str(idCodVBacN5) +  '_' + str(anoCount) + "_wl" 
+
+            # sampleRegions()
+            ptosTemp = img_recMosaic.sample(
+                                region=  baciaN5,                              
+                                scale= 30,   
+                                numPixels= 10000,
+                                dropNulls= True,
+                                # tileScale= 2,                             
+                                geometries= True
+                            )
+
+            self.save_ROIs_toAsset(ee.FeatureCollection(ptosTemp), nomeBaciaEx, idCount)        
+
+
+
+    
+    def iterate_idAsset_missing(self, paridAssetVBacN5):
+        idCount = paridAssetVBacN5[0]
+        partes = paridAssetVBacN5[1].split("_")
+        idCodVBacN5 = partes[0]
+        anoCount = int(partes[1])
+        print(f"=============  processing {idCount} => {idCodVBacN5}")
+        simgMosaic = ee.ImageCollection(self.options['asset_mosaic_mapbiomas']
+                                                    ).filter(ee.Filter.eq('biome', self.options['bioma'])
+                                                        ).select(arqParam.featureBands)        
+
+        imgMosaic = simgMosaic.map(lambda img: self.process_re_escalar_img(img))
+        # print(imgMosaic.first().bandNames().getInfo())
+
+        # @collection80: mapas de uso e cobertura Mapbiomas ==> para extrair as areas estaveis
+        collection80 = ee.Image(self.options['assetMapbiomas80'])
+        # print(collection80.bandNames().getInfo())
+        baciaN5 = ee.FeatureCollection(self.options['asset_shpN5']).filter(
+                                                ee.Filter.eq('wts_cd_pfa', idCodVBacN5)).geometry()
+        # print(baciaN5.getInfo())
+        imMasCoinc = None
+        maksEstaveis = None
+        areaColeta = None
+        # sys.exit()
+            
+        bandActiva = 'classification_' + str(anoCount)
+            
+        if anoCount > 2022:
+            # Loaded camadas de pixeles estaveis
+            m_assetPixEst = self.options['asset_estaveis'] + '/masks_estatic_pixels_' + str(2022)
+            # mask de fogo com os ultimos 5 anos de fogo mapeado 
+            imMaskFire = self.get_mask_Fire_estatics_pixels(2022, False)
+            # loaded banda da coleção 
+            map_yearAct = collection80.select('classification_2022').rename(['class'])                  
+            
+        else:
+            # Loaded camadas de pixeles estaveis
+            m_assetPixEst = self.options['asset_estaveis'] + '/masks_estatic_pixels_' + str(anoCount)                
+            # mask de fogo com os ultimos 5 anos de fogo mapeado 
+            imMaskFire = self.get_mask_Fire_estatics_pixels(anoCount, False)
+            # loaded banda da coleção 
+            map_yearAct = collection80.select(bandActiva).rename(['class'])
+
+        maksEstaveis = ee.Image(m_assetPixEst).rename('estatic')
+        # print("mascara maksEstaveis ", maksEstaveis.bandNames().getInfo())  
+        imMaskFire = ee.Image(imMaskFire)
+        # print("mascara imMaskFire ", imMaskFire.bandNames().getInfo())
+
+        # 1 Concordante, 2 concordante recente, 3 discordante recente,
+        # 4 discordante, 5 muito discordante
+        if anoCount < 2022:
+            asset_PixCoinc = self.options['asset_Coincidencia'] + '/masks_pixels_incidentes_'+ str(anoCount)                     
+        else:
+            asset_PixCoinc = self.options['asset_Coincidencia'] + '/masks_pixels_incidentes_2021'
+            
+        imMasCoinc = ee.Image(asset_PixCoinc).rename('coincident')
+        # print("mascara coincidentes ", imMasCoinc.bandNames().getInfo())
+
+        if anoCount > 1985:
+            imMaksAlert = self.get_class_maskAlerts(anoCount)
+
+        elif anoCount >= 2020:
+            imMaksAlert = self.AlertasSAD  
+        else:
+            imMaksAlert = ee.Image.constant(1).rename('mask_alerta')
+
+
+        # print("mascara imMaksAlert ", imMaksAlert.bandNames().getInfo())
+        areaColeta = maksEstaveis.multiply(imMaskFire).multiply(imMaksAlert) \
+                        .multiply(imMasCoinc.lt(3))
+        areaColeta = areaColeta.eq(1) # mask of the area for colects
+        
+        
+        map_yearAct = map_yearAct.addBands(
+                                ee.Image.constant(int(anoCount)).rename('year')).addBands(
+                                    imMasCoinc)           
+
+        img_recMosaic = imgMosaic.filter(ee.Filter.eq('year', anoCount)
+                                    ).filterBounds(baciaN5).median() 
+        # print("size ", img_recMosaic.size().getInfo())  
+        # print("metadato ", img_recMosaic.first().getInfo())
+
+        # print("img_recMosaic   ", img_recMosaic.bandNames().getInfo())
+        img_recMosaicnewB = self.CalculateIndice(img_recMosaic)
+        # bndAdd = img_recMosaicnewB.bandNames().getInfo()
+            
+        # print(f"know bands names {len(bndAdd)}")
+        # print("  ", bndAdd)
+
+        img_recMosaic = img_recMosaic.addBands(ee.Image(img_recMosaicnewB)).addBands(map_yearAct)
+        img_recMosaic = img_recMosaic.updateMask(areaColeta)
+        nomeBaciaEx = str(idCodVBacN5) +  '_' + str(anoCount) + "_wl" 
+
+        # sampleRegions()
+        ptosTemp = img_recMosaic.sample(
+                            region=  baciaN5,                              
+                            scale= 30,   
+                            numPixels= 10000,
+                            dropNulls= True,
+                            # tileScale= 2,                             
+                            geometries= True
+                        )
+
+        self.save_ROIs_toAsset(ee.FeatureCollection(ptosTemp), nomeBaciaEx, idCount)        
+                
+    
     # salva ftcol para um assetindexIni
     # lstKeysFolder = ['cROIsN2manualNN', 'cROIsN2clusterNN'] 
-    def save_ROIs_toAsset(self, collection, name):
+    def save_ROIs_toAsset(self, collection, name, pos):
+          
+        nfolder = 'cROIsN5allBND'
 
-        nfolder = "ROIsnotWithLabel"
         optExp = {
             'collection': collection,
             'description': name,
@@ -870,7 +980,7 @@ class ClassMosaic_indexs_Spectral(object):
 
         task = ee.batch.Export.table.toAsset(**optExp)
         task.start()
-        print("exportando ROIs da bacia $s ...!", name)
+        print("#", pos, " ==> exportando ROIs da bacia $s ...!", name)
 
 
 print("len arqParam ", len(arqParam.featuresreduce))
@@ -883,8 +993,8 @@ param = {
     # 'outAsset': 'projects/mapbiomas-workspace/AMOSTRAS/col5/CAATINGA/PtosXBaciasBalanceados/',
     'asset_ROIs_manual': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/coletaROIsv7N2manual'},
     'asset_ROIs_cluster': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/coletaROIsv6N2cluster'},
-    'asset_ROIs_automatic': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/coletaROIsv1N245'},
-    'asset_withLabel': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/ROIsnotWithLabel'},
+    'asset_ROIs_automatic': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN5allBND'},
+    'asset_shpN5': 'projects/mapbiomas-arida/ALERTAS/auxiliar/bacias_nivel_5_clipReg_Caat',
     'showAssetFeat': True,
     'janela': 5,
     'escala': 30,
@@ -894,30 +1004,19 @@ param = {
     'minROIs': 1500,
     # "anoColeta": 2015,
     'anoInicial': 1985,
-    'anoFinal': 2022,
+    'anoFinal': 2023,
     'sufix': "_1",
     'numeroTask': 6,
-<<<<<<< HEAD
-    'numeroLimit': 6,
+    'numeroLimit': 7,
     'conta': {
-        '0': 'superconta',
+        '0': 'caatinga01',
         '1': 'caatinga02',
         '2': 'caatinga03',
         '3': 'caatinga04',
         '4': 'caatinga05',
         '5': 'solkan1201',
-=======
-    'numeroLimit': 36,
-    'conta': {
-        '0': 'caatinga01',
-        '6': 'caatinga02',
-        '12': 'caatinga03',
-        '18': 'caatinga04',
-        '24': 'caatinga05',
-        '30': 'solkan1201',
->>>>>>> e245750315248ea091d20fb4d4c57b91d9e57aaa
-        # '24': 'diegoGmail',
-        # '20': 'rodrigo'
+        '6': 'solkanGeodatin',
+        # '20': 'solkanGeodatin'
     },
 }
 def gerenciador(cont, param):
@@ -950,26 +1049,38 @@ def GetPolygonsfromFolder(dictAsset):
         
     return ColectionPtos
 
-def compare_nameFilefromAssets(assetsgeeSource, assetsgeeTarge):
+def getlistofRegionYeartoProcessing(lstAssetSaved,lstCodBasinN5):
+    dicttmp = {}
+    for nkey in lstAssetSaved:
+        partes = nkey.split("_")
+        lstkeys = dicttmp.keys()
+        if partes[0] not in lstkeys:
+            dicttmp[partes[0]] = [int(partes[1])]
+        else:
+            lsttmp = dicttmp[partes[0]]
+            lsttmp.append(int(partes[1]))
+            dicttmp[partes[0]] = lsttmp
 
+    basinKeys = [kk for kk in dicttmp.keys()]
+    print(f"we have {len(basinKeys)} keys basin ")
     listTarge = []
     lstOut = []
     pathroot = None
-    print("reading all list ...")
-    for idAsset in tqdm(assetsgeeTarge):  
-        name = idAsset.split("/")[-1] 
-        name = name.replace("_0", "").replace("_1", "")
-        listTarge.append(name)
-    print("list ROIs bacin did\n =>", listTarge)
-    for idAsset in tqdm(assetsgeeSource):  
-        name = idAsset.split("/")[-1]        
-        if name not in listTarge: 
-            print("    >> ", name)
-            lstOut.append(idAsset)    
-    
+    print("************* looping all list of  basin ***********" )
+    for idBasin in tqdm(lstCodBasinN5):  
+        if str(idBasin) in basinKeys:
+            lstyears = dicttmp[str(idBasin)]
+            for year in range(param['anoInicial'], param['anoFinal'] + 1):
+                # 74113_1986_wl
+                nameAssetW = str(idBasin) + "_" + str(year) + "_wl"            
+                if year not in lstyears:                
+                    lstOut.append(nameAssetW)
+                    if int(idBasin) == int(77698):
+                        print("=======> ", nameAssetW)
+    print(lstAssetSaved[-30:])
     return lstOut 
 
-def getListBaciasSaved (nList):
+def getListBaciasSaved (nList, show_survive):
     lstB = []
     dictBacin = {}
     for namef in nList:
@@ -979,37 +1090,108 @@ def getListBaciasSaved (nList):
             dictBacin[nameB] = 1
         else:
             dictBacin[nameB] += 1
+    # building list to survive        
+    newlstBkeys = []
     for cc, nameB in enumerate(lstB):
-        print("# ", cc, "  ", nameB, "  ", dictBacin[nameB])
-        if dictBacin[nameB] < 37:
-            lstB.remove(nameB)
-    return lstB
+        if show_survive:
+            print("# ", cc, "  ", nameB, "  ", dictBacin[nameB])
+        if int(dictBacin[nameB]) < 39:
+            # adding in the new list             
+            newlstBkeys.append(nameB)
+        else:
+            print(f" {nameB} removed")
 
-listaNameBacias = [
-    '741','7421','7422','744','745','746','7492','751','752','753',
-    '754','755','756','757','758','759','7621','7622','763','764',
-    '765','766','767','771','772','773', '7741','7742','775','776',
-    '777','778','76111','76116','7612','7614','7615','7616','7617',
-    '7618','7619', '7613'
-]
+    if show_survive:
+        for cc, nameB in enumerate(newlstBkeys):
+            print("# ", cc, "  ", nameB, "  ", dictBacin[nameB])
+    
+    return newlstBkeys
+
+
 # listaNameBacias = ['765','766','759','7619','7422']
-cont = gerenciador(0, param)
+cont = 1
+cont = gerenciador(cont, param)
 # revisao da coleção 8 
 # https://code.earthengine.google.com/5e8af5ef94684a5769e853ad675fc368
+show_IdReg = False
+colectSaved = True
+path('update/<int:pk>/', update, name= 'url_update'),
+if show_IdReg:
+    divBasinN5 = ee.FeatureCollection(param['asset_shpN5'])
+    lstIdCod = divBasinN5.reduceColumns(ee.Reducer.toList(), ['wts_cd_pfa']).get('list').getInfo()
+    print(f"we have {len(lstIdCod)} regions N5 ")
+    step = 8
+    for cc in range(0, len(lstIdCod), step):
+        print(lstIdCod[cc: cc+ step])
+else:
+    print(f"loaded => {len(lstIdCodN5.lst_codBcaiasN5)} bacias ")
+    lstIdCod = lstIdCodN5.lst_codBcaiasN5
 
 
-lstFeatSaved = GetPolygonsfromFolder(param['asset_withLabel'])
-lstnameFeatsaved = [kk.split("/")[-1] for kk in lstFeatSaved]
-# print(lstnameFeatsaved)
-# sys.exit()
+lstKeysFolder = 'cROIsN5allBND'  # , , 'asset_ROIs_manual', 'asset_ROIs_cluster'
+objetoMosaic_exportROI = ClassMosaic_indexs_Spectral()
+if colectSaved:
+    lstAssetFolder = GetPolygonsfromFolder(param['asset_ROIs_automatic'])
+    if len(lstAssetFolder):
+        for cc, assetFolde in enumerate(lstAssetFolder):
+            print("#", cc, " We saved features from > ", assetFolde.split("/")[-1] , " <=> in ")
+    else:
+        print("========================= o folder asset is enty ===============================\n ")
 
-objetoMosaic_exportROI = ClassMosaic_indexs_Spectral(lstnameFeatsaved)
-for cc, item_bacia in enumerate(listaNameBacias[:]):
-    print(f"# {cc + 1} loading geometry bacia {item_bacia}")     
-    # geobacia, colAnos, nomeBacia, dict_nameBN4
-    objetoMosaic_exportROI.iterate_bacias(item_bacia)
+    # get the basin saved
+    mostrarSobreviventes = True
+    lstBaciasproc = getListBaciasSaved(lstAssetFolder, mostrarSobreviventes)
+    newlistaNameBacias = [kk.split("/")[-1] for kk in lstAssetFolder]  # .split("_")[0]
+    print(f"we have {len(newlistaNameBacias)} asset to search in what year is missing some ROIs")
+    lstAssetROIstoProcess =  getlistofRegionYeartoProcessing(newlistaNameBacias, lstIdCod)
+    print(f"we have {len(lstAssetROIstoProcess)} asset that are missing")
+
+    lstAssetProcpool = [(cc, kk ) for cc, kk in enumerate(lstAssetROIstoProcess)]
+    step = 2500
+    for ll in range(0, len(lstAssetProcpool), step):
+        lstProcpoolss = lstAssetProcpool[ll: ll + step]
+        if ll > -1:
+            with ThreadPool() as pool:
+                # issue one task for each call to the function
+                print(f"enviando para processamento entre a posição {ll} e {ll + step}")
+                for result in pool.map(objetoMosaic_exportROI.iterate_idAsset_missing, lstProcpoolss):
+                    # handle the result
+                    print(f'>got {result}')
+
+            # break
+            cont = gerenciador(cont, param)
+
+
     # sys.exit()
-    cont = gerenciador(cont, param)
+else:
+    lstProcpool = [(cc, kk ) for cc, kk in enumerate(lstIdCod)]
+    # print(lstProcpool[0])
+    # objetoMosaic_exportROI.iterate_bacias(lstProcpool[0])
+
+    step = 18
+    for ll in range(0, len(lstIdCod), step):
+        lstProcpoolss = lstProcpool[ll: ll + step]
+        if ll > -1:
+            with ThreadPool() as pool:
+                # issue one task for each call to the function
+                print(f"enviando para processamento entre a posição {ll} e {ll + step}")
+                for result in pool.map(objetoMosaic_exportROI.iterate_bacias, lstProcpoolss):
+                    # handle the result
+                    print(f'>got {result}')
+
+            # break
+            cont = gerenciador(cont, param)
+
+
+
+
+
+# for cc, item_bacia in enumerate(listaNameBacias[:]):
+#     print(f"# {cc + 1} loading geometry bacia {item_bacia}")     
+#     # geobacia, colAnos, nomeBacia, dict_nameBN4
+#     objetoMosaic_exportROI.iterate_bacias(item_bacia)
+#     # sys.exit()
+#     cont = gerenciador(cont, param)
 
 # sys.exit()
 
