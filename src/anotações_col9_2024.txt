@@ -11,9 +11,20 @@ ROIs no asset da coleção 9
     'asset_ROIs_cluster': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/coletaROIsN2cluster'} // normalizado
     'asset_ROIs_manual': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/cROIsN2manualNN'}, // não normalizado
     'asset_ROIs_cluster': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/cROIsN2clusterNN'} // não normalizado
+    'asset_ROIs_automatic': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN5allBND'}, // não normalizado in basin level 5    
 
-    amostragem de amostras pelos criterios 
-        coincidencia com a ultima versão da coleção 9 vr 5 e 6
+    asset com ROIs só com rotulos das classes:
+                projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/coletaROIsv1N245
+                projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN245_allBND  => com todas as bandas (sem sucesso)
+                projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN245red_allBND => com as bandas do landsat (estadisticos) (sem sucesso)
+
+criando uma grade para caatinga 
+    https://code.earthengine.google.com/d720a8e9e85305f9f904012a4a1e7095?noload=1
+    https://code.earthengine.google.com/9bf1ca48be3fc94c530ea2e53754a36a
+    essa geomatria foi recortada no qgis
+
+amostragem de amostras pelos criterios 
+    coincidencia com a ultima versão da coleção 9 vr 5 e 6
 
 Documentação 
     https://scikit-learn.org/stable/modules/permutation_importance.html
