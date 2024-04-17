@@ -79,9 +79,9 @@ if (selBacia === 'all'){
 }
 
 
-print("imagem no Asset Geral Mapbiomas Col 7.1", imgMapCol71);
-print("imagem no Asset Geral Mapbiomas Col 8.0", imgMapCol8);
-print("imagem no Asset Geral X Bacias col 9", imgMapCol9V1);
+print(" 📍 imagem no Asset Geral Mapbiomas Col 7.1  ‼️", imgMapCol71);
+print(" 📍 imagem no Asset Geral Mapbiomas Col 8.0  ‼️", imgMapCol8);
+print(" 📍 imagem no Asset Geral X Bacias col 9 ‼️", imgMapCol9V1);
 
 
 var mosaic_year = Mosaicos.filter(ee.Filter.eq('year', yearcourrent)).median();                     

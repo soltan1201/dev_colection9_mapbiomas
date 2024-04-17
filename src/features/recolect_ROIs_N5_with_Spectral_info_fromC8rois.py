@@ -741,6 +741,7 @@ class ClassMosaic_indexs_Spectral(object):
         image_year =  image_year.addBands(image_drys).addBands(image_wets)#.addBands(image_std)
         return image_year
 
+
     def get_mask_Fire_estatics_pixels(self, yyear, exportFire):
         janela = 5        
         imgColFire = ee.ImageCollection( self.options['asset_fire']).filter(
@@ -761,7 +762,6 @@ class ClassMosaic_indexs_Spectral(object):
             self.processoExportarImage(imgTemp,  name_exportimg, self.regionInterest.geometry(), 'fire')
         else:
             return imgTemp
-
 
     
     def iterate_bacias(self, paridCodVBacN5):
@@ -857,8 +857,6 @@ class ClassMosaic_indexs_Spectral(object):
                             )
 
             self.save_ROIs_toAsset(ee.FeatureCollection(ptosTemp), nomeBaciaEx, idCount)        
-
-
 
     
     def iterate_idAsset_missing(self, paridAssetVBacN5):
@@ -1122,11 +1120,10 @@ if show_IdReg:
     print(f"we have {len(lstIdCod)} regions N5 ")
     step = 8
     for cc in range(0, len(lstIdCod), step):
-        print(lstIdCod[cc: cc+ step])
+        print(lstIdCod[cc: cc + step])
 else:
     print(f"loaded => {len(lstIdCodN5.lst_codBcaiasN5)} bacias ")
     lstIdCod = lstIdCodN5.lst_codBcaiasN5
-
 
 lstKeysFolder = 'cROIsN5allBND'  # , , 'asset_ROIs_manual', 'asset_ROIs_cluster'
 objetoMosaic_exportROI = ClassMosaic_indexs_Spectral()
@@ -1141,7 +1138,7 @@ if colectSaved:
 
     # get the basin saved
     mostrarSobreviventes = True
-    lstBaciasproc = getListBaciasSaved(lstAssetFolder, mostrarSobreviventes)
+    # lstBaciasproc = getListBaciasSaved(lstAssetFolder, mostrarSobreviventes)
     newlistaNameBacias = [kk.split("/")[-1] for kk in lstAssetFolder]  # .split("_")[0]
     print(f"we have {len(newlistaNameBacias)} asset to search in what year is missing some ROIs")
     lstAssetROIstoProcess =  getlistofRegionYeartoProcessing(newlistaNameBacias, lstIdCod)

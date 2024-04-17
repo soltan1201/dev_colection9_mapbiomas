@@ -71,7 +71,8 @@ class ClassMosaic_indexs_Spectral(object):
         'lsPtos': [3000, 2000, 3000, 1500, 1500, 1000, 1500, 1000, 1000],
         "anoIntInit": 1985,
         "anoIntFin": 2023,
-        'janela': 3
+        'janela': 3,
+        'nfolder': 'cROIsN5allBND'
     }
     lst_bandExt = [
         'blue_min','blue_stdDev','green_min','green_stdDev','green_median_texture', 
@@ -850,14 +851,13 @@ class ClassMosaic_indexs_Spectral(object):
             self.save_ROIs_toAsset(ee.FeatureCollection(featCol), nomeBaciaEx, idCount)        
 
 
-
-    
     def iterate_idAsset_missing(self, paridAssetVBacN5):
         idCount = paridAssetVBacN5[0]
-        partes = paridAssetVBacN5[1]
-        idCodVBacN5 = partes[0]
-        anoCount = int(partes[1])
-        print(f"=============  processing {idCount} => {idCodVBacN5}")
+        partes = paridAssetVBacN5[1].split("_")
+        print(partes)
+        idCodGrad = partes[1]
+        anoCount = int(partes[2])
+        print(f"=============  processing {idCount} => {idCodGrad}")
         simgMosaic = ee.ImageCollection(self.options['asset_mosaic_mapbiomas']
                                                     ).filter(ee.Filter.eq('biome', self.options['bioma'])
                                                         ).select(arqParam.featureBands)        
@@ -868,9 +868,10 @@ class ClassMosaic_indexs_Spectral(object):
         # @collection80: mapas de uso e cobertura Mapbiomas ==> para extrair as areas estaveis
         collection80 = ee.Image(self.options['assetMapbiomas80'])
         # print(collection80.bandNames().getInfo())
-        baciaN5 = ee.FeatureCollection(self.options['asset_shpN5']).filter(
-                                                ee.Filter.eq('wts_cd_pfa', idCodVBacN5)).geometry()
+        gradeKM = ee.FeatureCollection(self.options['asset_shpGrade']).filter(
+                                                ee.Filter.eq('id', idCodGrad)).geometry()
         # print(baciaN5.getInfo())
+
         imMasCoinc = None
         maksEstaveis = None
         areaColeta = None
@@ -929,7 +930,7 @@ class ClassMosaic_indexs_Spectral(object):
                                     imMasCoinc)           
 
         img_recMosaic = imgMosaic.filter(ee.Filter.eq('year', anoCount)
-                                    ).filterBounds(baciaN5).median() 
+                                    ).filterBounds(gradeKM).median() 
         # print("size ", img_recMosaic.size().getInfo())  
         # print("metadato ", img_recMosaic.first().getInfo())
 
@@ -942,11 +943,11 @@ class ClassMosaic_indexs_Spectral(object):
 
         img_recMosaic = img_recMosaic.addBands(ee.Image(img_recMosaicnewB)).addBands(map_yearAct)
         img_recMosaic = img_recMosaic.updateMask(areaColeta)
-        nomeBaciaEx = str(idCodVBacN5) +  '_' + str(anoCount) + "_wl" 
+        nomeBaciaEx = "gradeROIs_" + str(idCodGrad) +  '_' + str(anoCount) + "_wl" 
 
         # sampleRegions()
         ptosTemp = img_recMosaic.sample(
-                            region=  baciaN5,                              
+                            region=  gradeKM,                              
                             scale= 30,   
                             numPixels= 10000,
                             dropNulls= True,
@@ -961,7 +962,7 @@ class ClassMosaic_indexs_Spectral(object):
     # lstKeysFolder = ['cROIsN2manualNN', 'cROIsN2clusterNN'] 
     def save_ROIs_toAsset(self, collection, name, pos):
           
-        nfolder = 'cROIsN5allBND'
+        self.options.nfolder = 'cROIsN5allBND'
 
         optExp = {
             'collection': collection,
@@ -986,7 +987,7 @@ param = {
     'asset_ROIs_cluster': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/coletaROIsv6N2cluster'},
     'asset_ROIs_automatic': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN5allBND'},
     'asset_shpGrade': 'projects/mapbiomas-arida/ALERTAS/auxiliar/basegrade30KMCaatinga',
-    'showAssetFeat': True,
+    'showAssetFeat': False,
     'janela': 5,
     'escala': 30,
     'sampleSize': 0,
@@ -998,13 +999,13 @@ param = {
     'anoFinal': 2023,
     'sufix': "_1",
     'numeroTask': 6,
-    'numeroLimit': 7,
+    'numeroLimit': 6,
     'conta': {
         '0': 'caatinga01',
-        '1': 'caatinga02',
-        '2': 'caatinga03',
-        '3': 'caatinga01',
-        '4': 'caatinga05',
+        '1': 'caatinga05',
+        '2': 'caatinga02',
+        '3': 'caatinga04',
+        '4': 'caatinga03',
         '5': 'solkan1201',
         '6': 'solkanGeodatin',
         # '20': 'solkanGeodatin'
@@ -1039,41 +1040,41 @@ def GetPolygonsfromFolder(dictAsset):
         
     return ColectionPtos
 
-def getlistofRegionYeartoProcessing(lstAssetSaved, lstCodBasinN5):
+def getlistofRegionYeartoProcessing(lstAssetSaved, lstCodGrade):
     
     dicttmp = {}
     for nkey in lstAssetSaved:
-        partes = nkey.split("_")
-        lstkeys = dicttmp.keys()
-        if partes[0] not in lstkeys:
-            dicttmp[partes[0]] = [int(partes[1])]
-        else:
-            lsttmp = dicttmp[partes[0]]
-            lsttmp.append(int(partes[1]))
-            dicttmp[partes[0]] = lsttmp
+        if nkey[0] != '7':
+            partes = nkey.split("_")
+            lstkeys = dicttmp.keys()        
+            print("===> ", nkey)
+            if partes[1] not in lstkeys:
+                dicttmp[partes[1]] = [int(partes[2])]
+            else:
+                lsttmp = dicttmp[partes[1]]
+                lsttmp.append(int(partes[2]))
+                dicttmp[partes[1]] = lsttmp
 
-    basinKeys = [kk for kk in dicttmp.keys()]
-    print(f"we have {len(basinKeys)} keys basin ")
+    idGradeKeys = [kk for kk in dicttmp.keys()]
+    print(f"we have {len(idGradeKeys)} keys basin ")
     listTarge = []
     lstOut = []
     pathroot = None
     print("************* looping all list of  basin ***********" )
     
-    for idBasin in tqdm(lstCodBasinN5):  
-        if str(idBasin) in basinKeys:
-            lstyears = dicttmp[str(idBasin)]
+    for idGrade in tqdm(lstCodGrade):  
+        if str(idGrade) in idGradeKeys:
+            lstyears = dicttmp[str(idGrade)]
             for year in range(param['anoInicial'], param['anoFinal'] + 1):
                 # 74113_1986_wl
-                nameAssetW = str(idBasin) + "_" + str(year) + "_wl"            
+                nameAssetW = "gradeROIs_" + str(idGrade) + "_" + str(year) + "_wl"            
                 if year not in lstyears:                
-                    lstOut.append(nameAssetW)
-                    if int(idBasin) == int(77698):
-                        print("=======> ", nameAssetW)
+                    lstOut.append(nameAssetW)                    
     
     print(lstAssetSaved[-30:])
     return lstOut 
 
-def getListBaciasSaved (nList, show_survive):
+def getListGradesROIsSaved (nList, show_survive):
     lstB = []
     dictBacin = {}
     for namef in nList:
@@ -1103,8 +1104,8 @@ def getListBaciasSaved (nList, show_survive):
 
 # listaNameBacias = ['765','766','759','7619','7422']
 setTeste = False
-cont = 0
-if not setTeste:
+cont = 3
+if setTeste:
     cont = gerenciador(cont, param)
 # revisao da coleção 8 
 # https://code.earthengine.google.com/5e8af5ef94684a5769e853ad675fc368
@@ -1112,7 +1113,7 @@ if not setTeste:
 # https://code.earthengine.google.com/62b0572fcdcb8abbdc2b240eeeda85af
 
 show_IdReg = False
-colectSaved = False
+colectSaved = True
 getLstIds = False
 # path('update/<int:pk>/', update, name= 'url_update'),
 if getLstIds:
@@ -1123,12 +1124,27 @@ if getLstIds:
 else:
     nlksIDs = lstIdCodN5.lstIdsGradeCaat
 print(f"lista de Ids com {len(nlksIDs)} grades  ")
+
+if colectSaved:
+    lstAssetFolder = GetPolygonsfromFolder(param['asset_ROIs_automatic'])
+    print(f"lista de Features ROIs com {len(lstAssetFolder)} grades  ")       
+    newlstIdGrades = [kk.split("/")[-1] for kk in lstAssetFolder]
+    print("show the first 5 : \n", newlstIdGrades[:5])
+    # get the basin saved
+    print(f"we have {len(newlstIdGrades)} asset to search in what year is missing some ROIs")
+    lstGradeMissing =  getlistofRegionYeartoProcessing(newlstIdGrades, nlksIDs)
+    print(f"we have {len(lstGradeMissing)} asset that are missing")
+    lstProcpool = [(cc, kk) for cc, kk in enumerate(lstGradeMissing[:])]    
+
+else:
+    lstProcpool = [(cc, kk) for cc, kk in enumerate(nlksIDs[1500:2000])]
+
 # print(nlksIDs)
 # sys.exit()
 lstKeysFolder = 'asset_shpGrade'  # , , 'asset_ROIs_manual', 'asset_ROIs_cluster'
 objetoMosaic_exportROI = ClassMosaic_indexs_Spectral(setTeste)
 print("============= Get parts of the list ===============")
-lstProcpool = [(cc, kk) for cc, kk in enumerate(nlksIDs[300:400])]
+
 # print(lstProcpool[0])
 # objetoMosaic_exportROI.iterate_bacias(lstProcpool[0])
 if not setTeste:
@@ -1139,9 +1155,14 @@ if not setTeste:
             with ThreadPool() as pool:
                 # issue one task for each call to the function
                 print(f"enviando para processamento entre a posição {ll} e {ll + step}")
-                for result in pool.map(objetoMosaic_exportROI.iterate_GradesCaatinga, lstProcpoolss):
-                    # handle the result
-                    print(f'>got {result}')
+                if colectSaved:
+                    for result in pool.map(objetoMosaic_exportROI.iterate_idAsset_missing, lstProcpoolss):
+                        # handle the result
+                        print(f'>got {result}')
+                else:
+                    for result in pool.map(objetoMosaic_exportROI.iterate_GradesCaatinga, lstProcpoolss):
+                        # handle the result
+                        print(f'>got {result}')
 
             # break
             cont = gerenciador(cont, param)

@@ -24,7 +24,7 @@ except:
     raise
 
 # path_asset = "projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1"
-path_asset = "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassV1"
+path_asset = "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVX"
 param = {
     'lsBiomas': ['CAATINGA'],
     'asset_bacias': 'projects/mapbiomas-arida/ALERTAS/auxiliar/bacias_hidrografica_caatinga',
@@ -41,13 +41,13 @@ param = {
         "FORMAÇÃO SAVÂNICA": 4,        
         "MANGUE": 3,
         "RESTINGA HERBÁCEA": 3,
-        "FLORESTA PLANTADA": 9,
+        "FLORESTA PLANTADA": 18,
         "FLORESTA INUNDÁVEL": 3,
-        "CAMPO ALAGADO E ÁREA PANTANOSA": 10,
-        "APICUM": 10,
-        "FORMAÇÃO CAMPESTRE": 10,
-        "AFLORAMENTO ROCHOSO": 10,
-        "OUTRA FORMAÇÃO NÃO FLORESTAL":10,
+        "CAMPO ALAGADO E ÁREA PANTANOSA": 12,
+        "APICUM": 12,
+        "FORMAÇÃO CAMPESTRE": 12,
+        "AFLORAMENTO ROCHOSO": 29,
+        "OUTRA FORMAÇÃO NÃO FLORESTAL":12,
         "PASTAGEM": 15,
         "CANA": 18,
         "LAVOURA TEMPORÁRIA": 18,
@@ -80,17 +80,18 @@ def change_value_class(feat):
         "FORMAÇÃO SAVÂNICA": 4,        
         "MANGUE": 3,
         "RESTINGA HERBÁCEA": 3,
-        "FLORESTA PLANTADA": 9,
+        "FLORESTA PLANTADA": 18,
         "FLORESTA INUNDÁVEL": 3,
-        "CAMPO ALAGADO E ÁREA PANTANOSA": 10,
-        "APICUM": 10,
-        "FORMAÇÃO CAMPESTRE": 10,
-        "AFLORAMENTO ROCHOSO": 10,
-        "OUTRA FORMAÇÃO NÃO FLORESTAL":10,
+        "CAMPO ALAGADO E ÁREA PANTANOSA": 12,
+        "APICUM": 12,
+        "FORMAÇÃO CAMPESTRE": 12,
+        "AFLORAMENTO ROCHOSO": 29,
+        "OUTRA FORMAÇÃO NÃO FLORESTAL":12,
         "PASTAGEM": 15,
         "CANA": 18,
         "LAVOURA TEMPORÁRIA": 18,
         "LAVOURA PERENE": 18,
+        "MOSAICO DE USOS": 21,
         "MINERAÇÃO": 22,
         "PRAIA E DUNA": 22,
         "INFRAESTRUTURA URBANA": 22,
@@ -106,7 +107,6 @@ def change_value_class(feat):
         ,'POINTEDITE','PROB_AMOS','REGIAO','TARGET_FID','UF', 'LON', 'LAT']
     
     feat_tmp = feat.select(prop_select)
-
     for year in range(1985, 2023):
         nam_class = "CLASS_" + str(year)
         set_class = "CLASS_" + str(year)
@@ -119,7 +119,7 @@ bioma250mil = ee.FeatureCollection(param['assetBiomas'])\
                     .filter(ee.Filter.eq('Bioma', 'Caatinga')).geometry()
 
 #lista de anos
-list_anos = [str(k) for k in range(param['anoInicial'],param['anoFinal'] + 1)]
+list_anos = [str(k) for k in range(param['anoInicial'], param['anoFinal'] + 1)]
 
 print('lista de anos', list_anos)
 lsAllprop = param['lsProp'].copy()
@@ -167,6 +167,10 @@ def gerenciador(cont, param):
     cont += 1    
     return cont
 
+cont = 0
+# cont = gerenciador(cont, param)
+
+
 #exporta a imagem classificada para o asset
 def processoExportar(ROIsFeat, nameT, porAsset):  
 
@@ -183,7 +187,7 @@ def processoExportar(ROIsFeat, nameT, porAsset):
         optExp = {
             'collection': ROIsFeat, 
             'description': nameT, 
-            'folder':"ptosCol7"          
+            'folder':"ptosAccCol9"          
             }
         task = ee.batch.Export.table.toDrive(**optExp)
         task.start() 
@@ -192,25 +196,23 @@ def processoExportar(ROIsFeat, nameT, porAsset):
     
 pointAcc = ee.FeatureCollection([])
 mapClasses = ee.List([])
-
+modelo = 'GTB' # 'RF','GTB'
+version = 5
 if param['inBacia']:    
     print("##########  CARREGOU A VERSAO 4 ###############")
-    mapClass = ee.ImageCollection(param['assetCol'])
-    #.filter(
-    #                    ee.Filter.eq('version', '5'))
-
+    mapClass = ee.ImageCollection(param['assetCol']).filter(
+                        ee.Filter.eq('version', version)).filter(
+                            ee.Filter.eq('classifier', modelo))
     print("número de imagens das bacias ", mapClass.size().getInfo())
 else:
     if param['isImgCol']:
         for yy in range(1985, 2023):
             nmIm = 'CAATINGA-' + str(yy) + '-2'
             imTmp = ee.Image(param['assetCol'] + nmIm).rename("classification_" + str(yy))
-
             if yy == 1985:
                 mapClass = imTmp.byte()
             else:
                 mapClass = mapClass.addBands(imTmp.byte())
-
     else:
         print("coletando no mapa final da coleção 8.0")
         mapClass = ee.Image(param['assetCol']).byte()
@@ -218,11 +220,11 @@ else:
 pointAll = ee.FeatureCollection([])
 lsNameClass = [kk for kk in param['pts_remap'].keys()]
 lsValClass = [kk for kk in param['pts_remap'].values()]
-exportarAsset = True
-extra = param['assetCol'].split('/')
+exportarAsset = False
+# extra = param['assetCol'].split('/')
 sizeFC = 0
 for cc, _nbacia in enumerate(nameBacias[:]):    
-    nameImg = 'mapbiomas_collection80_integration_v1' 
+    nameImg = 'mapbiomas_collection90_Bacia_v5' 
     print("processando img == " + nameImg + " em bacia *** " + _nbacia)
     baciaTemp = ftcol_bacias.filter(ee.Filter.eq('nunivotto3', _nbacia)).geometry()    
     g_bacia_biome = bioma250mil.intersection(baciaTemp)
@@ -252,7 +254,7 @@ for cc, _nbacia in enumerate(nameBacias[:]):
 
     pointAccTemp = pointAccTemp.map(lambda Feat: Feat.set('bacia', _nbacia))
     if not exportarAsset:
-        name = 'occTab_corr_Caatinga_' + _nbacia + "_" + extra[-1]
+        name = 'occTab_corr_Caatinga_' + _nbacia + "_" + modelo + "_" + str(version) + "_Col9" 
         processoExportar(pointAccTemp, name, exportarAsset)
 
     pointAll = ee.Algorithms.If(  
@@ -260,12 +262,11 @@ for cc, _nbacia in enumerate(nameBacias[:]):
                     pointAll,
                     ee.FeatureCollection(pointAll).merge(pointAccTemp)
                 )
-cont = 0
-cont = gerenciador(cont, param)
+
 
 # pointAll = ee.FeatureCollection(pointAll).flatten()
 # pointAll = pointAll.filter(ee.Filter.notNull(['CLASS_1990']))
-name = 'occTab_corr_Caatinga_Col9_' + extra[-1]
+name = 'occTab_corr_Caatinga_Col9_' + modelo + "_" + str(version) + "_Col9" 
 processoExportar(pointAll, name, exportarAsset)
 print()
 print("numero de ptos ", sizeFC)

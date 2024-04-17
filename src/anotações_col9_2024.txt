@@ -114,3 +114,13 @@ print(eemont.listIndices())
 ]
 >>> print("número de indices = ", len(eemont.listIndices()))
 número de indices =  228
+
+
+
+
+///////////////// VALIDATION ///////////////////////////////////////////////////
+https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html#sklearn.metrics.accuracy_score
+https://scikit-learn.org/stable/modules/generated/sklearn.metrics.balanced_accuracy_score.html#sklearn.metrics.balanced_accuracy_score
+https://scikit-learn.org/stable/modules/generated/sklearn.metrics.jaccard_score.html#sklearn.metrics.jaccard_score
+https://scikit-learn.org/stable/auto_examples/miscellaneous/plot_display_object_visualization.html#sphx-glr-auto-examples-miscellaneous-plot-display-object-visualization-py
+https://scikit-learn.org/stable/modules/classes.html#module-sklearn.metrics

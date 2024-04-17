@@ -28,16 +28,24 @@ param = {
     'asset_ROIs_manual': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN2manualNN'},
     'asset_ROIs_cluster': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN2clusterNN'},
     'asset_ROIs_automaticN245': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN245_allBND'},
-    'asset_ROIs_automaticN5': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN5allBND'},
+    'asset_ROIs_autGrade': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN5allBND'},
+    'asset_output': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/roisGradesgrouped',
     'anoInicial': 1985,
     'anoFinal': 2022,
     'numeroTask': 6,
-    'numeroLimit': 4,
-    'conta' : {
-        '0': 'caatinga02'              
+    'numeroLimit': 600,
+    'conta': {
+        '0': 'caatinga01',
+        '100': 'caatinga05',
+        '200': 'caatinga02',
+        '300': 'caatinga04',
+        '400': 'caatinga03',
+        '500': 'solkan1201',
+        '600': 'solkanGeodatin',
+        # '20': 'solkanGeodatin'
     },
     'showFilesCSV' : False,
-    'showAssetFeat': False
+    'showAssetFeat': True
 }
 
 nameBacias = [
@@ -50,7 +58,7 @@ nameBacias = [
 
 
 #========================METODOS=============================
-def GetPolygonsfromFolder(dictAsset):
+def GetPolygonsfromFolder(dictAsset, mergeGrade):
     
     getlistPtos = ee.data.getList(dictAsset)
     ColectionPtos = []
@@ -58,10 +66,18 @@ def GetPolygonsfromFolder(dictAsset):
     lstROIsAg = [ ]
     for idAsset in tqdm(getlistPtos):         
         path_ = idAsset.get('id')        
-        ColectionPtos.append(path_) 
         name = path_.split("/")[-1]
-        if param['showAssetFeat']:
-            print("Reading ", name)
+        if mergeGrade:
+            if 'gradeROIs_' in name:
+                ColectionPtos.append(name) 
+                if param['showAssetFeat']:
+                    print("Reading ", name)
+
+        else:
+            if 'gradeROIs_' in name:
+                ColectionPtos.append(name)
+                if param['showAssetFeat']:
+                    print("Reading ", name)
         
     return ColectionPtos
 
@@ -88,16 +104,26 @@ def gerenciador(cont, param):
     return cont
 
 #exporta a imagem classificada para o asset
-def processoExportar(ROIsFeat, nameB, nfolder):
-    
-    optExp = {
-          'collection': ROIsFeat, 
-          'description': nameB, 
-          'folder': nfolder          
+def processoExportar(ROIsFeat, nameB, nfolder, exportD, idPos):
+    if exportD:
+        optExp = {
+            'collection': ROIsFeat, 
+            'description': nameB, 
+            'folder': nfolder          
+            }
+        task = ee.batch.Export.table.toDrive(**optExp)
+        task.start() 
+        print("salvando ... " + nameB + "..!")    
+    else:
+        optExp = {
+            'collection': ROIsFeat,
+            'description': nameB,
+            'assetId': param['asset_output'] + "/" + nameB,
+            # 'priority': 8000
         }
-    task = ee.batch.Export.table.toDrive(**optExp)
-    task.start() 
-    print("salvando ... " + nameB + "..!")    
+        task = ee.batch.Export.table.toAsset(**optExp)
+        task.start() 
+        print(f" # {idPos} salvando ... " + nameB + " in asset ..!")
 
 
 def getDictBasinN5(lstAssetfromFolder):
@@ -132,45 +158,60 @@ def getDictBasinN5(lstAssetfromFolder):
     return dictCount
 
 
-def getDictBasinN245(lstAssetfromFolder):
+def getDictRegionCounting(lstAssetfromFolder, posCodReg):
     dictCount = {}
-
-    for cc, assetFeats in enumerate(lstAssetfromFolder[:]):        
-        nameFeat = assetFeats.split("/")[-1]    
+    for cc, nameFeat in enumerate(lstAssetfromFolder[:]):          
         partes = nameFeat.split("_")
-        codBasin = partes[0]
+        codReg = partes[posCodReg]
         lstKey = dictCount.keys()
-        if codBasin in lstKey:
-            lsttmp = dictCount[codBasin]
+        # addiconar a lista novos anos 
+        if codReg in lstKey:
+            lsttmp = dictCount[codReg]
             lsttmp.append(nameFeat)
-            dictCount[codBasin] = lsttmp
+            dictCount[codReg] = lsttmp
         else:
-            dictCount[codBasin] = [nameFeat]
-
+            dictCount[codReg] = [nameFeat]
+    
+    count = 0
+    if param['showAssetFeat']:
+        for kk, lstVal in dictCount.items():
+            print(f"# {count} => region {kk} = > {len(lstVal)}")
+            count += 1
     return dictCount
 
 cont = 0
-# cont = gerenciador(cont, param)
+joinGrade = True
+byBacia = False
+cont = gerenciador(cont, param)
 # iterando com cada uma das folders FeatC do asset
-lstKeysFolder = 'asset_ROIs_automaticN245'   # ,'asset_ROIs_cluster', 'asset_ROIs_manual', 'asset_ROIs_automaticN5'
-lstAssetFolder = GetPolygonsfromFolder(param[lstKeysFolder])
+KeysFolder = 'asset_ROIs_autGrade'   # ,'asset_ROIs_cluster', 'asset_ROIs_manual', 'asset_ROIs_automaticN5'
+lstAssetFolder = GetPolygonsfromFolder(param[KeysFolder], joinGrade)
+print(f"we have {len(lstAssetFolder)} features ROIs ")
+# codigo region se encontra na posição 1 gradeROIs_991_2023_wl
+dictRegCount = getDictRegionCounting(lstAssetFolder, 1)
+# sys.exit()
 
-if lstKeysFolder == 'asset_ROIs_automaticN5':
-    dictBasin = getDictBasinN5(lstAssetFolder)
 
-elif lstKeysFolder == 'asset_ROIs_automaticN245':
-    dictBasin = getDictBasinN245(lstAssetFolder)
+lstKeysB = [kk for kk in dictRegCount.keys()]
+if byBacia:
+    restante = []
+    for region in nameBacias:
+        if nbacia not in lstKeysB:
+            restante.append(nbacia)
 
-count = 0
-for nky, lstVal in dictBasin.items():
-    print(f"# {count} =>  {nky} ==> {len(lstVal)}")
-    count += 1
+    print("we need to research in basin ", restante )
+    print(len(restante))
 
-lstKeysB = dictBasin.keys()
-restante = []
-for nbacia in nameBacias:
-    if nbacia not in lstKeysB:
-        restante.append(nbacia)
+else:
 
-print("we need to research in basin ", restante )
-print(len(restante))
+    for cc, idRegion in enumerate(lstKeysB):
+        featTempReg = ee.FeatureCollection([])
+        lstNameFeat = dictRegCount[idRegion]
+        for nameFeat in tqdm(lstNameFeat):
+            featCtmp = ee.FeatureCollection(param[KeysFolder]['id'] + "/" + nameFeat)
+            # print(f"show {nameFeat} the number of samples {featCtmp.size().getInfo()}")
+            featTempReg = featTempReg.merge(featCtmp)
+        cont = gerenciador(cont, param)
+        # featTempReg = featTempReg.flatten()
+        nameExport = 'gradeROIs_' + idRegion + "_wl"
+        processoExportar(featTempReg, nameExport, None, False, cc)
