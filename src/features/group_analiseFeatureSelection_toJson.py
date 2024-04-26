@@ -42,7 +42,7 @@ def getPathCSV():
     pathparent = str(Path(mpath).parents[0])
     print("path parents ", pathparent)
     # folder results of CSVs ROIs
-    mpath_bndImp = pathparent + '/dados/results2'
+    mpath_bndImp = pathparent + '/dados/results'
     print("path of CSVs Rois is \n ==>",  mpath_bndImp)
     return mpath_bndImp
 
@@ -60,9 +60,9 @@ def preencher_dict_historico(tmpDict, nameFiletxt):
 
     return tmpDict
 
-buildingJson = False
+buildingJson = True
 pathResults = getPathCSV()
-pathjson = pathResults.replace("results2","")
+pathjson = pathResults.replace("results","regJSON")
 pathjsonRF = pathjson + "lst_features_selected_bndC8.json"
 jsonHistogram = pathjson + "historico_bacias_processFS.json"
 lstbndyearFalta = []
@@ -71,6 +71,8 @@ if buildingJson:
     dictHist = {}
     dictFeatures = {}
     lstFilesnames = glob.glob(pathResults + "/*.txt")
+    print("list de arquivos ", len(lstFilesnames))
+    # sys.exit()
     for cc, pathFile in enumerate(lstFilesnames[:]):
         nameFile = pathFile.replace(pathResults, "")
         ic(cc, nameFile)    
@@ -86,6 +88,8 @@ if buildingJson:
 
         
         nameKey = nameFile.replace("_c1.txt", "")
+        print(nameKey)
+        print(lst_bnd)
         dictFeatures[nameKey] = lst_bnd
 
     print("          🍀🍀 TERMINANDO 🍀🍀    ")

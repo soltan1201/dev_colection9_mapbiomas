@@ -569,10 +569,10 @@ class ClassMosaic_indexs_Spectral(object):
                                 "float((b('pri_median_wet') + 1) / 2)").rename(['spri_median_wet']).toFloat()
 
         priImgDry = img.expression(
-                                "float((b('green_median') - b('blue_median')) / (b('green_median') + b('blue_median')))"
-                            ).rename(['pri_median'])   
+                                "float((b('green_median_dry') - b('blue_median_dry')) / (b('green_median_dry') + b('blue_median_dry')))"
+                            ).rename(['pri_median_dry'])   
         spriImgDry =   priImgDry.expression(
-                                "float((b('pri_median') + 1) / 2)").rename(['spri_median']).toFloat()
+                                "float((b('pri_median') + 1) / 2)").rename(['spri_median_dry']).toFloat()
     
         return img.addBands(spriImgY).addBands(spriImgWet).addBands(spriImgDry)
     
@@ -632,7 +632,10 @@ class ClassMosaic_indexs_Spectral(object):
                 "avi","bsi","brba","dswi5","lswi","mbi","ui",
                 "osavi","ri","brightness","wetness","gvmi",
                 "nir_contrast","red_contrast"
-            ]        
+            ]   
+
+        # agregateBandsIndexMSI, agregateBandsIndexGVMI
+        # agregateBandsIndexCO2Flux      faltam
 
         imageW = self.agregateBandsIndexEVI(imagem)
         imageW = self.agregateBandsIndexRATIO(imageW)  #

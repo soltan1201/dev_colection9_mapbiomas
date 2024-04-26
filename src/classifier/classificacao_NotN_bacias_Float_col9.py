@@ -10,6 +10,7 @@
 import ee
 import os 
 import gee
+import glob
 import json
 import csv
 import copy
@@ -391,7 +392,7 @@ param = {
     'classMapB': [3, 4, 5, 9,12,13,15,18,19,20,21,22,23,24,25,26,29,30,31,32,33,36,37,38,39,40,41,42,43,44,45],
     'classNew': [3, 4, 3, 3,12,12,21,21,21,21,21,22,22,22,22,33,29,22,33,12,33, 21,33,33,21,21,21,21,21,21,21],
     'asset_mosaic': 'projects/nexgenmap/MapBiomas2/LANDSAT/BRAZIL/mosaics-2',
-    'version': 5,
+    'version': 6,
     'anoInicial': 1985,
     'anoFinal': 2023,
     'sufix': "_01",    
@@ -674,9 +675,9 @@ print(param['lsBandasMap'])
 
 # @mosaicos: ImageCollection com os mosaicos de Mapbiomas 
 bandNames = ['awei_median_dry', 'blue_stdDev', 'brightness_median', 'cvi_median_dry',]
-a_file = open(pathJson + "registroBacia_Year_FeatsSel.json", "r")
+a_file = open(pathJson + "rest_lst_features_selected_bndC8.json", "r")
 dictFeatureImp = json.load(a_file)
-
+print("dict Features ",dictFeatureImp.keys())
 b_file = open(pathJson +  "regBacia_Year_hiperPmtrosTuningfromROIs2Y.json", 'r')
 dictHiperPmtTuning = json.load(b_file)
 
@@ -703,7 +704,8 @@ def iterandoXBacias( _nbacia, myModel):
         bandActiva = 'classification_' + str(ano)        
         print( "banda activa: " + bandActiva)
         if ano < 2023:
-            bandas_lst = dictFeatureImp[_nbacia][str(ano)][:150]
+            keyDictFeat = _nbacia + "_" + str(ano)
+            bandas_lst = dictFeatureImp[keyDictFeat][:150]
             # print(lsNamesBacias)
             ROIs_toTrain = GetPolygonsfromFolder(lsNamesBacias, baciabuffer, ano)    
             # bandas_ROIs = [kk for kk in ROIs_toTrain.first().propertyNames().getInfo()]  
@@ -724,7 +726,7 @@ def iterandoXBacias( _nbacia, myModel):
         mosaicMapbiomas = colmosaicMapbiomas.addBands(mosaicMapbiomas)
         # print(mosaicMapbiomas.size().getInfo())
         ################################################################
-        # listBandsMosaic = mosaicMapbiomas.bandNames().getInfo()
+        listBandsMosaic = mosaicMapbiomas.bandNames().getInfo()
         # print(listBandsMosaic)
         # sys.exit()
         # print('NUMERO DE BANDAS MOSAICO ',len(listBandsMosaic) )
@@ -855,6 +857,12 @@ for ii in arqFeitos.readlines():
 arqFeitos.close()
 arqFeitos = open(path_MGRS, 'a+')
 
+# mpath_bndImp = pathFolder + '/dados/regJSON/'
+# filesJSON = glob.glob(pathJson + '*.json')
+# print("  files json ", filesJSON)
+# nameDictGradeBacia = ''
+# sys.exit()
+
 # 100 arvores
 nameBacias = [
     '741','7421','7422','744','745','746','7492','751','752','753',
@@ -868,16 +876,16 @@ nameBacias = [
 #     '76111', '76116', '7612', '7615', '7616', '7617', '7618', 
 #     '7619', '7613'
 # ]
-modelo = "GTB"# "GTB"# "RF"
+modelo = "RF"# "GTB"# "RF"
 knowMapSaved = False
 listBacFalta = []
 cont = 0
 for _nbacia in nameBacias[:]:
     if knowMapSaved:
         try:
-            nameMap = 'BACIA_' + _nbacia + '_' + 'GTB_col9'
+            nameMap = 'BACIA_' + _nbacia + '_' + 'GTB_col9-v' + str(param['version'])
             imgtmp = ee.Image(param['assetOut'] + nameMap)
-            print("loading ", nameMap, " ", len(imgtmp.bandNames().getInfo()), "bandas ")
+            print(" 🚨 loading ", nameMap, " ", len(imgtmp.bandNames().getInfo()), " bandas 🚨")
         except:
             listBacFalta.append(_nbacia)
     else:
