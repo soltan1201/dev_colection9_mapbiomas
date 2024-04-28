@@ -386,13 +386,14 @@ param = {
     'asset_bacias': "projects/mapbiomas-arida/ALERTAS/auxiliar/bacias_hidrografica_caatinga",
     'asset_bacias_buffer' : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/bacias_hidrograficaCaatbuffer5k',
     'asset_IBGE': 'users/SEEGMapBiomas/bioma_1milhao_uf2015_250mil_IBGE_geo_v4_revisao_pampa_lagoas',
-    'assetOut': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVX/',
+    'assetOut': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVP/',
     'assetROIs': {'id':'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN2clusterNN'},
-    'assetROIsExt': {'id':'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN2manualNN'},    
+    'assetROIsExt': {'id':'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN2manualNN'}, 
+    'assetROIgrade': {'id': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/roisGradesgrouped'}   
     'classMapB': [3, 4, 5, 9,12,13,15,18,19,20,21,22,23,24,25,26,29,30,31,32,33,36,37,38,39,40,41,42,43,44,45],
     'classNew': [3, 4, 3, 3,12,12,21,21,21,21,21,22,22,22,22,33,29,22,33,12,33, 21,33,33,21,21,21,21,21,21,21],
     'asset_mosaic': 'projects/nexgenmap/MapBiomas2/LANDSAT/BRAZIL/mosaics-2',
-    'version': 6,
+    'version': 7,
     'anoInicial': 1985,
     'anoFinal': 2023,
     'sufix': "_01",    
@@ -584,6 +585,13 @@ def GetPolygonsfromFolder(nBacias, baciabuffer, yyear):
     ColectionPtos = ee.FeatureCollection(ColectionPtos) 
     return  ColectionPtos
 
+def GetPolygonsfromFolderGrade(nBacias, baciabuffer, yyear):    
+    getlistPtos = ee.data.getList(param['assetROIs'])
+    getlistPtosExt = ee.data.getList(param['assetROIsExt'])
+    ColectionPtos = ee.FeatureCollection([])
+
+
+
 def FiltrandoROIsXimportancia(nROIs, baciasAll, nbacia):
 
     print("aqui  ")
@@ -756,7 +764,9 @@ def iterandoXBacias( _nbacia, myModel):
         #cria o classificador com as especificacoes definidas acima 
         if myModel == "RF":
             classifierRF = ee.Classifier.smileRandomForest(**param['pmtRF'])\
+                                        .setOutputMode('MULTIPROBABILITY')\
                                         .train(ROIs_toTrain, 'class', bandas_imports)
+                                        
 
             classifiedRF = mosaicMapbiomas.classify(classifierRF, bandActiva)
         # print("parameter loading ", dictHiperPmtTuning[_nbacia])
@@ -776,7 +786,9 @@ def iterandoXBacias( _nbacia, myModel):
         elif myModel == "GTB":
             # ee.Classifier.smileGradientTreeBoost(numberOfTrees, shrinkage, samplingRate, maxNodes, loss, seed)
             classifierGTB = ee.Classifier.smileGradientTreeBoost(**pmtroClass)\
+                                        .setOutputMode('MULTIPROBABILITY')\
                                         .train(ROIs_toTrain, 'class', bandas_imports)
+                                        
 
             classifiedGTB = mosaicMapbiomas.classify(classifierGTB, bandActiva)
 

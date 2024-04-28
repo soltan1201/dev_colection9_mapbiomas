@@ -199,7 +199,7 @@ if byBacia:
         if nbacia not in lstKeysB:
             restante.append(nbacia)
 
-    print("we need to research in basin ", restante )
+    print("we 🫵 need to research in basin ", restante )
     print(len(restante))
 
 else:

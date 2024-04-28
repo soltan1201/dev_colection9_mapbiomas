@@ -203,11 +203,10 @@ for _nbacia in nameBacias[:]:
         areaM = iterandoXanoImCruda(pixelArea, _nbacia, geomCurt, '')  
         processoExportar(areaM, nameCSV)
     #except:
-    #    print("=== BACIA {} WAS FAILED ====")
+    #    print(" ===  BACIA {} WAS FAILED  ====  🚨 ")
 
 
 
     
 
 
-🚨

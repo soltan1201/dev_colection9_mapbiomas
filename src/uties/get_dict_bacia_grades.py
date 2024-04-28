@@ -25,10 +25,12 @@ except:
     print("Unexpected error:", sys.exc_info()[0])
     raise
 # sys.setrecursionlimit(1000000000)
-
+# projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/roisGradesgroupedBuf
 param = {    
-    'asset_output': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/roisGradesgrouped',
+    'asset_output_old': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/roisGradesgrouped',
     'asset_bacias': "projects/mapbiomas-arida/ALERTAS/auxiliar/bacias_hidrografica_caatinga",
+    'asset_output': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/roisGradesgroupedBuf',
+    'asset_bacias_buffer' : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/bacias_hidrograficaCaatbuffer5k',
     'asset_shpGrade': 'projects/mapbiomas-arida/ALERTAS/auxiliar/basegrade30KMCaatinga',
 }
 
@@ -53,11 +55,11 @@ def removeId_nonDuplicate(dict_search, newlst):
     return novalista
 
 dict_bacGrade = {}
-bacias = ee.FeatureCollection(param['asset_bacias']);
+bacias = ee.FeatureCollection(param['asset_bacias_buffer']);
 grades = ee.FeatureCollection(param['asset_shpGrade']);
 
 for cc, nbacia in enumerate(nameBacias):
-    print(f" == processing bacia {nbacia} ====== ")
+    print(f" == {cc} == processing bacia {nbacia} ====== ")
     featBacia = bacias.filter(ee.Filter.eq('nunivotto3', nbacia)).geometry()
     # feature collection com todas as 
     gradesBacia = grades.filterBounds(featBacia);
@@ -67,7 +69,6 @@ for cc, nbacia in enumerate(nameBacias):
 
     listaCondsId = removeId_nonDuplicate(dict_bacGrade, lstCodId)
     dict_bacGrade[nbacia] = listaCondsId
-
 
 
 def getPathCSV():
@@ -85,9 +86,10 @@ cont = 0
 for kBac, lstIds in dict_bacGrade.items():
     print(f"# {cont}, bacia => {kBac} ")
     print("          ", lstIds)
+    cont += 1
     
-pathBase = getPathCSV()
-pathjsonRF = pathBase + "dict_fusion_grade_bacia_N2.json"
-with open(pathjsonRF, 'w') as fp:
-    json.dump(dict_bacGrade, fp)
-ic(" -- dict_fusion_grade_bacia_N2.json saved 💭 -- ")
+# pathBase = getPathCSV()
+# pathjsonRF = pathBase + "dict_fusion_grade_bacia_N2.json"
+# with open(pathjsonRF, 'w') as fp:
+#     json.dump(dict_bacGrade, fp)
+# ic(" -- dict_fusion_grade_bacia_N2.json saved 💭 -- ")
