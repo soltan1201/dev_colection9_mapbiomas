@@ -66,7 +66,6 @@ class methods_fromRFE():
         self.namepathroot = namepathroot
         self.nameFolderSaved = nameFolderSaved
 
-
     def method_RFECV(self, X_train, y_train, nameExports):
         # namebacia = nnameFile.split('_')[0]
         # myear = nnameFile.split('_')[1]
@@ -129,16 +128,20 @@ class methods_fromRFE():
             if 'class' in colunasDF:
                 colunasDF.remove('class')
             self.colunas = colunasDF
-        # sys.exit()
-        print(f"# {cc} loading train DF {df_tmp[self.colunas].shape} and ref {df_tmp['class'].shape}")
-        # X_train, X_test, y_train, y_test = train_test_split(df_tmp[colunas], df_tmp['class'], test_size=0.1, shuffle=False)
-        # name_table = dir_fileCSV.replace('ROIsCSV/ROIsCol8/', '')
-        
-        print("get variaveis") 
-        if metodo == 'RFE':
-            self.method_RFE (df_tmp[self.colunas], df_tmp['class'], nomeFile)
-        else:
-            self.method_RFECV (df_tmp[self.colunas], df_tmp['class'], nomeFile)
+            
+        for yyear in range(1985, 2023):
+            # ic(f" Working year {yyear}")
+            df_tmpYY =  df_tmp[df_tmp['year'] == yyear]
+            # sys.exit()
+            print(f" # {cc} 🚨 loading train DF {df_tmpYY[self.colunas].shape} and ref {df_tmpYY['class'].shape} by year {yyear}")
+            # X_train, X_test, y_train, y_test = train_test_split(df_tmp[colunas], df_tmp['class'], test_size=0.1, shuffle=False)
+            # name_table = dir_fileCSV.replace('ROIsCSV/ROIsCol8/', '')
+            nnomeFileE = nomeFile + "_" + str(yyear)
+            print("get variaveis") 
+            if metodo == 'RFE':
+                self.method_RFE (df_tmpYY[self.colunas], df_tmpYY['class'], nnomeFileE)
+            else:
+                self.method_RFECV (df_tmpYY[self.colunas], df_tmpYY['class'], nnomeFileE)
         
 def getPathCSV(folderROIs):
     # get dir path of script 
@@ -157,12 +160,10 @@ if __name__ == '__main__':
     # lst_years = ['2015','2016','2017','2018']# ['2019','2020','2021']
     # lst_years = ['2006','2007','2008','2009'] #['2010','2011','2012']
 
-    lst_years = [str(kk) for kk in range(1985, 2023)]
-    print("iniciar \n", lst_years)
-    print()
-
+    
     # /home/superusuario/Dados/mapbiomas/col8/features/
-    nameFolderCSV = "Col9_ROIs_cluster"
+    # nameFolderCSV = "Col9_ROIs_cluster"
+    nameFolderCSV = "gradeROIsbasin"
     npathBase, pathroot = getPathCSV(nameFolderCSV)
 
     lst_pathCSV = glob.glob(npathBase + '/*.csv')
@@ -177,17 +178,28 @@ if __name__ == '__main__':
     #                     iterable= dirCSVs, 
     #                     chunksize=5)
     pathroot = os.path.join(pathroot, 'dados')
-    folderOut = nameFolderCSV + '_REF'
-    pathOut = os.path.join(pathroot, folderOut)
-    methods_fromRFECC = methods_fromRFE(pathroot, folderOut)
-    folderOutSaved = Path(pathOut)
-    if not folderOutSaved:
-        os.mkdir(pathOut)
-
+    folderOutREF = nameFolderCSV + '_REF'
+    folderOutREFCV = nameFolderCSV + '_REFCV'
+    pathOutREF = os.path.join(pathroot, folderOutREF)
+    pathOutREFCV = os.path.join(pathroot, folderOutREFCV)
+    try:    
+        os.makedirs(pathOutREF, mode=0o777, exist_ok=False)
+        os.makedirs(pathOutREFCV, mode=0o777, exist_ok=False)
+        print(f"make folders folderOuts \n  ===>  {pathOutREF} \n  ===>  {pathOutREFCV}")
+    except:
+        print(f" === 🚨Yours analises will be save in ===== \n  ===>  {pathOutREF} \n  ===>  {pathOutREFCV}")
+    
+    # sys.exit()
+    methodtoSeleting = 'RFE'
+    if methodtoSeleting == 'RFE':
+        methods_fromRFECC = methods_fromRFE(pathroot, folderOutREF)
+    else:
+        methods_fromRFECC = methods_fromRFE(pathroot, folderOutREFCV)
+    
     for cc, mdir in dirCSVs[: 1]:        
         print("processing = ", mdir)
         nameFile = mdir.replace(npathBase, '')[1:]
-        
-       
-        print(f"========== executando ============ {mdir}")
-        lst_rank = methods_fromRFECC.load_table_to_process(cc, mdir, 'RFE', nameFile)  # 'RFE', 'RFECV'
+        # print(nameFile)
+        # sys.exit()
+        print(f"========== executando ============ \n {mdir}")
+        lst_rank = methods_fromRFECC.load_table_to_process(cc, mdir, methodtoSeleting, nameFile)  # 'RFE', 'RFECV'
