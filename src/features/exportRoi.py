@@ -30,6 +30,8 @@ param = {
     'asset_ROIs_automatic': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/coletaROIsv1N245'},
     'asset_ROIs_automatic': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN5allBND'},
     'asset_ROIs_grades': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/roisGradesgrouped'},
+    'asset_ROIS_bacia_grade': {'id': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/roisGradesgroupedBuf'},
+    'asset_ROIS_joinsBaGr': {'id': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/roisJoinsbyBaciaNN'},
     'anoInicial': 1985,
     'anoFinal': 2022,
     'numeroTask': 6,
@@ -126,7 +128,9 @@ cont = gerenciador(cont, param)
 lstNameFeat = []
 # sys.exit()
 # iterando com cada uma das folders FeatC do asset
-lstKeysFolder = ['asset_ROIs_grades']   # ,'asset_ROIs_cluster', 'asset_ROIs_manual'
+# 'asset_ROIs_cluster', 'asset_ROIs_manual', asset_ROIs_grades, asset_ROIS_bacia_grade
+# asset_ROIS_joinsBaGr ,
+lstKeysFolder = ['asset_ROIS_joinsBaGr']   
 for assetKey in lstKeysFolder:
     lstAssetFolder = GetPolygonsfromFolder(param[assetKey])
     list_baciaYearFaltan = []
@@ -137,7 +141,7 @@ for assetKey in lstKeysFolder:
             try: 
                 ROIs = ee.FeatureCollection(assetFeats)       
                 print(nameFeat, " ", ROIs.size().getInfo())     
-                processoExportar(ROIs, nameFeat, "ROIs_grades")              
+                processoExportar(ROIs, nameFeat, "ROIs_Joins_GrBa")              
             except:
                 # list_baciaYearFaltan.append(nameFeat)
                 # arqFaltante.write(nameFeat + '\n')

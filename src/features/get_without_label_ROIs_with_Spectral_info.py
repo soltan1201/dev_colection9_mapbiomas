@@ -74,12 +74,8 @@ class ClassMosaic_indexs_Spectral(object):
         'swir2_min', 'swir2_stdDev'
     ]
     newlstNameBacin = [
-<<<<<<< HEAD
         '741_0',
         '7421_0','7422_0','745_0','751_0','752_0',
-=======
-        '741_0','7421_0','7422_0','745_0','751_0','752_0',
->>>>>>> e245750315248ea091d20fb4d4c57b91d9e57aaa
         '754_0','755_0','756_0','757_0','759_0', '7613_0', '76111_0',
         '7612_0','7614_0','7616_0','7622_0','763_0','764_0','765_0',
         '767_0','771_0','772_0','773_0','7742_0','775_0','776_0',
@@ -897,7 +893,6 @@ param = {
     'anoFinal': 2022,
     'sufix': "_1",
     'numeroTask': 6,
-<<<<<<< HEAD
     'numeroLimit': 6,
     'conta': {
         '0': 'superconta',
@@ -906,16 +901,6 @@ param = {
         '3': 'caatinga04',
         '4': 'caatinga05',
         '5': 'solkan1201',
-=======
-    'numeroLimit': 36,
-    'conta': {
-        '0': 'caatinga01',
-        '6': 'caatinga02',
-        '12': 'caatinga03',
-        '18': 'caatinga04',
-        '24': 'caatinga05',
-        '30': 'solkan1201',
->>>>>>> e245750315248ea091d20fb4d4c57b91d9e57aaa
         # '24': 'diegoGmail',
         # '20': 'rodrigo'
     },

@@ -52,6 +52,11 @@ Documentação
     https://scikit-learn.org/stable/auto_examples/ensemble/plot_gradient_boosting_regression.html#sphx-glr-auto-examples-ensemble-plot-gradient-boosting-regression-py
     https://scikit-learn.org/stable/modules/generated/sklearn.inspection.permutation_importance.html
 
+    tuning hyperparameters
+    https://scikit-learn.org/stable/auto_examples/model_selection/plot_nested_cross_validation_iris.html#sphx-glr-auto-examples-model-selection-plot-nested-cross-validation-iris-py
+    https://scikit-learn.org/stable/auto_examples/model_selection/plot_roc.html
+    https://machinelearningmastery.com/tune-xgboost-performance-with-learning-curves/
+    
     icons 
     https://coolsymbol.com/
 

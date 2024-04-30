@@ -134,6 +134,10 @@ class methods_fromRFE():
             df_tmpYY =  df_tmp[df_tmp['year'] == yyear]
             # sys.exit()
             print(f" # {cc} 🚨 loading train DF {df_tmpYY[self.colunas].shape} and ref {df_tmpYY['class'].shape} by year {yyear}")
+            dictClass = df_tmpYY['class'].value_counts()
+            print("     classes:  ", [int(kk) for kk in dictClass.index.tolist()])
+            print("  quantities:  ", dictClass.tolist())
+
             # X_train, X_test, y_train, y_test = train_test_split(df_tmp[colunas], df_tmp['class'], test_size=0.1, shuffle=False)
             # name_table = dir_fileCSV.replace('ROIsCSV/ROIsCol8/', '')
             nnomeFileE = nomeFile + "_" + str(yyear)
@@ -163,7 +167,8 @@ if __name__ == '__main__':
     
     # /home/superusuario/Dados/mapbiomas/col8/features/
     # nameFolderCSV = "Col9_ROIs_cluster"
-    nameFolderCSV = "gradeROIsbasin"
+    # nameFolderCSV = "gradeROIsbasin"
+    nameFolderCSV = "ROIs_Joins_GrBa"
     npathBase, pathroot = getPathCSV(nameFolderCSV)
 
     lst_pathCSV = glob.glob(npathBase + '/*.csv')

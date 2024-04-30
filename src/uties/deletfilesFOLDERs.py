@@ -31,7 +31,7 @@ def GetPolygonsfromFolder(assetFolder, sufixo):
     
     print(lstBacias)
 
-asset ={'id' :'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/ROIs/coletaROIsv2N4'}
+asset ={'id' :'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/roisJoinsbyBaciaNN'}
 # asset = {'id':"projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/masks/maks_layers"}
 
 GetPolygonsfromFolder(asset, '')  # 
