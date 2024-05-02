@@ -36,7 +36,7 @@ def getPathCSV (nfolders):
     # get dir path of script 
     mpath = os.getcwd()
     # get dir folder before to path scripts 
-    pathparent = str(Path(mpath).parents[0])
+    pathparent = str(Path(mpath).parents[1])
     # folder of CSVs ROIs
     roisPathAcc = pathparent + '/dados/' + nfolders
     return pathparent, roisPathAcc
@@ -121,18 +121,20 @@ def calculing_metrics_AccYear(row):
 
     return row
 
-base_path, input_path_CSVs = getPathCSV('acc/ptosAccCol9/')
+base_path, input_path_CSVs = getPathCSV('acc/ptosAccCol9')
 print("path the base ", base_path)
-print("path of CSVs from folder ", input_path_CSVs)
+print("path of CSVs from folder :  \n ==> ", input_path_CSVs)
 
 lstRef = ['CLASS_' + str(kk) for kk in range(1985, 2023)]
 lstPred = ['classification_' + str(kk) for kk in range(1985, 2023)]
 lYears = [kk for kk in range(1985, 2023)]
 
-lst_paths = glob.glob(input_path_CSVs + '/*')
+lst_paths = glob.glob(input_path_CSVs + '/*.csv')
+print('lista ', lst_paths)
 classificador = "GTB"
 lst_df = []
-for path in lst_paths[:]:       
+for path in lst_paths[:]: 
+    print(" loading 🕙 >> ", path)      
     partes = path.split('_')
     classificador = partes[-3]
     bacia = partes[-4]

@@ -134,3 +134,20 @@ https://scikit-learn.org/stable/modules/generated/sklearn.metrics.balanced_accur
 https://scikit-learn.org/stable/modules/generated/sklearn.metrics.jaccard_score.html#sklearn.metrics.jaccard_score
 https://scikit-learn.org/stable/auto_examples/miscellaneous/plot_display_object_visualization.html#sphx-glr-auto-examples-miscellaneous-plot-display-object-visualization-py
 https://scikit-learn.org/stable/modules/classes.html#module-sklearn.metrics
+
+
+
+
+
+
+///////////////// ASSET TO SAVE /////////////////////
+projects/mapbiomas-workspace/COLECAO9/classificacao
+projects/mapbiomas-workspace/COLECAO9/agricultura
+projects/mapbiomas-workspace/COLECAO9/agricultura-irrigada
+projects/mapbiomas-workspace/COLECAO9/agua
+projects/mapbiomas-workspace/COLECAO9/aquicultura
+projects/mapbiomas-workspace/COLECAO9/floresta-plantada
+projects/mapbiomas-workspace/COLECAO9/urbano
+projects/mapbiomas-workspace/COLECAO9/mineracao
+projects/mapbiomas-workspace/COLECAO9/agropecuaria
+projects/mapbiomas-workspace/COLECAO9/zona-costeira

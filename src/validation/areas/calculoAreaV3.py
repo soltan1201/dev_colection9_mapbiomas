@@ -10,7 +10,6 @@
 import ee 
 import gee
 import sys
-import arqParametros as arqParamet
 import collections
 collections.Callable = collections.abc.Callable
 
@@ -24,16 +23,17 @@ except:
     raise
 sys.setrecursionlimit(1000000000)
 
-path = 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/CLASS/'
+
 param = {
     # 'inputAsset': path + 'class_filtered_Tp',   
-    'inputAsset': path + 'ClassCol8V2/',
-    'collection': '7.0',
+    'assetCol': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVX" ,
+    'asset_Map' : "projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1",
+    'collection': '9.0',
     'geral':  True,
     'isImgCol': True,  
     'inBacia': True,
-    'version': '6',
-    'sufixo': '_Cv7', 
+    'version': 6,
+    'sufixo': '_Cv', 
     'assetBiomas': 'projects/mapbiomas-workspace/AUXILIAR/biomas_IBGE_250mil', 
     'biome': 'CAATINGA', 
     'source': 'geodatin',
@@ -43,7 +43,7 @@ param = {
     'numeroTask': 0,
     'numeroLimit': 37,
     'conta' : {
-        '0': 'caatinga04'
+        '0': 'solkanGeodatin'
     }
 }
 
@@ -130,17 +130,13 @@ def iterandoXano(imgAreaRef, limite):
     for year in range(1985, 2021): 
         
         if param['isImg'] == True:
-
-            imgAct = 'classification_' + str(year)
-            imgMap = ee.Image(param['inputAsset']).select(imgAct).clip(limite)
-            
-            if param['collection'] == '5.0':
-                imgMap = imgMap.remap(param['classMapB'], param['classNew'])
+            bandaAct = 'classification_' + str(year)
+            imgMap = ee.Image(param['inputAsset']).select(bandaAct).clip(limite)
 
         else:            
             
-            imgAct = 'CAATINGA-' + str(year) + param['version']
-            imgMap = ee.Image(param['inputAsset'] + imgAct).clip(limite)
+            bandaAct = 'CAATINGA-' + str(year) + param['version']
+            imgMap = ee.Image(param['inputAsset'] + bandaAct).clip(limite)
 
         areaTemp = calculateArea (imgMap, imgAreaRef, limite, year)
         
@@ -171,23 +167,27 @@ def processoExportar(areaFeat, nameT):
 # https://code.earthengine.google.com/8e5ba331665f0a395a226c410a04704d
 # https://code.earthengine.google.com/306a03ce0c9cb39c4db33265ac0d3ead
 # get raster with area km2
-lstBands = ['classification_' + str(yy) for yy in range(1985, 2023)]
+lstBands = ['classification_' + str(yy) for yy in range(1985, 2024)]
 bioma250mil = ee.FeatureCollection(param['assetBiomas'])\
                     .filter(ee.Filter.eq('Bioma', 'Caatinga')).geometry()
 
 gerenciador(0, param)
-
+model = "GTB"# , "RF", "GTB"
 pixelArea = ee.Image.pixelArea().divide(10000)
-imgMapa = ee.ImageCollection(param['inputAsset']).select(lstBands)
+if param['isImgCol']:
+    imgMapa = ee.ImageCollection(param['assetCol']).select(lstBands)
+    if param['version'] == '':
+        imgMapa = ee.Image(imgMapa.min())
+        nameCSV = 'areaXclasse_' + param['biome'] + '_Col' + param['collection'] 
 
-if param['version'] == '':
-    imgMapa = ee.Image(imgMapa.min())
-    nameCSV = 'areaXclasse_' + param['biome'] + '_Col' + param['collection'] + "_biome" + param['sufixo']
-
+    else:
+        imgMapa = imgMapa.filter(
+                            ee.Filter.eq('version', param['version'])).filter(
+                                ee.Filter.eq('classifier', model)).max()
+        nameCSV = 'areaXclasse_' + param['biome'] + '_Col' + param['collection']
+        nameCSV += "_"+ model + param['sufixo'] + str(param['version'])
 else:
-    imgMapa = ee.Image(imgMapa.filter(
-                        ee.Filter.eq('version', param['version'])).max())
-    nameCSV = 'areaXclasse_' + param['biome'] + '_Col' + param['collection'] + "_biomeTempV" + param['version']
+    imgMapa = ee.Image(param['asset_Map'])
 
 areaM = iterandoXanoImCruda(pixelArea, imgMapa, bioma250mil)  
 processoExportar(areaM, nameCSV)

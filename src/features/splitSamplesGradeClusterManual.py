@@ -28,22 +28,22 @@ except:
 
 
 param = {    
-    'assetROIgradeBa': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/roisGradesgroupedBuf',
+    'assetROIgradeBa': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/roisGradesgroupBuf',
     'asset_bacias_buffer' : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/bacias_hidrograficaCaatbuffer5k',
     'asset_shpGrade': 'projects/mapbiomas-arida/ALERTAS/auxiliar/basegrade30KMCaatinga',
     'assetROIsCC': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN2clusterNN',
     'assetROIsMn': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN2manualNN', 
     'asset_output': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/roisJoinsbyBaciaNN",
     'numeroTask': 6,
-    'numeroLimit': 42,
+    'numeroLimit': 140,
     'conta' : {
         '0': 'caatinga01',
-        '6': 'caatinga02',
-        '12': 'caatinga03',
-        '18': 'caatinga04',
-        '24': 'caatinga05',        
-        '30': 'solkan1201',
-        '36': 'solkanGeodatin' 
+        '20': 'caatinga02',
+        '40': 'caatinga03',
+        '60': 'caatinga04',
+        '80': 'caatinga05',        
+        '100': 'solkan1201',
+        '120': 'solkanGeodatin' 
     },
 }
 
@@ -86,38 +86,40 @@ def gerenciador(cont):
         print("conta ativa >> {} <<".format(param['conta'][str(cont)]))        
         gee.switch_user(param['conta'][str(cont)])
         gee.init()        
-        gee.tasks(n= param['numeroTask'], return_list= True)        
+        gee.tasks(n= param['numeroTask'], return_list= True)            
     
     elif cont > param['numeroLimit']:
-        cont = 0
-    
-    cont += 1    
+        return 0  
+    cont += 1 
     return cont
 
 
 nameBacias = [
-    '741','7421','7422','744','745','746','7492','751','752','753',
-    '754','755','756','757','758','759','7621','7622','763','764',
-    '765','766','767','771','772','773', '7741','7742','775','776',
-    '777','778','76111','76116','7612','7614','7615','7616','7617',
-    '7618','7619', '7613'
-]
+    # '741',
+    # '7421','7422','744','745','746','7492','751','752','753',
+    # '754','755','756','757','758','759','7621','7622','763','764',
+    # '765','766',
+    '767','771','772','773', '7741','7742','775','776',
+    '777',  '76111','76116','7612',
+    '7614','7615','7616','7617', '7618','7619', '7613'
+]  # '778',
 
 cont = gerenciador(0)
 
 # consulting all file Samples saved by Basin and year 
-dictConsult = {'id': param['asset_output']}
-lstFeatSaved = GetPolygonsfromFolder(dictConsult)
-lstnameFeatsaved = [kk.split("/")[-1] for kk in lstFeatSaved]
+# dictConsult = {'id': param['asset_output']}
+# lstFeatSaved = GetPolygonsfromFolder(dictConsult)
+# lstnameFeatsaved = [kk.split("/")[-1] for kk in lstFeatSaved]
 
 
 
 for nbacia in nameBacias:
     print(" 🚨 loading ", nbacia )
-    featAllSamples = ee.FeatureCollection([])
+    
     nameGradeBa = "bassinG_ROIs_" + nbacia + "_wl"
     featGradeBa = ee.FeatureCollection(param['assetROIgradeBa'] + "/" + nameGradeBa)
     for yyear  in range(1985, 2023):
+        featAllSamples = ee.FeatureCollection([])
         totalAno = 0
         try:
             nameCluster = nbacia + "_" + str(yyear) +"_c1"
@@ -135,29 +137,48 @@ for nbacia in nameBacias:
         print(f" {yyear} we have 📢 {sizeGBa}  in ROIsGradeBacia ")
         dictClass = featGradeBaYY.aggregate_histogram('class').getInfo()
         print("    ", dictClass)
-        featGradeBaYYnC412 = featGradeBaYY.filter(ee.Filter.inList('class', [4, 12]).Not())
+        featGradeBaYYnC412 = featGradeBaYY.filter(ee.Filter.inList('class', [4, 12, 15]).Not())
         namepropList = featGradeBaYYnC412.propertyNames()
         # só teste
         # print(featGradeBaYYnC412.aggregate_histogram('class').getInfo())        
         # preprocessing classe 4
-        featGradeBaYYc4 = featGradeBaYY.filter(ee.Filter.eq('class', 4)).randomColumn('rand')
-        limiarCut4 = float(2500 / dictClass['4'])
-        featGradeBaYYc4 = featGradeBaYYc4.filter(ee.Filter.lt('rand', limiarCut4))
-        featGradeBaYYc4 = featGradeBaYYc4.select(namepropList)
+        if '4' in dictClass.keys():
+            print("processing 4")
+            featGradeBaYYc4 = featGradeBaYY.filter(ee.Filter.eq('class', 4)).randomColumn('rand')
+            limiarCut4 = float(2500 / dictClass['4'])
+            featGradeBaYYc4 = featGradeBaYYc4.filter(ee.Filter.lt('rand', limiarCut4))
+            featGradeBaYYc4 = featGradeBaYYc4.select(namepropList)
+
+            featAllSamples = featAllSamples.merge(featGradeBaYYc4)
+
         # preprocessing class 12
         if '12' in dictClass.keys():
-            if dictClass['12'] > 900:
+            print("processing 12")
+            if dictClass['12'] > 800:
                 featGradeBaYYc12 = featGradeBaYY.filter(ee.Filter.eq('class', 12)).randomColumn('rand')        
                 limiarCut12 = float(600 / dictClass['12'])
                 featGradeBaYYc12 = featGradeBaYYc12.filter(ee.Filter.lt('rand', limiarCut4))
                 featGradeBaYYc12 = featGradeBaYYc12.select(namepropList)
             else: 
                 featGradeBaYYc12 = featGradeBaYY.filter(ee.Filter.eq('class', 12))
+            
             featAllSamples = featAllSamples.merge(featGradeBaYYc12)
 
+        # preprocessing class 12
+        if '15' in dictClass.keys():
+            print("processing 15")
+            if dictClass['15'] > 1000:
+                featGradeBaYYc15 = featGradeBaYY.filter(ee.Filter.eq('class', 15)).randomColumn('rand')        
+                limiarCut15 = float(800 / dictClass['15'])
+                featGradeBaYYc15 = featGradeBaYYc15.filter(ee.Filter.lt('rand', limiarCut4))
+                featGradeBaYYc15 = featGradeBaYYc15.select(namepropList)
+            else: 
+                featGradeBaYYc15 = featGradeBaYY.filter(ee.Filter.eq('class', 15))
+            
+            featAllSamples = featAllSamples.merge(featGradeBaYYc15)
+
         # join Samples from grade coleted 
-        featAllSamples = featAllSamples.merge(featGradeBaYYnC412)
-        featAllSamples = featAllSamples.merge(featGradeBaYYc4)
+        featAllSamples = featAllSamples.merge(featGradeBaYYnC412)        
         
 
         if yyear == 2016 or yyear == 2021:
@@ -174,6 +195,6 @@ for nbacia in nameBacias:
 
         nameGrBaExp = "joined_ROIs_" + nbacia + "_" + str(yyear) +"_wl"
         processoExportar(featAllSamples, nameGrBaExp, yyear - 1985)
-        
+        cont = gerenciador(cont)
 
-    cont = gerenciador(cont)
+    

@@ -30,7 +30,7 @@ param = {
     'cancelar' : False,
     'unicaconta': True,
     'numeroTask': 7,
-    'numeroLimit': 7,
+    'numeroLimit': 6,
     'conta' : {
         '0': 'caatinga01',
         '1': 'caatinga02',
@@ -83,7 +83,7 @@ def gerenciador(cont):
     return cont
 
 if param['unicaconta']:
-    cont = 1
+    cont = 6
     cont = gerenciador(cont)
     if param['cancelar']:
         gee.cancel(opentasks=True)

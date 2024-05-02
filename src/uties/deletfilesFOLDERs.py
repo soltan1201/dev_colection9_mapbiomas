@@ -27,7 +27,7 @@ def GetPolygonsfromFolder(assetFolder, sufixo):
         if sufixo in str(name): 
             print("eliminando {}:  {}".format(cc, name))
             print(path_)
-            # ee.data.deleteAsset(path_) 
+            ee.data.deleteAsset(path_) 
     
     print(lstBacias)
 

@@ -569,9 +569,9 @@ def GetPolygonsfromFolder(nBacias, baciabuffer, yyear):
         newName = name.split('_')
         # print("cole"newName[0])
         if str(newName[0]) in nBacias and str(newName[1]) == str(yyear):
-            print(f"reading year {yyear} from basin {name}")
+            # print(f"reading year {yyear} from basin {name}")
             FeatTemp = ee.FeatureCollection(path_)  
-            print("number of samples in featColection ", FeatTemp.size().getInfo())
+            # print("number of samples in featColection ", FeatTemp.size().getInfo())
             FeatTemp = FeatTemp.filter(ee.Filter.neq('class', 18))
             if nBacias in ['7612','7613','76116']:
                 FeatTemp = process_reduce_ROIsXclass(FeatTemp, 12, 0.7)
@@ -699,7 +699,7 @@ dictFeatureImp = json.load(a_file)
 b_file = open(pathJson +  "regBacia_Year_hiperPmtrosTuningfromROIs2Y.json", 'r')
 dictHiperPmtTuning = json.load(b_file)
 
-def iterandoXBacias( _nbacia, myModel):
+def iterandoXBacias( _nbacia, myModel, makeProb):
     classifiedRF = None;
     classifiedRF
     # selectBacia = ftcol_bacias.filter(ee.Filter.eq('nunivotto3', _nbacia)).first()
@@ -712,6 +712,7 @@ def iterandoXBacias( _nbacia, myModel):
     print("lista de Bacias vizinhas", lsNamesBacias)
 
     imglsClasxanos = ee.Image().byte()
+    imglsClasxanos_prob = ee.Image().byte()
     mydict = None
     pmtroClass = copy.deepcopy(param['pmtGTB'])
     # print("area ", baciabuffer.area(0.1).getInfo())
@@ -793,12 +794,14 @@ def iterandoXBacias( _nbacia, myModel):
         # print('PROPERTIES FEAT = ', lsAllprop)
         #cria o classificador com as especificacoes definidas acima 
         if myModel == "RF":
-            classifierRF = ee.Classifier.smileRandomForest(**param['pmtRF'])\
-                                        .setOutputMode('MULTIPROBABILITY')\
-                                        .train(ROIs_toTrain, 'class', bandas_imports)
-                                        
-
-            classifiedRF = mosaicMapbiomas.classify(classifierRF)
+            classifierRF = ee.Classifier.smileRandomForest(**param['pmtRF']).train(
+                                                ROIs_toTrain, 'class', bandas_imports)            
+            if makeProb:
+                classifiedRFBprob = mosaicMapbiomas.classify(classifierRF.setOutputMode('MULTIPROBABILITY'))
+                classifiedRFBprob = classifiedRFBprob.arrayReduce(reducer= ee.Reducer.max(), axes= [0])
+                classifiedRFBprob = classifiedRFBprob.multiply(100).byte().rename('prob_'+ str(ano))
+            else:
+                classifiedRF = mosaicMapbiomas.classify(classifierRF, bandActiva)
         # print("parameter loading ", dictHiperPmtTuning[_nbacia])
         # # 'numberOfTrees': 50, 
         # # 'shrinkage': 0.1,    # 
@@ -815,19 +818,24 @@ def iterandoXBacias( _nbacia, myModel):
         # print("pmtros Classifier Ajustado ==> ", pmtroClass)
         elif myModel == "GTB":
             # ee.Classifier.smileGradientTreeBoost(numberOfTrees, shrinkage, samplingRate, maxNodes, loss, seed)
-            classifierGTB = ee.Classifier.smileGradientTreeBoost(**pmtroClass)\
-                                        .setOutputMode('MULTIPROBABILITY')\
-                                        .train(ROIs_toTrain, 'class', bandas_imports)
-                                        
-
-            classifiedGTB = mosaicMapbiomas.classify(classifierGTB)
-
+            classifierGTB = ee.Classifier.smileGradientTreeBoost(**pmtroClass).train(
+                                                ROIs_toTrain, 'class', bandas_imports)              
+            if makeProb:
+                classifiedGTBprob = mosaicMapbiomas.classify(classifierGTB.setOutputMode('MULTIPROBABILITY'))
+                classifiedGTBprob = classifiedGTBprob.arrayReduce(reducer= ee.Reducer.max(), axes= [0])
+                classifiedGTBprob = classifiedGTBprob.multiply(100).byte().rename('prob_'+ str(ano))
+            else:
+                classifiedGTB = mosaicMapbiomas.classify(classifierGTB, bandActiva)
         else:
             # ee.Classifier.libsvm(decisionProcedure, svmType, kernelType, shrinking, degree, gamma, coef0, cost, nu, terminationEpsilon, lossEpsilon, oneClass)
             classifierSVM = ee.Classifier.libsvm(**param['pmtSVM'])\
                                         .train(ROIs_toTrain, 'class', bandas_imports)
-
-            classifiedSVM = mosaicMapbiomas.classify(classifierSVM)
+            if makeProb:
+                classifiedSVMBprob = mosaicMapbiomas.classify(classifierSVM.setOutputMode('MULTIPROBABILITY'))
+                classifiedSVMBprob = classifiedSVMBprob.arrayReduce(reducer= ee.Reducer.max(), axes= [0])
+                classifiedSVMBprob = classifiedSVMBprob.multiply(100).byte().rename('prob_'+ str(ano))
+            else:
+                classifiedSVM = mosaicMapbiomas.classify(classifierSVM, bandActiva)
             # print("classificando!!!! ")
 
         # threeClassification  = classifiedRF.addBands(classifiedGTB).addBands(classifiedSVM)
@@ -837,19 +845,28 @@ def iterandoXBacias( _nbacia, myModel):
         #se for o primeiro ano cria o dicionario e seta a variavel como
         #o resultado da primeira imagem classificada
         #print("addicionando classification bands")
-
+        
         if param['anoInicial'] == ano:
             print ('entrou em 1985, no modelo ', myModel)
             if myModel == "GTB":
-                print("===> ", myModel)
-                imglsClasxanos = copy.deepcopy(classifiedGTB)
+                print("===> ", myModel)                
+                if makeProb:
+                    imglsClasxanos_prob = copy.deepcopy(classifiedGTBprob)
+                else:
+                    imglsClasxanos = copy.deepcopy(classifiedGTB)
                 nomec = _nbacia + '_' + 'GTB_col9-v' + str(param['version'])
             elif myModel == "RF":
-                print("===> ", myModel)
-                imglsClasxanos = copy.deepcopy(classifiedRF)
+                print("===> ", myModel)                
+                if makeProb:
+                    imglsClasxanos_prob = copy.deepcopy(classifiedRFBprob)
+                else:
+                    imglsClasxanos = copy.deepcopy(classifiedRF)
                 nomec = _nbacia + '_' + 'RF_col9-v' + str(param['version'])      
-            else:
-                imglsClasxanos = copy.deepcopy(classifiedSVM) 
+            else:                 
+                if makeProb:
+                    imglsClasxanos_prob = copy.deepcopy(classifiedSVMBprob)
+                else:
+                    imglsClasxanos = copy.deepcopy(classifiedSVM)
                 nomec = _nbacia + '_' + 'SVM_col9-v' + str(param['version'])
             
             mydict = {
@@ -865,21 +882,36 @@ def iterandoXBacias( _nbacia, myModel):
         #se nao, adiciona a imagem como uma banda a imagem que ja existia
         else:
             # print("Adicionando o mapa do ano  ", ano)
-            if myModel == "GTB":
-                imglsClasxanos = imglsClasxanos.addBands(classifiedGTB)
+            if myModel == "GTB":                
+                if makeProb:
+                    imglsClasxanos_prob = imglsClasxanos_prob.addBands(classifiedGTBprob)  
+                else:
+                    imglsClasxanos = imglsClasxanos.addBands(classifiedGTB)
             elif myModel == "RF":
-                imglsClasxanos = imglsClasxanos.addBands(classifiedRF)  
-            else:
-                imglsClasxanos = imglsClasxanos.addBands(classifiedSVM)
+                
+                if makeProb:
+                    imglsClasxanos_prob = imglsClasxanos_prob.addBands(classifiedRFBprob)
+                else:
+                    imglsClasxanos = imglsClasxanos.addBands(classifiedRF)  
+            else:                
+                if makeProb:
+                    imglsClasxanos_prob = imglsClasxanos_prob.addBands(classifiedSVMBprob)
+                else:
+                    imglsClasxanos = imglsClasxanos.addBands(classifiedSVM)
             #           
     
     # i+=1
-    # print(param['lsBandasMap'])
-    # seta as propriedades na imagem classificada            
-    imglsClasxanos = imglsClasxanos.select(param['lsBandasMap'])    
-    imglsClasxanos = imglsClasxanos.clip(baciabuffer).set("system:footprint", baciabuffer.coordinates())
-    # exporta bacia
-    processoExportar(imglsClasxanos, baciabuffer.coordinates(), nomec) 
+    # print(param['lsBandasMap'])    
+    if makeProb:
+        imglsClasxanos_prob = imglsClasxanos_prob.clip(baciabuffer).set("system:footprint", baciabuffer.coordinates())
+        processoExportar(imglsClasxanos_prob, baciabuffer.coordinates(), nomec + '_prob')
+    else:
+        # seta as propriedades na imagem classificada            
+        imglsClasxanos = imglsClasxanos.select(param['lsBandasMap'])    
+        imglsClasxanos = imglsClasxanos.clip(baciabuffer).set("system:footprint", baciabuffer.coordinates())
+        # exporta bacia
+        processoExportar(imglsClasxanos, baciabuffer.coordinates(), nomec) 
+    
     # sys.exit()
 
 
@@ -907,11 +939,10 @@ arqFeitos = open(path_MGRS, 'a+')
 
 # 100 arvores
 nameBacias = [
-    # '741','7421','7422','744','745','746','7492','751','752','753',
-    # '754','755','756','757','758','759','7621','7622','763','764',
-    # '765','766','767','771','772','773', '7741','7742','775','776',
-    # '777',
-    '778','76111','76116','7612','7614','7615','7616','7617',
+    '741','7421','7422','744','745','746','7492','751','752','753',
+    '754','755','756','757','758','759','7621','7622','763','764',
+    '765','766','767','771','772','773', '7741','7742','775','776',
+    '777','778','76111','76116','7612','7614','7615','7616','7617',
     '7618','7619', '7613'
 ]
 # nameBacias = [
@@ -919,7 +950,7 @@ nameBacias = [
 #     '76111', '76116', '7612', '7615', '7616', '7617', '7618', 
 #     '7619', '7613'
 # ]
-modelo = "RF"# "GTB"# "RF"
+modelo = "GTB"# "GTB"# "RF"
 knowMapSaved = False
 listBacFalta = []
 cont = 0
@@ -936,7 +967,7 @@ for _nbacia in nameBacias[:]:
         print("-------------------.kmkl-------------------------------------")
         print("--------    classificando bacia " + _nbacia + "-----------------")   
         print("--------------------------------------------------------") 
-        iterandoXBacias(_nbacia, modelo) 
+        iterandoXBacias(_nbacia, modelo, False) 
         arqFeitos.write(_nbacia + '\n')
 
 arqFeitos.close()

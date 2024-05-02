@@ -11,6 +11,16 @@ var text = "";
     🚨 sirena
     ⚠️ atenção
     ✍️ escrevendo
-
+    🔥 fire
+    🗒️ caderno
+    📍 pin 
+    🔊 comuncado 
+    📩 e-mail
+    🔒 fechado 
+    ⛔ placa
+    👉🏻 o privado!
+    😉 legal
+    🌵 caatinga
+    📊 plot
 */
 

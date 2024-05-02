@@ -35,6 +35,7 @@ class ClassMosaic_indexs_Spectral(object):
         'bnd_L': ['blue','green','red','nir','swir1','swir2'],
         'bnd_fraction': ['gv','npv','soil'],
         'bioma': 'CAATINGA',
+        'biomas': ['CERRADO','CAATINGA'],
         'classMapB': [3, 4, 5, 9, 12, 13, 15, 18, 19, 20, 21, 22, 23, 24, 25, 26, 29, 30, 31, 32, 33,
                       36, 39, 40, 41, 46, 47, 48, 49, 50, 62],
         'classNew':  [3, 4, 3, 3, 12, 12, 15, 18, 18, 18, 18, 22, 22, 22, 22, 33, 29, 22, 33, 12, 33,
@@ -750,7 +751,7 @@ class ClassMosaic_indexs_Spectral(object):
             ic("show geometry() ", gradeKM.getInfo())
 
         imgColMosaic = ee.ImageCollection(self.options['asset_mosaic_mapbiomas']
-                                                    ).filter(ee.Filter.eq('biome', self.options['bioma'])
+                                                    ).filter(ee.Filter.inList('biome', self.options['biomas'])
                                                         ).filterBounds(gradeKM).select(arqParam.featureBands)        
         print(f" we loaded {imgColMosaic.size().getInfo()} images ")
         imgMosaic = imgColMosaic.map(lambda img: self.process_re_escalar_img(img))
@@ -965,7 +966,7 @@ class ClassMosaic_indexs_Spectral(object):
     # lstKeysFolder = ['cROIsN2manualNN', 'cROIsN2clusterNN'] 
     def save_ROIs_toAsset(self, collection, name, pos):
           
-        self.options.nfolder = 'cROIsN5allBND'
+        nfolder = 'cROIsN5allBND'
 
         optExp = {
             'collection': collection,
@@ -1116,7 +1117,7 @@ if setTeste:
 # https://code.earthengine.google.com/62b0572fcdcb8abbdc2b240eeeda85af
 
 show_IdReg = False
-colectSaved = True
+colectSaved = False
 getLstIds = False
 # path('update/<int:pk>/', update, name= 'url_update'),
 if getLstIds:
@@ -1127,6 +1128,18 @@ if getLstIds:
 else:
     nlksIDs = lstIdCodN5.lstIdsGradeCaat
 print(f"lista de Ids com {len(nlksIDs)} grades  ")
+
+nlksIDs = [     
+    1106,1107,1108,1109,1165,1166,1167,1168,1224,1225,1226,1227,1284,1285,1286,1342,1343,1344,1345,1346,
+    1402,1403,1404,1461,1462,1463,1520,1521,1578,1579,1580,1581,1636,1637,1638,1639,1640,1695,1696,1697,
+    1698,1699,1753,1754,1755,1756,1757,1758,1812,1813,1814,1815,1816,1817,1870,1871,1872,1873,1874,1875,
+    1876,1934,1935,936,937,938,939,993,994,995,996,997,998,999,1000,1051,1052,1053,1054,1055,1056,1057,
+    1058,1059,1109,1110,1111,1112,1113,1114,1115,1116,1167,1168,1169,1170,1171,1172,1173,1174,1175,1226,
+    1227,1228,1229,1230,1231,1232,1233,1234,1285,1286,1287,1288,1289,1290,1291,1292,1345,1346,1347,1348,
+    1349,1350,1403,1404,1405,1406,1407,1408,1462,1463,1464,1465,1466,1467,1521,1522,1523,1524,1525,1580,
+    1581,1582,1583,1584,1639,1640,1641,1642,1698,1699,1700,1701,1757,1758,1759,1816,1817,1818,1875,1876,
+    1934,1935, 
+]
 
 if colectSaved:
     lstAssetFolder = GetPolygonsfromFolder(param['asset_ROIs_automatic'])
@@ -1140,9 +1153,9 @@ if colectSaved:
     lstProcpool = [(cc, kk) for cc, kk in enumerate(lstGradeMissing[:])]    
 
 else:
-    lstProcpool = [(cc, kk) for cc, kk in enumerate(nlksIDs[1500:2000])]
+    lstProcpool = [(cc, kk) for cc, kk in enumerate(nlksIDs[:2000])]
 
-# print(nlksIDs)
+print(nlksIDs)
 # sys.exit()
 lstKeysFolder = 'asset_shpGrade'  # , , 'asset_ROIs_manual', 'asset_ROIs_cluster'
 objetoMosaic_exportROI = ClassMosaic_indexs_Spectral(setTeste)
@@ -1151,6 +1164,7 @@ print("============= Get parts of the list ===============")
 # print(lstProcpool[0])
 # objetoMosaic_exportROI.iterate_bacias(lstProcpool[0])
 if not setTeste:
+    print("Não fazer teste")
     step = 70
     for ll in range(0, len(lstProcpool), step):
         lstProcpoolss = lstProcpool[ll: ll + step]
