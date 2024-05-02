@@ -537,7 +537,8 @@ def processoExportar(mapaRF, regionB, nameB):
         'region':regionB.getInfo(), #['coordinates']
         'scale': 30, 
         'maxPixels': 1e13,
-        "pyramidingPolicy":{".default": "mode"}
+        "pyramidingPolicy":{".default": "mode"},
+        'priority': 1000
     }
     task = ee.batch.Export.image.toAsset(**optExp)
     task.start() 
@@ -950,7 +951,7 @@ nameBacias = [
 #     '76111', '76116', '7612', '7615', '7616', '7617', '7618', 
 #     '7619', '7613'
 # ]
-modelo = "GTB"# "GTB"# "RF"
+modelo = "RF"# "GTB"# "RF"
 knowMapSaved = False
 listBacFalta = []
 cont = 0

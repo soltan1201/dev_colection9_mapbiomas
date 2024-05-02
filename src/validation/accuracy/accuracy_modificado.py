@@ -110,6 +110,8 @@ def classification_report_shinny(df_temp, class_names, class_values, year):
 	text_gb += str(erro_comissao) + ';' + str(erro_omissao) + ';'
 
 	quantid, allocat, exchange, shift = allocation_erros(matrix, num_classes)
+	
+	#  quantity_diss ; alloc_dis ; exchange; shift
 	mcalc = np.round_(sum(quantid) / 2, decimals= 2)
 	text_gb += str(mcalc) + ';'
 

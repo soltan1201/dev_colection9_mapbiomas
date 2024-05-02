@@ -22,5 +22,12 @@ var text = "";
     😉 legal
     🌵 caatinga
     📊 plot
+    🚀 foguete
+    ➡️  zeta
+    📷 camara
+    📲 celular 
+    💻 notebook 
+    🫂 abraços
+    🔉 son
 */
 

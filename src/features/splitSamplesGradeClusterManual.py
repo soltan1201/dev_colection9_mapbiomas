@@ -33,7 +33,7 @@ param = {
     'asset_shpGrade': 'projects/mapbiomas-arida/ALERTAS/auxiliar/basegrade30KMCaatinga',
     'assetROIsCC': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN2clusterNN',
     'assetROIsMn': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN2manualNN', 
-    'asset_output': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/roisJoinsbyBaciaNN",
+    'asset_output': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/roisredDJoinsbyBaciaNN",
     'numeroTask': 6,
     'numeroLimit': 140,
     'conta' : {
@@ -95,13 +95,12 @@ def gerenciador(cont):
 
 
 nameBacias = [
-    # '741',
-    # '7421','7422','744','745','746','7492','751','752','753',
-    # '754','755','756','757','758','759','7621','7622','763','764',
-    # '765','766',
-    '767','771','772','773', '7741','7742','775','776',
-    '777',  '76111','76116','7612',
-    '7614','7615','7616','7617', '7618','7619', '7613'
+    '741','7421','7422','744','745','746','7492','751','752','753',
+    '754','755','756','757','758','759','7621','7622','763','764',
+    '765','766',
+    # '767','771','772','773', '7741','7742','775','776',
+    # '777',  '76111','76116','7612',
+    # '7614','7615','7616','7617', '7618','7619', '7613'
 ]  # '778',
 
 cont = gerenciador(0)
@@ -145,7 +144,7 @@ for nbacia in nameBacias:
         if '4' in dictClass.keys():
             print("processing 4")
             featGradeBaYYc4 = featGradeBaYY.filter(ee.Filter.eq('class', 4)).randomColumn('rand')
-            limiarCut4 = float(2500 / dictClass['4'])
+            limiarCut4 = float(3500 / dictClass['4'])
             featGradeBaYYc4 = featGradeBaYYc4.filter(ee.Filter.lt('rand', limiarCut4))
             featGradeBaYYc4 = featGradeBaYYc4.select(namepropList)
 
@@ -154,7 +153,7 @@ for nbacia in nameBacias:
         # preprocessing class 12
         if '12' in dictClass.keys():
             print("processing 12")
-            if dictClass['12'] > 800:
+            if dictClass['12'] > 600:
                 featGradeBaYYc12 = featGradeBaYY.filter(ee.Filter.eq('class', 12)).randomColumn('rand')        
                 limiarCut12 = float(600 / dictClass['12'])
                 featGradeBaYYc12 = featGradeBaYYc12.filter(ee.Filter.lt('rand', limiarCut4))
@@ -167,9 +166,9 @@ for nbacia in nameBacias:
         # preprocessing class 12
         if '15' in dictClass.keys():
             print("processing 15")
-            if dictClass['15'] > 1000:
+            if dictClass['15'] > 750:
                 featGradeBaYYc15 = featGradeBaYY.filter(ee.Filter.eq('class', 15)).randomColumn('rand')        
-                limiarCut15 = float(800 / dictClass['15'])
+                limiarCut15 = float(700 / dictClass['15'])
                 featGradeBaYYc15 = featGradeBaYYc15.filter(ee.Filter.lt('rand', limiarCut4))
                 featGradeBaYYc15 = featGradeBaYYc15.select(namepropList)
             else: 

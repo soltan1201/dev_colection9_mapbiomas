@@ -26,11 +26,8 @@ var visualizar = {
 var param = { 
     assetMapC7: 'projects/mapbiomas-workspace/public/collection7_1/mapbiomas_collection71_integration_v1',
     assetMapC8: 'projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1',
-    asset_MapC9 : {
-            'V1':'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassV1',
-        //    'V4':'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/CLASS/ClassCol8V4',
-        //    'V5':'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/CLASS/ClassCol8V5',
-    },
+    asset_MapC9X : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVX',
+    asset_MapC9P : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVP',
     // assetclass : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/class_filtered_Fq',
     // assetclass : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/class_filtered_GF',    
     assetIm: 'projects/nexgenmap/MapBiomas2/LANDSAT/BRAZIL/mosaics-2',    
@@ -54,13 +51,25 @@ var param = {
 }
 var selBacia = 'all';
 var yearcourrent = 2020;
+var version = 5;
+var assetCol9 = param.asset_MapC9X;
+if (version > 5){
+    assetCol9 = param.asset_MapC9P;
+}
 var banda_activa = 'classification_' + String(yearcourrent)
 var FeatColbacia = ee.FeatureCollection(param.assetBacia);
 var imgMapCol71= ee.Image(param.assetMapC7);
 var imgMapCol8= ee.Image(param.assetMapC8);
-var imgMapCol9V1 =  ee.ImageCollection(param.asset_MapC9.V1)
-                            .filter(ee.Filter.eq('version', 5))
+
+var imgMapCol9RF =  ee.ImageCollection(assetCol9)
+                            .filter(ee.Filter.eq('version', version))
+                            .filter(ee.Filter.eq("classifier", "RF"));
+                            // .max().clip(shp_limit.geometry());
+
+var imgMapCol9GTB =  ee.ImageCollection(assetCol9)
+                            .filter(ee.Filter.eq('version', version))
                             .filter(ee.Filter.eq("classifier", "GTB"));
+                            // .max().clip(shp_limit.geometry());
 var Mosaicos = ee.ImageCollection(param.assetIm).filter(
                         ee.Filter.eq('biome', 'CAATINGA')).select(param.bandas);
 
@@ -68,21 +77,23 @@ if (selBacia === 'all'){
     //  FeatColbacia geometria com todas as Bacias  
     imgMapCol71 = imgMapCol71.clip(FeatColbacia.geometry());
     imgMapCol8 = imgMapCol8.clip(FeatColbacia.geometry());
-    imgMapCol9V1 = imgMapCol9V1.max();
+    imgMapCol9RF = imgMapCol9RF.max();
+    imgMapCol9GTB = imgMapCol9GTB.max();
 
 }else{
-    FeatColbacia = FeatColbacia.filter(ee.Filter.eq('nunivotto3', _nbselBaciaacia));   
+    FeatColbacia = FeatColbacia.filter(ee.Filter.eq('nunivotto3', selBacia));   
     imgMapCol71 = imgMapCol71.clip(FeatColbacia.geometry());
     imgMapCol8 = imgMapCol8.clip(FeatColbacia.geometry());
-    imgMapCol9V1 = imgMapCol9V1.filter(ee.Filter.eq("id_bacia", selBacia)); 
+    imgMapCol9RF = imgMapCol9RF.filter(ee.Filter.eq("id_bacia", selBacia)); 
+    imgMapCol9GTB = imgMapCol9GTB.filter(ee.Filter.eq("id_bacia", selBacia)); 
     Mosaicos = Mosaicos.filterBounds(FeatColbacia);
 }
 
 
 print(" 📍 imagem no Asset Geral Mapbiomas Col 7.1  ‼️", imgMapCol71);
 print(" 📍 imagem no Asset Geral Mapbiomas Col 8.0  ‼️", imgMapCol8);
-print(" 📍 imagem no Asset Geral X Bacias col 9 ‼️", imgMapCol9V1);
-
+print(" 📍 imagem no Asset Geral X Bacias col 9 RF", imgMapCol9RF);
+print(" 📍 imagem no Asset Geral X Bacias col 9 GTB", imgMapCol9GTB);
 
 var mosaic_year = Mosaicos.filter(ee.Filter.eq('year', yearcourrent)).median();                     
 Map.addLayer(FeatColbacia, {color: 'green'}, 'bacia');
@@ -92,7 +103,8 @@ var imgMapCol71temp = imgMapCol71.select(banda_activa).remap(param.classMapB, pa
 var imgMapCol8temp = imgMapCol8.select(banda_activa).remap(param.classMapB, param.classNew);
 Map.addLayer(imgMapCol71temp, visualizar.visclassCC,'Col71_' + String(yearcourrent), false);
 Map.addLayer(imgMapCol8temp,  visualizar.visclassCC, 'Col8_'+ String(yearcourrent), false)
-Map.addLayer(imgMapCol9V1.select(banda_activa),  visualizar.visclassCC, 'Col9_ClassV1');
+Map.addLayer(imgMapCol9RF.select(banda_activa),  visualizar.visclassCC, 'Class RF', false);
+Map.addLayer(imgMapCol9GTB.select(banda_activa),  visualizar.visclassCC, 'Class GTB', false);
 
 
 

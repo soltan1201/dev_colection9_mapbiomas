@@ -65,7 +65,8 @@ def processoExportar(ROIsFeat, nameT, porAsset):
         optExp = {
             'collection': ROIsFeat, 
             'description': nameT, 
-            'folder':"ptosAccCol9"          
+            'folder':"ptosAccCol9",
+            # 'priority': 1000          
             }
         task = ee.batch.Export.table.toDrive(**optExp)
         task.start() 
@@ -276,15 +277,17 @@ if param['isImgCol']:
     if getid_bacia:         
         nameBands = 'classification'
         prefixo = ""
-        for model in ['GTB']:   # ,'RF'
+        for model in ['GTB','RF']:   # 
             mapClassYYMod = mapClass.filter(
                                 ee.Filter.eq('version', version)).filter(
                                     ee.Filter.eq('classifier', model))
             print(f"########## 🔊 FILTERED BY VERSAO {version} AND MODEL {model} 🔊 ###############") 
-            print(" 🚨 número de mapas bacias ", mapClassYYMod.size().getInfo()) 
+            sizeimgCol = mapClassYYMod.size().getInfo()
+            print(" 🚨 número de mapas bacias ", sizeimgCol) 
             # sys.exit()               
-            # getPointsAccuraciaFromIC (imClass, isImgCBa, ptosAccCorreg, modelo, version, exportByBasin, exportarAsset)
-            getPointsAccuraciaFromIC (mapClassYYMod, True, pointTrue, model, version, True, False)
+            if sizeimgCol > 0:
+                # getPointsAccuraciaFromIC (imClass, isImgCBa, ptosAccCorreg, modelo, version, exportByBasin, exportarAsset)
+                getPointsAccuraciaFromIC (mapClassYYMod, True, pointTrue, model, version, True, False)
 
     else:
         print(f"########## 🔊 FILTERED BY VERSAO {version} 🔊 ###############")              
@@ -293,7 +296,8 @@ if param['isImgCol']:
         immapClassYY = ee.Image().byte()
         for yy in range(1985, 2023):
             nmIm = 'CAATINGA-' + str(yy) + '-' + str(version)
-            imTmp = mapClassYY.filter(ee.Filter.eq('system:index', nmIm)).first().rename("classification_" + str(yy))
+            nameBands = 'classification_' + str(yy)
+            imTmp = mapClassYY.filter(ee.Filter.eq('system:index', nmIm)).first().rename(nameBands)
             if yy == 1985:
                 immapClassYY = imTmp.byte()
             else:

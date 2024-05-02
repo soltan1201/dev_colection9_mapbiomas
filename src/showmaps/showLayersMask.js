@@ -44,25 +44,31 @@ var parameters = {
     'classNew': [3, 4, 3, 3,12,12,21,21,21,21,21,22,22,22,22,33,29,22,33,12,33, 21,33,33,21,21,21,21,21,21,21]
 
 };
-
+var version = 5;
 var year_select = 1996;
 var banda_activa = 'classification_' + year_select.toString();
 var shp_limit = ee.FeatureCollection(parameters.limit_caat);
 var imgMapCol71= ee.Image(parameters.assetMapC7).clip(shp_limit.geometry());
 var imgMapCol8= ee.Image(parameters.assetMapC8).clip(shp_limit.geometry());
-var imgMapCol9V1 =  ee.ImageCollection(parameters.asset_MapC9)
-                            .filter(ee.Filter.eq('version', 5))
+var imgMapCol9RF =  ee.ImageCollection(parameters.asset_MapC9)
+                            .filter(ee.Filter.eq('version', version))
+                            .filter(ee.Filter.eq("classifier", "RF"))
+                            .max().clip(shp_limit.geometry());
+
+var imgMapCol9GTB =  ee.ImageCollection(parameters.asset_MapC9)
+                            .filter(ee.Filter.eq('version', version))
                             .filter(ee.Filter.eq("classifier", "GTB"))
                             .max().clip(shp_limit.geometry());
 
 print("imagem no Asset Geral Mapbiomas Col 7.1", imgMapCol71);
 print("imagem no Asset Geral Mapbiomas Col 8.0", imgMapCol8);
-print("imagem no Asset Geral X Bacias col 9", imgMapCol9V1);
+print("imagem no Asset Geral X Bacias col 9 RF", imgMapCol9RF);
+print("imagem no Asset Geral X Bacias col 9 GTB", imgMapCol9GTB);
 
 imgMapCol71 = imgMapCol71.select(banda_activa)
 imgMapCol8 = imgMapCol8.select(banda_activa)
-imgMapCol9V1 = imgMapCol9V1.select(banda_activa)
-
+imgMapCol9RF = imgMapCol9RF.select(banda_activa)
+imgMapCol9GTB = imgMapCol9GTB.select(banda_activa)
 //projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/masks/maks_fire_w5/
 // 
 var nameFireMask = 'masks_fire_wind5_' + year_select.toString();
@@ -94,7 +100,8 @@ var areaColeta = imgCoincd.multiply(imgEstavel).multiply(imgALerts.eq(0))
 
 Map.addLayer(imgMapCol71, vis.visclassCC,'Col71_' + String(year_select), false);
 Map.addLayer(imgMapCol8,  vis.visclassCC, 'Col8_'+ String(year_select))
-Map.addLayer(imgMapCol9V1,  vis.visclassCC, 'Col9_ClassV1', false);
+Map.addLayer(imgMapCol9RF,  vis.visclassCC, 'Col9_ClassV1', false);
+Map.addLayer(imgMapCol9GTB,  vis.visclassCC, 'Col9_ClassV1', false);
 Map.addLayer(imgEstavel.selfMask(), vis.estavel, "Áreas estaveis", false);
 Map.addLayer(imgCoincd.selfMask(), vis.coincidentes, "Áreas Coincidentes", false);
 Map.addLayer(imgFire.gt(0).selfMask(), vis.fire, "fire year " + year_select.toString(), false) ;
