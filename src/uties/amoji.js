@@ -17,6 +17,7 @@ var text = "";
     🔊 comuncado 
     📩 e-mail
     🔒 fechado 
+    🚫 erro
     ⛔ placa
     👉🏻 o privado!
     😉 legal

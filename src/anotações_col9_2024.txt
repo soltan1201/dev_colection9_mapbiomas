@@ -57,8 +57,9 @@ Documentação
     https://scikit-learn.org/stable/auto_examples/model_selection/plot_roc.html
     https://machinelearningmastery.com/tune-xgboost-performance-with-learning-curves/
     
-    icons 
+    icons e colors
     https://coolsymbol.com/
+    https://imagecolorpicker.com/color-code/9932cc
 
     biblioteca de índices 
     https://eemont.readthedocs.io/en/latest/ 
@@ -151,3 +152,20 @@ projects/mapbiomas-workspace/COLECAO9/urbano
 projects/mapbiomas-workspace/COLECAO9/mineracao
 projects/mapbiomas-workspace/COLECAO9/agropecuaria
 projects/mapbiomas-workspace/COLECAO9/zona-costeira
+
+
+
+Distribuição de Classes por Bacias 
+Agro
+"7616","7617","7618","7619","7622","7621","7741",
+"7648","765","754","757","763","767","776","7615"
+
+Florestas 
+"76116","7421","7422","7622","7742","7741","741","744","745","746","752",
+"753","754","759","763","766","771","772","773","775","777","778"
+
+Campos
+'741','7421','7422','744','751','752','753','757','758','759',    
+'763', '771','772','773', '7741','7742','775','776','777','778',    
+'76111','76116','7612','7614','7615','7616','7617','7618','7619', 
+'7613'

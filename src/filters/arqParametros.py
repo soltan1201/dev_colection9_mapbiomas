@@ -129,17 +129,6 @@ allFeatures = [
         "wefi_median","wefi_median_wet","wefi_amp","wefi_stdDev","slope"      
         ]
 
-featureBands = [
-        'blue_median','blue_median_wet','blue_median_dry','blue_min','blue_stdDev', 
-        'green_median','green_median_wet','green_median_dry','green_min','green_stdDev','green_median_texture', 
-        'red_median','red_median_wet','red_median_dry','red_min', 'red_stdDev', 
-        'nir_median','nir_median_wet','nir_median_dry','nir_min','nir_stdDev', 
-        'swir1_median','swir1_median_wet','swir1_median_dry','swir1_min', 'swir1_stdDev', 
-        'swir2_median', 'swir2_median_wet', 'swir2_median_dry','swir2_min', 'swir2_stdDev',
-        'slope'
-]
-
-
 featuresreduce = [
         'blue_median', 'blue_median_wet', 'blue_median_dry', 'blue_min', 'blue_stdDev', 'green_median',
         'green_median_dry', 'green_median_wet', 'green_median_texture', 'green_min', 'green_stdDev', 
@@ -392,51 +381,3 @@ area_bacia_inCaat = {
         "7618":18255015569.601635,
         "7619":36309315896.40004
 }
-
-# esta diccionario es para estabelecer classes representativas no processo de classificação 
-# este permite entrar só amostras com estas classes
-dictClassRepre = {
-        "741": [3,4,12,15,21,22,33],
-        "7421": [3,4,12,15,21,22,33],
-        "7422": [3,4,12,15,21,22,33],
-        "744": [3,4,12,15,21,22,33],
-        "745": [3,4,15,21,22,33],
-        "746": [3,4,15,21,22,33],
-        "7492": [4,15,21,22,33],
-        "751": [3,4,12,15,21,22,33],
-        "752": [3,4,12,15,21,22,33],
-        "753": [3,4,12,15,21,22,33],
-        "754": [3,4,15,21,18,22,33],
-        "755": [4,15,21,22,33],
-        "756": [4,15,21,22,33],
-        "757": [4,12,15,21,18,22,33],
-        "758": [4,12,15,21,22,33],
-        "759": [3,4,12,15,21,22,33],
-        "76111": [4,12,15,21,22,33],
-        "76116":[3,4,12,15,21,22,33],
-        "7612": [4,12,15,21,22,33],
-        "7613": [4,12,15,21,22,33],
-        "7614": [4,12,15,21,22,33],
-        "7615": [4,12,15,21,18,22,33],
-        "7616": [4,12,15,21,18,22,33],
-        "7617": [4,12,15,21,18,22,33],
-        "7618": [4,12,15,21,18,22,33],
-        "7619": [4,12,15,21,18,22,33],
-        "7621": [3,4,15,21,18,22,33],
-        "7622": [3,4,15,21,18,22,33],
-        "763": [3,4,12,15,21,18,22,33],
-        "764": [4,15,21,22,33],
-        "765": [4,15,21,18,22,33],        
-        "766": [3,4,15,21,22,33],
-        "767": [4,15,21,18,22,33],        
-        "771": [3,4,12,15,21,22,33],
-        "772": [3,4,12,15,21,22,33],
-        "773": [3,4,12,15,21,22,33],
-        "7741": [3,4,12,15,21,18,22,33],
-        "7742": [3,4,12,15,21,22,33],
-        "775": [3,4,12,15,21,22,33],
-        "776": [4,15,12,21,22,33],
-        "777": [3,4,12,15,21,22,33],
-        "778": [3,4,12,15,21,22,33],
-}
-

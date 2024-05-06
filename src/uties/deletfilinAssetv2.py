@@ -11,8 +11,8 @@ except:
     print("Unexpected error:", sys.exc_info()[0])
     raise
 
-# asset = 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/classification_Col71_S1v4'
-asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/masks/maks_fire_w5'
+# asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fill'
+# asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Spatial'
 
 lsBacias = [
     '741','7421','7422','744','745','746','7492','751','752','753',
@@ -22,7 +22,6 @@ lsBacias = [
     '7422','744','7492','751','752','757','7622','763',
     '765','766','767','772','773','7741','7742','776',
     '778','7612','7613','7615','7617'
-
 ]
 
 imgCol = ee.ImageCollection(asset)

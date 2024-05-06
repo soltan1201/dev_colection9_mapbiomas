@@ -36,21 +36,25 @@ param = {
     # 'inputAsset': path + 'class_filtered_Tp',   
     'assetCol': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVX" ,
     'assetColprob': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVP" ,
+    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fill',
+    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Spatial',
+    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Temporal',
+    'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Frequency',
     'asset_Map' : "projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1",
     'asset_bacias': 'projects/mapbiomas-arida/ALERTAS/auxiliar/bacias_hidrografica_caatinga',
     'collection': '9.0',
     'geral':  True,
     'isImgCol': True,  
     'inBacia': True,
-    'version': 7,
+    'version': 9,
     'sufixo': '_Cv', 
     'assetBiomas': 'projects/mapbiomas-workspace/AUXILIAR/biomas_IBGE_250mil', 
     'biome': 'CAATINGA', 
     'source': 'geodatin',
     'scale': 30,
     'driverFolder': 'AREA-EXPORT-COL9', 
-    'lsClasses': [3,4,12,21,22,33,29],
-    'changeAcount': False,
+    'lsClasses': [3,4,12,15,18,21,22,33],
+    'changeAcount': True,
     'numeroTask': 0,
     'numeroLimit': 37,
     'conta' : {
@@ -138,7 +142,7 @@ def iterandoXanoImCruda(imgAreaRef, imgMapp, limite):
 
         
 #exporta a imagem classificada para o asset
-def processoExportar(areaFeat, nameT):  
+def processoExportar(areaFeat, nameT, ipos):  
     
     optExp = {
           'collection': areaFeat, 
@@ -149,7 +153,7 @@ def processoExportar(areaFeat, nameT):
     
     task = ee.batch.Export.table.toDrive(**optExp)
     task.start() 
-    print("salvando ... " + nameT + "..!")      
+    print(f"🔉 {ipos} salvando ...📲   {nameT} ... ")      
 
 #testes do dado
 # https://code.earthengine.google.com/8e5ba331665f0a395a226c410a04704d
@@ -159,16 +163,27 @@ lstBands = ['classification_' + str(yy) for yy in range(1985, 2024)]
 bioma250mil = ee.FeatureCollection(param['assetBiomas'])\
                     .filter(ee.Filter.eq('Bioma', 'Caatinga')).geometry()
 knowImgcolg = False
-lstVers = [5, 6, 7]
+isFilter = True
+if 'POS-CLASS' in param['assetFilters']:
+    subfolder = "_" + param['assetFilters'].split('/')[-1] 
+else:
+    subfolder= ''
+# lstVers = [5, 6, 7, 8, 9] # versions classification 
+# lstVers = [5, 9] # versions Filters 
+
 version = param['version']
 if param['changeAcount']:
     gerenciador(0, param)
 pixelArea = ee.Image.pixelArea().divide(10000)
 if param['isImgCol']:
-    if int(version) > 6:  # 
-        imgsMaps = ee.ImageCollection(param['assetColprob'])# .select(lstBands)
+    if isFilter:
+        imgsMaps = ee.ImageCollection(param['assetFilters'])
     else:
-        imgsMaps = ee.ImageCollection(param['assetCol'])# .select(lstBands)
+        if int(version) > 6:  # 
+            imgsMaps = ee.ImageCollection(param['assetColprob'])# .select(lstBands)
+        else:
+            imgsMaps = ee.ImageCollection(param['assetCol'])# .select(lstBands)
+    
     getid_bacia = imgsMaps.first().get('id_bacia').getInfo()
     print(f"we load bacia {getid_bacia}")
     if knowImgcolg:
@@ -177,23 +192,28 @@ if param['isImgCol']:
         nameBands = 'classification'
         prefixo = ""
         for model in ['GTB','RF']:   # 
-            mapClassMod = imgsMaps.filter(
+            if isFilter and model != 'RF':
+                mapClassMod = imgsMaps.filter(
+                                ee.Filter.eq('version', version))
+            else:
+                mapClassMod = imgsMaps.filter(
                                 ee.Filter.eq('version', version)).filter(
                                     ee.Filter.eq('classifier', model))
+
             print(f"########## 🔊 FILTERED BY VERSION {version} AND MODEL {model} 🔊 ###############") 
             sizeimgCol = mapClassMod.size().getInfo()
             print(" 🚨 número de mapas bacias ", sizeimgCol) 
-            nameCSV = 'areaXclasse_' + param['biome'] + '_Col' + param['collection'] + "_" + model + "_vers_" + str(version)
+            nameCSV = 'areaXclasse_' + param['biome'] + '_Col' + param['collection'] + "_" + model +  subfolder + "_vers_" + str(version)
             # sys.exit()               
             if sizeimgCol > 0:
-                for nbacia in nameBacias:
+                for cc, nbacia in enumerate(nameBacias): # nameBacias
                     ftcol_bacias = ee.FeatureCollection(param['asset_bacias']).filter(
                                         ee.Filter.eq('nunivotto3', nbacia)).geometry()
                     limitInt = bioma250mil.intersection(ftcol_bacias)
                     mapClassBacia = mapClassMod.filter(ee.Filter.eq('id_bacia', nbacia)).first()
                     areaM = iterandoXanoImCruda(pixelArea, mapClassBacia, limitInt) 
                     nameCSVBa = nameCSV + "_" + nbacia 
-                    processoExportar(areaM, nameCSVBa)
+                    processoExportar(areaM, nameCSVBa, cc)
     else:
         print(f"########## 🔊 FILTERED BY VERSAO {version} 🔊 ###############")              
         mapClassYY = mapClass.filter(ee.Filter.eq('version', version))

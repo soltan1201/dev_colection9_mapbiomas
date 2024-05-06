@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 """
-Produzido por Geodatin - Dados e Geoinformacao
+Produzido por Geodatin - Dados e Geoinformação
 DISTRIBUIDO COM GPLv2
 @author: geodatin
 """
@@ -396,16 +396,16 @@ if buildMetricsAcc:
     # .iloc[:1]
     dfAccBa = dfAccYYBa.progress_apply(calculing_metrics_AccBacia, axis= 1)
     print("show the first row from table dfAccYYBa")
-    print(dfAccBa.head())
+    # print(dfAccBa.head())
     print("the size table is ", dfAccBa.shape)
     # sys.exit()
 
     dfAccYY = dfAccYY.progress_apply(calculing_metrics_AccGlobal, axis= 1)
     print("show the first row from table dfAccYY")
-    print(dfAccYYBa.head())
+    # print(dfAccYYBa.head())
     print("the size table is ", dfAccYYBa.shape)
 
-    pathOutpout = base_path + '/dados/accTables/'
+    pathOutpout = base_path + '/dados/globalTables/'
     nameTablesGlob = "regMetricsAccGlobalCol9.csv"        
     nameTablesbacias = "regMetricsAccBaciasCol9.csv"
     print("====== SAVING GLOBAL ACCURACY BY YEARS =========== ")
@@ -453,7 +453,7 @@ if buildMetAggrements:
     print("the size table is ", dfAggCalc.shape)
     
     # checked and Create the directory
-    pathOutpout = base_path + '/dados/accTables/'
+    pathOutpout = base_path + '/dados/globalTables/'
     # path = Path(pathOutpout)
     # path.mkdir(parents=True, exist_ok=True)    
     nameTablesGlob = "regAggrementsAccGlobalCol9.csv"

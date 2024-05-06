@@ -77,7 +77,8 @@ def processoExportar(ROIsFeat, nameT, porAsset):
 
 #nome das bacias que fazem parte do bioma
 nameBacias = [
-      '741', '7421','7422','744','745','746','751','752',  # '7492',
+    #   '741', 
+      '7421','7422','744','745','746','751','752',  # '7492',
       '753', '754','755','756','757','758','759','7621','7622','763',
       '764','765','766','767','771','772','773', '7741','7742','775',
       '776','76111','76116','7612','7613','7614','7615',  # '777','778',
@@ -90,7 +91,12 @@ param = {
     'assetBiomas' : 'projects/mapbiomas-workspace/AUXILIAR/biomas_IBGE_250mil',
     'assetpointLapig': 'projects/mapbiomas-workspace/VALIDACAO/mapbiomas_85k_col3_points_w_edge_and_edited_v2',    
     'limit_bacias': "users/CartasSol/shapes/bacias_limit",
-    'assetCol': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVP" ,
+    'assetCol': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVX" ,
+    'assetColprob': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVP" ,
+    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Spatial',
+    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Frequency',
+    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fill',
+    'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Temporal',
     'asset_Map' : "projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1",
     # 'assetCol6': path_asset + "class_filtered/maps_caat_col6_v2_4",
     'classMapB': [3, 4, 5, 9,12,13,15,18,19,20,21,22,23,24,25,26,29,30,31,32,33,36,37,38,39,40,41,42,43,44,45],
@@ -176,11 +182,11 @@ def change_value_class(feat):
     return feat_tmp
 
 
-def getPointsAccuraciaFromIC (imClass, isImgCBa, ptosAccCorreg, modelo, version, exportByBasin, exportarAsset):
+def getPointsAccuraciaFromIC (imClass, isImgCBa, ptosAccCorreg, modelo, version, exportByBasin, exportarAsset,subbfolder):
 
     #lista de anos
     list_anos = [str(k) for k in range(param['anoInicial'], param['anoFinal'] + 1)]
-    print('lista de anos', list_anos)
+    # print('lista de anos', list_anos)
     # update properties 
     lsAllprop = param['lsProp'].copy()
     for ano in list_anos:
@@ -193,7 +199,7 @@ def getPointsAccuraciaFromIC (imClass, isImgCBa, ptosAccCorreg, modelo, version,
 
     sizeFC = 0
     for cc, _nbacia in enumerate(nameBacias[:]):    
-        nameImg = 'mapbiomas_collection90_Bacia_v5' 
+        nameImg = 'mapbiomas_collection90_Bacia_v' + str(version) 
         print("processando img == " + nameImg + " em bacia *** " + _nbacia)
         baciaTemp = ftcol_bacias.filter(ee.Filter.eq('nunivotto3', _nbacia)).geometry()    
 
@@ -217,7 +223,7 @@ def getPointsAccuraciaFromIC (imClass, isImgCBa, ptosAccCorreg, modelo, version,
         pointAccTemp = pointAccTemp.map(lambda Feat: Feat.set('bacia', _nbacia))
         if exportByBasin:
             if modelo != '':
-                name = 'occTab_corr_Caatinga_' + _nbacia + "_" + modelo + "_" + str(version) + "_Col9" 
+                name = 'occTab_corr_Caatinga_' + _nbacia + "_" + modelo + subbfolder + "_" + str(version) + "_Col9" 
             else:
                 name = 'occTab_corr_Caatinga_' + _nbacia + "_" + str(version) + "_Col9" 
             processoExportar(pointAccTemp, name, exportarAsset)
@@ -241,7 +247,7 @@ expPointLapig = False
 knowImgcolg = True
 param['isImgCol'] = True
 param['inBacia'] = True
-version = 7
+version = 5
 bioma250mil = ee.FeatureCollection(param['assetBiomas'])\
                     .filter(ee.Filter.eq('Bioma', 'Caatinga')).geometry()
 ## os pontos só serão aqueles que representam a Caatinga 
@@ -258,17 +264,27 @@ if expPointLapig:
     processoExportar(pointTrue, param['assetpointLapig'].split("/")[-1] + '_reclass', False)
     
 # sys.exit()
-
-
 ########################################################
 #   porBacia -----  Image
 #              |--  ImageCollection -> min() -> Image
 #   porBioma -----  Image
 #              |--  ImageCollection -> min() -> Image
 #######################################################
+isFilter = True
+if 'POS-CLASS' in param['assetFilters']:
+    subfolder = "_" + param['assetFilters'].split('/')[-1] 
+else:
+    subfolder= ''
 
 if param['isImgCol']:
-    mapClass = ee.ImageCollection(param['assetCol'])
+    if isFilter:
+        mapClass = ee.ImageCollection(param['assetFilters'])
+    else:
+        if int(version) > 6:  # 
+            mapClass = ee.ImageCollection(param['assetColprob'])# .select(lstBands)
+        else:
+            mapClass = ee.ImageCollection(param['assetCol'])# .select(lstBands)
+
     getid_bacia = mapClass.first().get('id_bacia').getInfo()
     print(f"we load bacia {getid_bacia}")
     
@@ -278,16 +294,20 @@ if param['isImgCol']:
         nameBands = 'classification'
         prefixo = ""
         for model in ['GTB','RF']:   # 
-            mapClassYYMod = mapClass.filter(
+            if isFilter and model != 'RF':
+                mapClassMod = mapClass.filter(
+                                ee.Filter.eq('version', version))
+            else:
+                mapClassMod = mapClass.filter(
                                 ee.Filter.eq('version', version)).filter(
                                     ee.Filter.eq('classifier', model))
             print(f"########## 🔊 FILTERED BY VERSAO {version} AND MODEL {model} 🔊 ###############") 
-            sizeimgCol = mapClassYYMod.size().getInfo()
+            sizeimgCol = mapClassMod.size().getInfo()
             print(" 🚨 número de mapas bacias ", sizeimgCol) 
             # sys.exit()               
             if sizeimgCol > 0:
                 # getPointsAccuraciaFromIC (imClass, isImgCBa, ptosAccCorreg, modelo, version, exportByBasin, exportarAsset)
-                getPointsAccuraciaFromIC (mapClassYYMod, True, pointTrue, model, version, True, False)
+                getPointsAccuraciaFromIC (mapClassMod, True, pointTrue, model, version, True, False,  subfolder)
 
     else:
         print(f"########## 🔊 FILTERED BY VERSAO {version} 🔊 ###############")              

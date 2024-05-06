@@ -32,6 +32,7 @@ param = {
     'asset_ROIs_grades': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/roisGradesgrouped'},
     'asset_ROIS_bacia_grade': {'id': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/roisGradesgroupedBuf'},
     'asset_ROIS_joinsBaGr': {'id': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/roisJoinsbyBaciaNN'},
+    'asset_ROISall_joins': {'id': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/roisJoinedBaGrNN'},
     'anoInicial': 1985,
     'anoFinal': 2022,
     'numeroTask': 6,
@@ -129,8 +130,8 @@ lstNameFeat = []
 # sys.exit()
 # iterando com cada uma das folders FeatC do asset
 # 'asset_ROIs_cluster', 'asset_ROIs_manual', asset_ROIs_grades, asset_ROIS_bacia_grade
-# asset_ROIS_joinsBaGr ,
-lstKeysFolder = ['asset_ROIS_joinsBaGr']   
+# asset_ROIS_joinsBaGr ,asset_ROISall_joins
+lstKeysFolder = ['asset_ROISall_joins']   
 for assetKey in lstKeysFolder:
     lstAssetFolder = GetPolygonsfromFolder(param[assetKey])
     list_baciaYearFaltan = []
@@ -141,7 +142,7 @@ for assetKey in lstKeysFolder:
             try: 
                 ROIs = ee.FeatureCollection(assetFeats)       
                 print(nameFeat, " ", ROIs.size().getInfo())     
-                processoExportar(ROIs, nameFeat, "ROIs_Joins_GrBa")              
+                processoExportar(ROIs, nameFeat, "ROIs_Joined_All")              
             except:
                 # list_baciaYearFaltan.append(nameFeat)
                 # arqFaltante.write(nameFeat + '\n')
