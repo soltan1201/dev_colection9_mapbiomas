@@ -36,17 +36,18 @@ param = {
     # 'inputAsset': path + 'class_filtered_Tp',   
     'assetCol': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVX" ,
     'assetColprob': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVP" ,
-    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fill',
+    'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fill',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Spatial',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Temporal',
-    'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Frequency',
+    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Frequency',
+    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport',
     'asset_Map' : "projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1",
     'asset_bacias': 'projects/mapbiomas-arida/ALERTAS/auxiliar/bacias_hidrografica_caatinga',
     'collection': '9.0',
     'geral':  True,
     'isImgCol': True,  
     'inBacia': True,
-    'version': 9,
+    'version': 5,
     'sufixo': '_Cv', 
     'assetBiomas': 'projects/mapbiomas-workspace/AUXILIAR/biomas_IBGE_250mil', 
     'biome': 'CAATINGA', 
@@ -110,7 +111,6 @@ def calculateArea (image, pixelArea, geometry):
     pixelArea = pixelArea.addBands(image.rename('classe'))#.addBands(
                                 # ee.Image.constant(yyear).rename('year'))
     reducer = ee.Reducer.sum().group(1, 'classe')
-
     optRed = {
         'reducer': reducer,
         'geometry': geometry,
@@ -164,7 +164,7 @@ bioma250mil = ee.FeatureCollection(param['assetBiomas'])\
                     .filter(ee.Filter.eq('Bioma', 'Caatinga')).geometry()
 knowImgcolg = False
 isFilter = True
-if 'POS-CLASS' in param['assetFilters']:
+if 'POS-CLASS' in param['assetFilters'] or 'toExport' in param['assetFilters']:
     subfolder = "_" + param['assetFilters'].split('/')[-1] 
 else:
     subfolder= ''
@@ -205,7 +205,7 @@ if param['isImgCol']:
             print(" 🚨 número de mapas bacias ", sizeimgCol) 
             nameCSV = 'areaXclasse_' + param['biome'] + '_Col' + param['collection'] + "_" + model +  subfolder + "_vers_" + str(version)
             # sys.exit()               
-            if sizeimgCol > 0:
+            if sizeimgCol > 0:                
                 for cc, nbacia in enumerate(nameBacias): # nameBacias
                     ftcol_bacias = ee.FeatureCollection(param['asset_bacias']).filter(
                                         ee.Filter.eq('nunivotto3', nbacia)).geometry()
@@ -243,7 +243,6 @@ else:
     mapClassRaster = ee.Image(param['assetCol']).byte()
     ### call to function samples  #######
     nameCSV = 'areaXclasse_' + param['biome'] + '_Col' + param['collection'] + "_" + model + "_vers_" + str(version)
-
     for nbacia in nameBacias:
         ftcol_bacias = ee.FeatureCollection(param['asset_bacias']).filter(
                             ee.Filter.eq('nunivotto3', _nbacia)).geometry()

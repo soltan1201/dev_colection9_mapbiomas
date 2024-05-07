@@ -84,9 +84,9 @@ for ii, year in enumerate(range(1985, 2024)):  #
     # img_banda = 'CAATINGA-' + str(year) +  '-' + str(param['version'])
     imgExtraBnd = imgColExp.select([bandaAct], ['classification'])
 
-    imgYear = imgExtraBnd.set('biome', param['biome'])\
+    imgYear = imgExtraBnd.clip(bioma5kbuf).set('biome', param['biome'])\
                     .set('year', year)\
-                    .set('version', param['version'])\
+                    .set('version', str(param['version']))\
                     .set('collection', param['collection'])\
                     .set('source', param['source'])\
                     .set('theme',None)\

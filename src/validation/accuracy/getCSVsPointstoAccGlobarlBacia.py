@@ -77,8 +77,7 @@ def processoExportar(ROIsFeat, nameT, porAsset):
 
 #nome das bacias que fazem parte do bioma
 nameBacias = [
-    #   '741', 
-      '7421','7422','744','745','746','751','752',  # '7492',
+      '741', '7421','7422','744','745','746','751','752',  # '7492',
       '753', '754','755','756','757','758','759','7621','7622','763',
       '764','765','766','767','771','772','773', '7741','7742','775',
       '776','76111','76116','7612','7613','7614','7615',  # '777','778',
@@ -96,7 +95,8 @@ param = {
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Spatial',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Frequency',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fill',
-    'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Temporal',
+    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Temporal',
+    'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport',
     'asset_Map' : "projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1",
     # 'assetCol6': path_asset + "class_filtered/maps_caat_col6_v2_4",
     'classMapB': [3, 4, 5, 9,12,13,15,18,19,20,21,22,23,24,25,26,29,30,31,32,33,36,37,38,39,40,41,42,43,44,45],
@@ -194,7 +194,6 @@ def getPointsAccuraciaFromIC (imClass, isImgCBa, ptosAccCorreg, modelo, version,
         lsAllprop.append(band)
     # featureCollection to export colected 
     pointAll = ee.FeatureCollection([])
-
     ftcol_bacias = ee.FeatureCollection(param['asset_bacias'])
 
     sizeFC = 0
@@ -271,7 +270,7 @@ if expPointLapig:
 #              |--  ImageCollection -> min() -> Image
 #######################################################
 isFilter = True
-if 'POS-CLASS' in param['assetFilters']:
+if 'POS-CLASS' in param['assetFilters']  or 'toExport' in param['assetFilters']:
     subfolder = "_" + param['assetFilters'].split('/')[-1] 
 else:
     subfolder= ''

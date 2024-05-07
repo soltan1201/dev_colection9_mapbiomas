@@ -247,10 +247,11 @@ def load_table_to_process(cc, dir_fileCSV):
 
     return lstBandSelect, limear
 
-def filterLSTbyBacia_Year(lstDir, mbasin, nYear):
+def filterLSTbyBacia_Year(lstDir, mbasin, nYear, prefix):
     lst_tmp = []
     for ndir in lstDir:  # ndir[1] name path file
-        if "/" + mbasin in ndir[1] and str(nYear) in ndir[1]:
+        print(ndir[1])
+        if prefix + mbasin in ndir[1] and str(nYear) in ndir[1]:
             lst_tmp.append(ndir)
     return lst_tmp
 
@@ -258,8 +259,9 @@ def filterLSTbyBacia_YearTupla(lstDir, mbasin, nYear):
     lst_tmp = []
     cc = 0
     for ndir in lstDir:
+        print(ndir)
         if "/" + mbasin in ndir[1] and str(nYear) in ndir[1]:
-            lst_tmp.append((cc, ndir))            
+            lst_tmp.append((cc, ndir[1]))            
 
     return lst_tmp
 
@@ -269,14 +271,15 @@ def getPathCSV (lstfolders):
     # get dir folder before to path scripts 
     pathparent = str(Path(mpath).parents[0])
 
-    # folder of CSVs ROIs
-    roisPathClus = '/dados/' + lstfolders[0]
-    roisPathMan = '/dados/' + lstfolders[1]
-    mpathCC = pathparent + roisPathClus
-    mpathMan = pathparent + roisPathMan
-    print("path of CSVs Rois is \n ==>",  mpathCC)
-    print(mpathMan)
-    return mpathCC, mpathMan, pathparent + '/dados/'
+    # folder of CSVs ROIs    
+    lstpaths = []
+    for npath in lstfolders:
+        roisPathC = '/dados/' + npath
+        mpathCC = pathparent + roisPathC
+        lstpaths.append(mpathCC)
+        print("add path of CSVs Rois is \n ==>",  mpathCC)
+    
+    return lstpaths, pathparent + '/dados/'
 
 lstBacias = [
     '7421','741','7422','744','745','746','7492','751','752','753',
@@ -287,26 +290,32 @@ lstBacias = [
 ]
 lstYears = [str(kk) for kk in range(1985, 2023)]
 print(lstYears)
-sys.exit()
-lstFolders =  ['Col9_ROIs_cluster/', 'Col9_ROIs_manual/']
+# sys.exit()
+lstFolders =  ['ROIs_Joins_GrBa/']#  ['Col9_ROIs_cluster/', 'Col9_ROIs_manual/']
 nameFolder = lstFolders[0]
-pathCSVsCC, pathCSVsMan, npathParent = getPathCSV(lstFolders)
+pathCSVsCCs, npathParent = getPathCSV(lstFolders)
+print(f" numero {len(pathCSVsCCs)} conferindo  {pathCSVsCCs}")
+# sys.exit()
 byYear = True
 byBacia = True
 multiprocess = False
 
-if __name__ == '__main__':    
-    lst_pathCSVcc = glob.glob(pathCSVsCC + "*.csv")
-    lst_pathCSVman = glob.glob(pathCSVsMan + "*.csv")
-    lst_pathCSV = lst_pathCSVcc + lst_pathCSVman
+if __name__ == '__main__': 
+    lst_pathCSV = []
+    for mpath in pathCSVsCCs:
+        lst_pathCSVcc = glob.glob(mpath + "*.csv")
+        lst_pathCSV += lst_pathCSVcc
+
     dirCSVs = [(cc, kk) for cc, kk in enumerate(lst_pathCSV[:])]
+    print(f"lista de path {len(dirCSVs)}")
     print(dirCSVs[0])
+    # sys.exit()
     if multiprocess:
         # Create a pool with 4 worker processes 🍀
         dict_Bacia_year = []
         for nbacia in lstBacias:
             for year in lstYears:
-                tpm_lsit = filterLSTbyBacia_YearTupla()
+                tpm_list = filterLSTbyBacia_YearTupla(dirCSVs, nbacia, year)
         with Pool(4) as procWorker:
             # The arguments are passed as tuples
             result = procWorker.starmap(
@@ -316,18 +325,19 @@ if __name__ == '__main__':
     else:
         cc = 0
         # for cc, mdir in dirCSVs:  
-        for nbacia in lstBacias:
+        for nbacia in ['777']: # lstBacias
             for year in lstYears:
-                lstmDirs = filterLSTbyBacia_Year(dirCSVs, nbacia, year)
-                print("# ", cc, " processing = ", lstmDirs)
-
-                if cc > 27:
+                lstmDirs = filterLSTbyBacia_Year(dirCSVs, nbacia, year, "")  # "/"
+                print(f"#  {cc}  processing {nbacia} and {year} == {lstmDirs}")
+                # sys.exit()
+                if cc > -1:
                     print(f"========== executando ============ \n => {lstmDirs}")
                     try:
                         lst_bnd_rank, nlimear = load_table_to_process(cc, lstmDirs)
                         nameFileSaved = lstmDirs[0][1].split("/")[-1][:-4] + '.txt'
                         print(" ✍️ saving ... ", nameFileSaved)
                         newdir = npathParent + "/results/" + nameFileSaved
+
                         with open(newdir, 'w+') as filesave:
                             for bndrank in lst_bnd_rank:
                                 # print("número Rank ", rank)
