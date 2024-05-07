@@ -346,4 +346,5 @@ if __name__ == '__main__':
                     except:
                         print("=== Dado com Gap ==== ")
                 cc += 1
+        
         # sys.exit()
