@@ -250,7 +250,7 @@ def load_table_to_process(cc, dir_fileCSV):
 def filterLSTbyBacia_Year(lstDir, mbasin, nYear, prefix):
     lst_tmp = []
     for ndir in lstDir:  # ndir[1] name path file
-        print(ndir[1])
+        # print(ndir[1])
         if prefix + mbasin in ndir[1] and str(nYear) in ndir[1]:
             lst_tmp.append(ndir)
     return lst_tmp
@@ -259,7 +259,7 @@ def filterLSTbyBacia_YearTupla(lstDir, mbasin, nYear):
     lst_tmp = []
     cc = 0
     for ndir in lstDir:
-        print(ndir)
+        # print(ndir)
         if "/" + mbasin in ndir[1] and str(nYear) in ndir[1]:
             lst_tmp.append((cc, ndir[1]))            
 
