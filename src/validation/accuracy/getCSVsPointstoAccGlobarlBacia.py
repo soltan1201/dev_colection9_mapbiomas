@@ -92,11 +92,11 @@ param = {
     'limit_bacias': "users/CartasSol/shapes/bacias_limit",
     'assetCol': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVX" ,
     'assetColprob': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVP" ,
-    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Spatial',
+    'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Spatial',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Frequency',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fill',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Temporal',
-    'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport',
+    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport',
     'asset_Map' : "projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1",
     # 'assetCol6': path_asset + "class_filtered/maps_caat_col6_v2_4",
     'classMapB': [3, 4, 5, 9,12,13,15,18,19,20,21,22,23,24,25,26,29,30,31,32,33,36,37,38,39,40,41,42,43,44,45],
@@ -183,7 +183,23 @@ def change_value_class(feat):
 
 
 def getPointsAccuraciaFromIC (imClass, isImgCBa, ptosAccCorreg, modelo, version, exportByBasin, exportarAsset,subbfolder):
+    """
+    This function is responsible for collecting points of accuracy from a given image classification.
 
+    Parameters:
+    imClass (ee.Image): The image classification to collect points from.
+    isImgCBa (bool): Whether to filter the image classification by bacia.
+    ptosAccCorreg (ee.FeatureCollection): The points of accuracy to collect.
+    modelo (str): The model used for classification.
+    version (int): The version of the classification.
+    exportByBasin (bool): Whether to export the collected points by bacia.
+    exportarAsset (bool): Whether to export the collected points as an asset.
+    subbfolder (str): The subfolder to include in the exported file name.
+
+    export: (ee.FeatureCollection): the points of values label from classification and reference 
+    Returns:
+    None
+    """
     #lista de anos
     list_anos = [str(k) for k in range(param['anoInicial'], param['anoFinal'] + 1)]
     # print('lista de anos', list_anos)
@@ -197,8 +213,9 @@ def getPointsAccuraciaFromIC (imClass, isImgCBa, ptosAccCorreg, modelo, version,
     ftcol_bacias = ee.FeatureCollection(param['asset_bacias'])
 
     sizeFC = 0
+    
     for cc, _nbacia in enumerate(nameBacias[:]):    
-        nameImg = 'mapbiomas_collection90_Bacia_v' + str(version) 
+        nameImg = 'mapbiomas_collection80_Bacia_v' + str(version) 
         print("processando img == " + nameImg + " em bacia *** " + _nbacia)
         baciaTemp = ftcol_bacias.filter(ee.Filter.eq('nunivotto3', _nbacia)).geometry()    
 
@@ -210,6 +227,7 @@ def getPointsAccuraciaFromIC (imClass, isImgCBa, ptosAccCorreg, modelo, version,
         if isImgCBa:
             mapClassBacia = ee.Image(imClass.filter(ee.Filter.eq('id_bacia', _nbacia)).first())
         else:
+            print(" 🚨  reading the one image ")
             mapClassBacia = ee.Image(imClass)
         
         pointAccTemp = mapClassBacia.sampleRegions(
@@ -220,23 +238,33 @@ def getPointsAccuraciaFromIC (imClass, isImgCBa, ptosAccCorreg, modelo, version,
             geometries= True
         )
         pointAccTemp = pointAccTemp.map(lambda Feat: Feat.set('bacia', _nbacia))
+
         if exportByBasin:
-            if modelo != '':
-                name = 'occTab_corr_Caatinga_' + _nbacia + "_" + modelo + subbfolder + "_" + str(version) + "_Col9" 
+            if 'col9/' in param['asset_Map']:
+                if modelo != '':
+                    name = 'occTab_corr_Caatinga_' + _nbacia + "_" + modelo + subbfolder + "_" + str(version) + "_Col9" 
+                else:
+                    name = 'occTab_corr_Caatinga_' + _nbacia + "_" + str(version) + "_Col9" 
             else:
-                name = 'occTab_corr_Caatinga_' + _nbacia + "_" + str(version) + "_Col9" 
+                name =  'occTab_corr_Caatinga_' + param['asset_Map'].split('/')[-1]
+            # export by basin 
             processoExportar(pointAccTemp, name, exportarAsset)
+
         else:
             pointAll = ee.Algorithms.If(  
                         ee.Algorithms.IsEqual(ee.Number(ptoSize).eq(0), 1),
                         pointAll,
                         ee.FeatureCollection(pointAll).merge(pointAccTemp)
                     )
+
     if not exportByBasin:
-        if modelo != '':
-            name = 'occTab_corr_Caatinga_Col9_' + modelo + "_" + str(version) + "_Col9" 
+        if 'col9/' in param['asset_Map']:
+            if modelo != '':
+                name = 'occTab_corr_Caatinga_Col9_' + modelo + "_" + str(version) + "_Col9" 
+            else:
+                name = 'occTab_corr_Caatinga_Col9_' + str(version) + "_Col9" 
         else:
-            name = 'occTab_corr_Caatinga_Col9_' + str(version) + "_Col9" 
+            name =  'occTab_corr_Caatinga_' + param['asset_Map'].split('/')[-1]
         processoExportar(pointAll, name, exportarAsset)
         print()
         print("numero de ptos ", sizeFC)
@@ -244,9 +272,9 @@ def getPointsAccuraciaFromIC (imClass, isImgCBa, ptosAccCorreg, modelo, version,
 
 expPointLapig = False
 knowImgcolg = True
-param['isImgCol'] = True
+param['isImgCol'] = False
 param['inBacia'] = True
-version = 5
+version = 9
 bioma250mil = ee.FeatureCollection(param['assetBiomas'])\
                     .filter(ee.Filter.eq('Bioma', 'Caatinga')).geometry()
 ## os pontos só serão aqueles que representam a Caatinga 
@@ -269,8 +297,9 @@ if expPointLapig:
 #   porBioma -----  Image
 #              |--  ImageCollection -> min() -> Image
 #######################################################
-isFilter = True
-if 'POS-CLASS' in param['assetFilters']  or 'toExport' in param['assetFilters']:
+subfolder= ''
+isFilter = False
+if isFilter and ('POS-CLASS' in param['assetFilters']  or 'toExport' in param['assetFilters']):
     subfolder = "_" + param['assetFilters'].split('/')[-1] 
 else:
     subfolder= ''
@@ -280,6 +309,7 @@ if param['isImgCol']:
         mapClass = ee.ImageCollection(param['assetFilters'])
     else:
         if int(version) > 6:  # 
+            print("---- ⛔ load version 9 with models classification ⛔ ----")
             mapClass = ee.ImageCollection(param['assetColprob'])# .select(lstBands)
         else:
             mapClass = ee.ImageCollection(param['assetCol'])# .select(lstBands)
@@ -323,11 +353,12 @@ if param['isImgCol']:
                 immapClassYY = immapClassYY.addBands(imTmp.byte())
         ## imageCollection converted in image Maps
         ### call to function samples  #######
-        getPointsAccuraciaFromIC (immapClassYY, False, pointTrue, '', '', True, False)
+        getPointsAccuraciaFromIC (immapClassYY, False, pointTrue, '', '', True, False, subfolder)
 
 else:
     print("########## 🔊 LOADING MAP RASTER ###############")
     mapClassRaster = ee.Image(param['assetCol']).byte()
     ### call to function samples  #######
-    getPointsAccuraciaFromIC (mapClassRaster, False, pointTrue, '', '', True, False)
+    # imClass, isImgCBa, ptosAccCorreg, modelo, version, exportByBasin, exportarAsset,subbfolder
+    getPointsAccuraciaFromIC (mapClassRaster, False, pointTrue, '', 'Col8', False, True, subfolder)
 

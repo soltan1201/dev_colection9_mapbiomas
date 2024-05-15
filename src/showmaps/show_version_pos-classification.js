@@ -6,8 +6,8 @@ var text = require('users/gena/packages:text')
 var visualizar = {
     visclassCC: {
             "min": 0, 
-            "max": 45,
-            "palette":  palettes.get('classification5'),
+            "max": 62,
+            "palette":  palettes.get('classification8'),
             "format": "png"
     },
     visMosaic: {

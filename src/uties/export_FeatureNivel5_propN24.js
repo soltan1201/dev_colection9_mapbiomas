@@ -1,4 +1,10 @@
 /// exporta a o vetor de pontos para o asset
+/**
+ * Export the feature collection to a shapefile in Google Earth Engine asset.
+ * @param {ee.FeatureCollection} ROIsFeat - The feature collection to be exported.
+ * @param {string} nameB - The description or name of the exported shapefile.
+ * @param {string} asset_path - The path to the Google Earth Engine asset where the shapefile will be stored.
+ */
 function processoExportarSHP(ROIsFeat, nameB, asset_path){
     
     var optExp = {

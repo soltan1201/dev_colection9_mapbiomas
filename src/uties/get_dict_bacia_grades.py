@@ -54,23 +54,6 @@ def removeId_nonDuplicate(dict_search, newlst):
 
     return novalista
 
-dict_bacGrade = {}
-bacias = ee.FeatureCollection(param['asset_bacias_buffer']);
-grades = ee.FeatureCollection(param['asset_shpGrade']);
-
-for cc, nbacia in enumerate(nameBacias):
-    print(f" == {cc} == processing bacia {nbacia} ====== ")
-    featBacia = bacias.filter(ee.Filter.eq('nunivotto3', nbacia)).geometry()
-    # feature collection com todas as 
-    gradesBacia = grades.filterBounds(featBacia);
-    lstCodId = gradesBacia.reduceColumns(ee.Reducer.toList(), ['id']).get('list').getInfo()
-
-    print(f"        we have {len(lstCodId)} grades ")
-
-    listaCondsId = removeId_nonDuplicate(dict_bacGrade, lstCodId)
-    dict_bacGrade[nbacia] = listaCondsId
-
-
 def getPathCSV():
     # get dir path of script 
     mpath = os.getcwd()
@@ -82,14 +65,53 @@ def getPathCSV():
     print("path of CSVs Rois is \n ==>",  mpath_bndImp)
     return mpath_bndImp
 
-cont = 0
-for kBac, lstIds in dict_bacGrade.items():
-    print(f"# {cont}, bacia => {kBac} ")
-    print("          ", lstIds)
-    cont += 1
+
+savedDicGrade = False
+savedInverseDictGrad = True
+pathBase = getPathCSV()
+pathjsonRF = pathBase + "dict_fusion_grade_bacia_N2.json"
+pathjsonBaGr = pathBase + "dict_convert_bacia_N2_toGrade.json"
+dict_bacGrade = {}
+bacias = ee.FeatureCollection(param['asset_bacias_buffer']);
+grades = ee.FeatureCollection(param['asset_shpGrade']);
+
+if savedDicGrade:
+    for cc, nbacia in enumerate(nameBacias):
+        print(f" == {cc} == processing bacia {nbacia} ====== ")
+        featBacia = bacias.filter(ee.Filter.eq('nunivotto3', nbacia)).geometry()
+        # feature collection com todas as 
+        gradesBacia = grades.filterBounds(featBacia);
+        lstCodId = gradesBacia.reduceColumns(ee.Reducer.toList(), ['id']).get('list').getInfo()
+
+        print(f"        we have {len(lstCodId)} grades ")
+
+        listaCondsId = removeId_nonDuplicate(dict_bacGrade, lstCodId)
+        dict_bacGrade[nbacia] = listaCondsId
+
+
+    cont = 0
+    for kBac, lstIds in dict_bacGrade.items():
+        print(f"# {cont}, bacia => {kBac} ")
+        print("          ", lstIds)
+        cont += 1
+        
     
-# pathBase = getPathCSV()
-# pathjsonRF = pathBase + "dict_fusion_grade_bacia_N2.json"
-# with open(pathjsonRF, 'w') as fp:
-#     json.dump(dict_bacGrade, fp)
-# ic(" -- dict_fusion_grade_bacia_N2.json saved 💭 -- ")
+    with open(pathjsonRF, 'w') as fp:
+        json.dump(dict_bacGrade, fp)
+    ic(" -- dict_fusion_grade_bacia_N2.json saved 💭 -- ")
+
+if savedInverseDictGrad:
+
+    with open(pathjsonRF, 'r') as fp:
+        dict_bacGrade = json.loads(fp.read())
+    ic(" -- Loading dict_fusion_grade_bacia_N2.json and convert to dict 💭 -- ")
+
+    dictidGrBasin = {}
+    for cc, (kBac, lstIds) in enumerate(dict_bacGrade.items()):
+        print(f" 📢 {cc} bacia {kBac} have {len(lstIds)} idGrade ")
+        for idGr in lstIds:
+            dictidGrBasin[str(idGr)] = str(kBac)
+    
+    with open(pathjsonBaGr, 'w') as fp:
+        json.dump(dictidGrBasin, fp)
+    ic(" -- dict_convert_bacia_N2_toGrade.json saved 💭 -- ")

@@ -30,5 +30,10 @@ var text = "";
     💻 notebook 
     🫂 abraços
     🔉 son
+    🫵 tu
+    🔓  cadeado
+    🏆 triunfo
+
+
 */
 

@@ -25,6 +25,7 @@ def getPathCSV (nfolders):
 
 
 
+
 classes = [3,4,12,15,18,21,22,29,33] # 
 columnsInt = [
     'Forest Formation', 'Savanna Formation', 'Grassland', 'Pasture',
@@ -66,6 +67,7 @@ dict_ColorNat = {
 dict_colors = {}
 for ii, cclass in enumerate(classes):
     dict_colors[dict_class[str(cclass)]] = colors[ii]
+
 dict_colors['Natural'] = '#32a65e'
 dict_colors['Antrópico'] = '#FFFFB2'
 dict_colors['cobertura'] = '#FFFFFF'
@@ -78,7 +80,6 @@ def set_columncobertura(nrow):
     nrow['nat_color'] = dict_ColorNat[dict_classNat[str(nclasse)]]
     nrow['total'] = 'cobertura'
     return nrow
-
 
 
 base_path, input_path_CSVs = getPathCSV('areaBacia')
@@ -97,52 +98,70 @@ if showlstGerral:
     print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
     print("==================================================================================")
 
-lstDF = []
-for pathLayerA in filesAreaCSV:
-    nameFiles = pathLayerA.split("/")[-1]
-    partes = nameFiles.replace("areaXclasse_CAATINGA_Col9.0_", "").split("_")
-    name_model = partes[0]
-    version = partes[2]
-    nbacia = partes[-1].replace(".csv", "")
-    print(f" ====== loading {nameFiles} ========") 
-    dftmp = pd.read_csv(pathLayerA)
-    dftmp = dftmp.drop(['system:index', '.geo'], axis='columns')
-    dftmp["Models"] = name_model
-    dftmp["Bacia"] = nbacia
-    dftmp["version"] = version
-    # print(dftmp.head(10))
+modelos = ['RF', 'GTB']
+posclass = ['Gap-fill', 'Spatial', 'Temporal', 'toExport']
 
-    lstDF.append(dftmp)
+modelos += posclass
+for nmodel in modelos[:1]:
+    lstDF = []
+    for pathLayerA in filesAreaCSV:
+        nameFiles = pathLayerA.split("/")[-1]
+        # areaXclasse_CAATINGA_Col9.0_GTB_Temporal_vers_9_757
+        # areaXclasse_CAATINGA_Col9.0_GTB_vers_7_775
+        partes = nameFiles.replace("areaXclasse_CAATINGA_Col9.0_", "").split("_")
+        name_model = partes[0]
+        if len(partes) > 4:
+            name_model = partes[1]
+        if str(nmodel) == str(name_model):
+            version = partes[-2]
+            nbacia = partes[-1].replace(".csv", "")
+            print(f" ====== loading {nameFiles} ========") 
+            dftmp = pd.read_csv(pathLayerA)
+            dftmp = dftmp.drop(['system:index', '.geo'], axis='columns')
+            dftmp["Models"] = name_model
+            dftmp["Bacia"] = nbacia
+            dftmp["version"] = version
+            # print(dftmp.head(10))
 
+            lstDF.append(dftmp)
 
-ndfArea = pd.concat(lstDF, ignore_index= True)
-print("columna ", ndfArea.columns)
-# ndfArea = ndfArea.sort_values(by='year')
-print(f" === 📲 We have now <<{ndfArea.shape[0]}>> row in the DataFrame Area ===")
-print(ndfArea.head())
-# get values uniques 
-lstVers = [kk for kk in ndfArea['version'].unique()]
-lstModels = [kk for kk in ndfArea['Models'].unique()]
-lstClasses = [kk for kk in ndfArea['classe'].unique()]
-lstYears = [kk for kk in ndfArea['year'].unique()]
+    ndfArea = pd.concat(lstDF, ignore_index= True)
+    print("columna ", ndfArea.columns)
+    # ndfArea = ndfArea.sort_values(by='year')
+    print(f" === 📲 We have now <<{ndfArea.shape[0]}>> row in the DataFrame Area ===")
+    print(ndfArea.head())
+    classInic = [3,4, 9,10,12,15,18,21,22,27,29,33,50]
+    classFin  = [3,4,12,12,12,15,18,15,22,27,22,33, 3]
+    if nmodel in posclass:
+        classInic = [3,4, 9,10,12,15,18,21,22,27,29,33,50]
+        classFin  = [3,4,12,12,12,21,21,21,22,27,22,33, 3]
+    
+    ndfArea['classe'] = ndfArea['classe'].replace(classInic, classFin) 
+    ndfArea = ndfArea[ndfArea['classe'] != 0]
+    # Remap column values in inplace
+    # sys.exit()
+    # get values uniques 
+    lstVers = [kk for kk in ndfArea['version'].unique()]
+    lstClasses = [kk for kk in ndfArea['classe'].unique()]
+    lstYears = [kk for kk in ndfArea['year'].unique()]
 
-# def get_Values_Areas()
-lstInt = ['version','Models','year','classe','area']
-dfTest = ndfArea[lstInt].groupby(['version','Models','year','classe'], as_index= False).agg('sum')
-dfTest['Bacia'] = ['Caatinga'] * dfTest.shape[0]
-print(" size dfTest ", dfTest.shape)
-print(dfTest.head(10))
+    # def get_Values_Areas()
+    lstInt = ['version','year','classe','area']
+    dfTest = ndfArea[lstInt].groupby(['version','year','classe'], as_index= False).agg('sum')
+    dfTest['Bacia'] = ['Caatinga'] * dfTest.shape[0]
+    dfTest['Models'] = [nmodel] * dfTest.shape[0]
+    print(" 🫵 size dfTest ", dfTest.shape)
+    print(dfTest.head(10))
 
-ndfAllArea = pd.concat([ndfArea, dfTest], ignore_index= True)
+    ndfAllArea = pd.concat([ndfArea, dfTest], ignore_index= True)
+    ndfAllArea = ndfAllArea.progress_apply(set_columncobertura, axis= 1)
 
-ndfAllArea = ndfAllArea.progress_apply(set_columncobertura, axis= 1)
+    print(" size dfAreaBiome = ", ndfAllArea.shape)
+    print(ndfAllArea.head())
 
-print(" size dfAreaBiome = ", ndfAllArea.shape)
-print(ndfAllArea.head())
-
-nameexport = "/dados/globalTables/areaXclasse_CAATINGA_Col9.0.csv"
-print("we going to export with name => ", nameexport)
-ndfAllArea.to_csv(base_path + nameexport)
-print(" -------- DONE ! --------------")
-print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
-print("==================================================================================")
+    nameexport = f"/dados/globalTables/areaXclasse_CAATINGA_{nmodel}_Col9.0.csv"
+    print("we going to export with name => ", nameexport)
+    ndfAllArea.to_csv(base_path + nameexport)
+    print(" -------- DONE ! --------------")
+    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+    print("==================================================================================")

@@ -26,9 +26,10 @@ lsBacias = [
 
 imgCol = ee.ImageCollection(asset)
 lst_id = imgCol.reduceColumns(ee.Reducer.toList(), ['system:index']).get('list').getInfo()
+
 for cc, idss in enumerate(lst_id):    
     # id_bacia = idss.split("_")[2]
-    path_ = str(asset + '/' + idss)       
+    path_ = str(asset + '/' + idss)    
     print ("... eliminando ❌ ... item 📍{} : {}  ▶️ ".format(cc, idss))
     
     try:

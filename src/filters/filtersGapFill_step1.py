@@ -179,7 +179,6 @@ class processo_gapfill(object):
             print ( "  {} : {}".format(keys, vals))
 
 
-
 param = {    
     'bioma': "CAATINGA", #nome do bioma setado nos metadados  
     'numeroTask': 6,

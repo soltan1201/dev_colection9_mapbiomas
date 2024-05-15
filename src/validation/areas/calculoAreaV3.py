@@ -47,7 +47,7 @@ param = {
     'geral':  True,
     'isImgCol': True,  
     'inBacia': True,
-    'version': 5,
+    'version': 9,
     'sufixo': '_Cv', 
     'assetBiomas': 'projects/mapbiomas-workspace/AUXILIAR/biomas_IBGE_250mil', 
     'biome': 'CAATINGA', 
@@ -55,7 +55,7 @@ param = {
     'scale': 30,
     'driverFolder': 'AREA-EXPORT-COL9', 
     'lsClasses': [3,4,12,15,18,21,22,33],
-    'changeAcount': True,
+    'changeAcount': False,
     'numeroTask': 0,
     'numeroLimit': 37,
     'conta' : {
@@ -163,8 +163,9 @@ lstBands = ['classification_' + str(yy) for yy in range(1985, 2024)]
 bioma250mil = ee.FeatureCollection(param['assetBiomas'])\
                     .filter(ee.Filter.eq('Bioma', 'Caatinga')).geometry()
 knowImgcolg = False
-isFilter = True
-if 'POS-CLASS' in param['assetFilters'] or 'toExport' in param['assetFilters']:
+isFilter = False
+
+if isFilter and ('POS-CLASS' in param['assetFilters'] or 'toExport' in param['assetFilters']):
     subfolder = "_" + param['assetFilters'].split('/')[-1] 
 else:
     subfolder= ''
