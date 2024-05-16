@@ -917,12 +917,12 @@ class ClassMosaic_indexs_Spectral(object):
         idCodGrad = partes[1]
         anoCount = int(partes[2])
         print(f"=============  processing {idCount} => {idCodGrad}")
-        nomeBacia = self.dictidGrBasin[str(idCod)]
+        nomeBacia = self.dictidGrBasin[str(idCodGrad)]
 
         self.featCStat = ee.FeatureCollection(self.options['inputAssetStats'] + nomeBacia)
         gradeKM = ee.FeatureCollection(self.options['asset_shpGrade']).filter(
-                                                ee.Filter.eq('id', idCod)).geometry()
-        simgMosaic = ee.ImageCollection(self.options['asset_mosaic_mapbiomas']
+                                                ee.Filter.eq('id', idCodGrad)).geometry()
+        imgMosaic = ee.ImageCollection(self.options['asset_mosaic_mapbiomas']
                                                     ).filter(ee.Filter.eq('biome', self.options['bioma'])
                                                         ).filterBounds(gradeKM).select(arqParam.featureBands)        
 
@@ -1064,15 +1064,15 @@ param = {
     'anoFinal': 2023,
     'sufix': "_1",
     'numeroTask': 6,
-    'numeroLimit': 7,
+    'numeroLimit': 2,
     'conta': {
         '0': 'caatinga01',
-        '1': 'caatinga05',
-        '2': 'caatinga02',
+        '1': 'caatinga02',
+        '2': 'caatinga03',
         '3': 'caatinga04',
-        '4': 'caatinga03',
+        '4': 'caatinga05',
         '5': 'solkan1201',
-        '6': 'solkanGeodatin',
+        # '6': 'solkanGeodatin',
         # '20': 'solkanGeodatin'
     },
 }
@@ -1208,7 +1208,7 @@ ic(" -- Loading dict_convert_bacia_N2_toGrade.json and convert to dict 💭 -- "
 
 setTeste = False
 show_IdReg = False
-colectSaved = False
+colectSaved = True
 getLstIds = False
 # path('update/<int:pk>/', update, name= 'url_update'),
 if getLstIds:
@@ -1250,7 +1250,7 @@ if setTeste:
 else:
     print("Não fazer teste")
     step = 60
-    for ll in range(0, len(lstProcpool[780:1200]), step):
+    for ll in range(0, len(lstProcpool[:]), step):
         lstProcpoolss = lstProcpool[ll: ll + step]
         if ll > -1:
             with ThreadPool() as pool:

@@ -33,7 +33,7 @@ var text = "";
     🫵 tu
     🔓  cadeado
     🏆 triunfo
-
-
+    ☕ cafe
+    🔗 cadenas
 */
 

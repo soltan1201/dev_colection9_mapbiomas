@@ -15,6 +15,11 @@ var visualizar = {
         max: 2000,
         bands: ['red_median', 'green_median', 'blue_median']
     },
+    visIncident : {
+        max: 5,
+        min: 1,
+        palette: ['#faf3dd','#c8d5b9','#f19c79','#fec601','#013a63']
+    },
     props: {  
         textColor: 'ff0000', 
         outlineColor: 'ffffff', 
@@ -28,9 +33,12 @@ var param = {
     assetMapC8: 'projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1',
     asset_MapC9X : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVX',
     asset_MapC9P : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVP',
-    // assetclass : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/class_filtered_Fq',
+    asset_ptosDifLapigvsCol7: 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/occTab_acc_Dif_Caat_mapbiomas_71_integration_v1',
+    asset_ptosDifLapigvsCol8: 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/occTab_acc_Dif_Caat_mapbiomas_80_integration_v1',
     asset_Gapfill : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fill',   
     asset_Spatial : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Spatial', 
+    asset_Temporal : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Temporal', 
+    asset_Frequence: 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Frequency', 
     asset_mixed: 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport',
     asset_baciasN1raster: 'projects/mapbiomas-workspace/AUXILIAR/bacias-nivel-1-raster',
     assetIm: 'projects/nexgenmap/MapBiomas2/LANDSAT/BRAZIL/mosaics-2',    
@@ -49,9 +57,36 @@ var param = {
         '7616','7617','7618','7619'
     ],
     classMapB: [3, 4, 5, 9,12,13,15,18,19,20,21,22,23,24,25,26,29,30,31,32,33,36,39,40,41,46,47,48,49,50,62],
-    classNew:  [3, 4, 3, 3,12,12,15,18,18,18,21,22,22,22,22,33,29,22,33,12,33,18,18,18,18,18,18,18, 3,12,18],
-
+    classNew:  [3, 4, 3, 3,12,12,21,21,21,21,21,22,22,22,22,33,29,22,33,12,33,21,21,21,21,21,21,21, 3,12,21],
+    classesMapAmp:  [3, 4, 3, 3,12,12,15,18,18,18,21,22,22,22,22,33,29,22,33,12,33,18,18,18,18,18,18,18, 3,12,18],
 }
+
+function get_layerIncidentes(mapYY71, mapYY80, mapYY90){
+    mapYY71 = mapYY71.remap(param.classMapB, param.classNew);
+    mapYY80 = mapYY80.remap(param.classMapB, param.classNew);
+    var mapAdding = mapYY71.addBands(mapYY80).addBands(mapYY90);
+    var incidentesMaps = mapAdding.reduce(ee.Reducer.countRuns())
+                                    .subtract(1).rename('incidentes');
+    var statesMaps = mapAdding.reduce(ee.Reducer.countDistinctNonNull()).rename('states');
+    var modaMaps = mapAdding.reduce(ee.Reducer.mode());
+    ///logica de definição de classes está embasada no fato de termos 3 coleções de entrada
+    //para analisar mais coleções a logica precisa ser reestruturada
+    var clas1_add = incidentesMaps.eq(0).selfMask();
+    var clas2_add = incidentesMaps.eq(1).and(mapAdding.select(2).subtract(modaMaps).eq(0)).selfMask();
+    var clas3_add = incidentesMaps.eq(1).and(mapAdding.select(0).subtract(modaMaps).eq(0)).selfMask();
+    var clas4_add = incidentesMaps.eq(2).and(statesMaps.eq(2)).selfMask();
+    var clas5_add = incidentesMaps.eq(2).and(statesMaps.eq(3)).selfMask();
+
+    var outMaps = clas1_add.blend(clas2_add.multiply(2))
+                    .blend(clas3_add.multiply(3))
+                    .blend(clas4_add.multiply(4))
+                    .blend(clas5_add.multiply(5))
+                    .rename('classes');
+    
+    return outMaps
+}
+
+
 var selBacia = 'all';
 var yearcourrent = 2020;
 var version = 5;
@@ -79,8 +114,13 @@ print("  imgMapCol9GTB", imgMapCol9GTB);
 var imgMapCol9GF = ee.ImageCollection(param.asset_Gapfill)
                         .filter(ee.Filter.eq('version', version))
                         .select(banda_activa);
-
 var imgMapCol9SP = ee.ImageCollection(param.asset_Spatial)
+                        .filter(ee.Filter.eq('version', version))
+                        .select(banda_activa);
+var imgMapCol9TP = ee.ImageCollection(param.asset_Temporal)
+                        .filter(ee.Filter.eq('version', version))
+                        .select(banda_activa);
+var imgMapCol9FQ = ee.ImageCollection(param.asset_Frequence)
                         .filter(ee.Filter.eq('version', version))
                         .select(banda_activa);
 var imgMapmixed = ee.ImageCollection(param.asset_mixed)
@@ -92,7 +132,17 @@ var imgMapmixed = ee.ImageCollection(param.asset_mixed)
 
 var Mosaicos = ee.ImageCollection(param.assetIm).filter(
                         ee.Filter.eq('biome', 'CAATINGA')).select(param.bandas);
-
+var poitsRefCol71compY = null;
+var pointRefCol80compY = null;
+var poitsRefCol71comp = ee.FeatureCollection(param.asset_ptosDifLapigvsCol7);
+var pointRefCol80comp = ee.FeatureCollection(param.asset_ptosDifLapigvsCol8);
+if(yearcourrent < 2022){
+    poitsRefCol71compY = poitsRefCol71comp.filter(ee.Filter.eq('diference' + String(yearcourrent), true));
+    pointRefCol80compY = pointRefCol80comp.filter(ee.Filter.eq('diference' + String(yearcourrent), true));
+    print(" size points filtered Col7.1", poitsRefCol71compY.size());
+}else{
+    print("We don´t have points of references in this year, sorry !");
+}
 // ========================================================================= //
 // set as 'all' to show all map or set the basin from pamareter dictionary
 // ========================================================================= //
@@ -100,6 +150,8 @@ var imgMapCol9GTBjoin = null;
 var imgMapCol9SPjoin = null;
 var imgMapCol9GFjoin = null;
 var imgMapmixedJoin = null;
+
+
 if (selBacia === 'all'){
     imgMapCol9GTBjoin = imgMapCol9GTB.min();
     imgMapCol9SPjoin = imgMapCol9SP.min();
@@ -112,7 +164,11 @@ if (selBacia === 'all'){
     imgMapCol9GFjoin = imgMapCol9GF.filter(ee.Filter.eq("id_bacia", selBacia)); 
     imgMapmixedJoin = imgMapmixed.filter(ee.Filter.eq("id_bacia", selBacia));
     Mosaicos = Mosaicos.filterBounds(FeatColbacia);
+    poitsRefCol71compY = poitsRefCol71compY.filterBounds(FeatColbacia);
+    pointRefCol80compY = pointRefCol80comp.filterBounds(FeatColbacia);
 }
+
+var incidencias = get_layerIncidentes(imgMapCol71, imgMapCol8, imgMapmixedJoin);
 
 print(" 📍 imagem no Asset Geral Mapbiomas Col 7.1  ‼️", imgMapCol71);
 print(" 📍 imagem no Asset Geral Mapbiomas Col 8.0  ‼️", imgMapCol8);
@@ -134,9 +190,47 @@ Map.addLayer(imgMapCol9GTBjoin,  visualizar.visclassCC, 'Class GTB ' + String(ve
 Map.addLayer(imgMapmixedJoin,  visualizar.visclassCC, 'Class Mixed', false);
 Map.addLayer(imgMapCol71, visualizar.visclassCC,'Col71_' + String(yearcourrent), false);
 Map.addLayer(imgMapCol8,  visualizar.visclassCC, 'Col8_'+ String(yearcourrent), false);
+Map.addLayer(incidencias,  visualizar.visIncident, 'Inc_'+ String(yearcourrent), false);
+Map.addLayer(pointRefCol80compY, {}, 'Point Ref col8.0 ', false);
+Map.addLayer(poitsRefCol71compY, {}, 'Point Ref col7.1', false)
 
 
-
+var legend = ui.Panel({style: {position: 'bottom-left', padding: '8px 15px'}});
+var makeRow = function(color, name) {
+    var colorBox = ui.Label({
+      style: {color: '#ffffff',
+        backgroundColor: color,
+        padding: '10px',
+        margin: '0 0 4px 0',
+      }
+    });
+    var description = ui.Label({
+      value: name,
+      style: {
+        margin: '0px 0 4px 6px',
+      }
+    }); 
+    return ui.Panel({
+      widgets: [colorBox, description],
+      layout: ui.Panel.Layout.Flow('horizontal')}
+  )};
+  
+  var title = ui.Label({
+    value: 'Coincidencias das classes',
+    style: {
+          fontWeight: 'bold',
+          fontSize: '16px',
+          margin: '0px 0 4px 0px'
+      }
+  });
+  
+  legend.add(title);
+  legend.add(makeRow('#faf3dd','Concordante'));
+  legend.add(makeRow('#c8d5b9','Concordante Recente'));
+  legend.add(makeRow('#f19c79','Discordante Recente'));
+  legend.add(makeRow('#fec601','Discordante'));
+  legend.add(makeRow('#013a63','Muito discordante'));
+  Map.add(legend);
 
 
 
