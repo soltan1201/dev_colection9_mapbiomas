@@ -27,7 +27,7 @@ except:
 relatorios = open("relatorioTaskXContas.txt", 'a+')
 
 param = {
-    'cancelar' : False,
+    'cancelar' : True,
     'unicaconta': False,
     'numeroTask': 7,
     'numeroLimit': 7,

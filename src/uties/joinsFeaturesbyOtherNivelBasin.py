@@ -29,6 +29,7 @@ param = {
     'asset_ROIs_cluster': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN2clusterNN'},
     'asset_ROIs_automaticN245': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN245_allBND'},
     'asset_ROIs_autGrade': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN5allBND'},
+    'asset_ROIs_autGradeNormal': {"id" : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsGradeallBNDNormal'},
     'asset_output': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/roisGradesgrouped',
     'anoInicial': 1985,
     'anoFinal': 2022,
@@ -184,12 +185,12 @@ joinGrade = True
 byBacia = False
 cont = gerenciador(cont, param)
 # iterando com cada uma das folders FeatC do asset
-KeysFolder = 'asset_ROIs_autGrade'   # ,'asset_ROIs_cluster', 'asset_ROIs_manual', 'asset_ROIs_automaticN5'
+KeysFolder =  'asset_ROIs_autGradeNormal' #'asset_ROIs_autGrade'   # ,'asset_ROIs_cluster', 'asset_ROIs_manual', 'asset_ROIs_automaticN5'
 lstAssetFolder = GetPolygonsfromFolder(param[KeysFolder], joinGrade)
 print(f"we have {len(lstAssetFolder)} features ROIs ")
 # codigo region se encontra na posição 1 gradeROIs_991_2023_wl
 dictRegCount = getDictRegionCounting(lstAssetFolder, 1)
-# sys.exit()
+sys.exit()
 
 
 lstKeysB = [kk for kk in dictRegCount.keys()]

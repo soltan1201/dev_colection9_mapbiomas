@@ -27,11 +27,13 @@ def GetPolygonsfromFolder(assetFolder, sufixo):
         if sufixo in str(name): 
             print("eliminando {}:  {}".format(cc, name))
             print(path_)
-            ee.data.deleteAsset(path_) 
+            # ee.data.deleteAsset(path_) 
     
     print(lstBacias)
 
-asset ={'id' :'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/roisJoinsbyBaciaNN'}
+# asset ={'id' :'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/roisJoinsbyBaciaNN'}
+# asset = {'id' : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsGradeallBNDNorm'} 
+asset ={'id' :'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/roisGradesgrouped'}
 # asset = {'id':"projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/masks/maks_layers"}
 
 GetPolygonsfromFolder(asset, '')  # 

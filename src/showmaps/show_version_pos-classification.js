@@ -87,7 +87,10 @@ function get_layerIncidentes(mapYY71, mapYY80, mapYY90){
 }
 
 
-var selBacia = 'all';
+
+
+
+var selBacia = '741';
 var yearcourrent = 2020;
 var version = 5;
 var assetCol9 = param.asset_MapC9X;
@@ -165,7 +168,8 @@ if (selBacia === 'all'){
     imgMapmixedJoin = imgMapmixed.filter(ee.Filter.eq("id_bacia", selBacia));
     Mosaicos = Mosaicos.filterBounds(FeatColbacia);
     poitsRefCol71compY = poitsRefCol71compY.filterBounds(FeatColbacia);
-    pointRefCol80compY = pointRefCol80comp.filterBounds(FeatColbacia);
+    pointRefCol80compY = pointRefCol80compY.filterBounds(FeatColbacia);
+    var ptosfromBacia = poitsRefCol71comp.filterBounds(FeatColbacia);
 }
 
 var incidencias = get_layerIncidentes(imgMapCol71, imgMapCol8, imgMapmixedJoin);
@@ -176,6 +180,7 @@ print(" 📍 imagem no Asset Geral X Bacias col 9 GTB", imgMapCol9GTB);
 print(" 📍 imagem no Asset Geral X Bacias pos-Class col 9 Gap Fill", imgMapCol9GFjoin);
 print(" 📍 imagem no Asset Geral X Bacias pos-Class col 9 Spatial", imgMapCol9SPjoin);
 print(" 📍 imagem no Asset Geral X Bacias pos-Class col 9 Mixed", imgMapmixedJoin);
+print(" 📍 shp no Asset ptos Lapig X Bacias", ptosfromBacia.size());
 
 var mosaic_year = Mosaicos.filter(ee.Filter.eq('year', yearcourrent)).median();                     
 Map.addLayer(FeatColbacia, {color: 'green'}, 'bacia');
@@ -191,6 +196,7 @@ Map.addLayer(imgMapmixedJoin,  visualizar.visclassCC, 'Class Mixed', false);
 Map.addLayer(imgMapCol71, visualizar.visclassCC,'Col71_' + String(yearcourrent), false);
 Map.addLayer(imgMapCol8,  visualizar.visclassCC, 'Col8_'+ String(yearcourrent), false);
 Map.addLayer(incidencias,  visualizar.visIncident, 'Inc_'+ String(yearcourrent), false);
+Map.addLayer(ptosfromBacia, {color: 'red'}, 'ptos do Lapig', false);
 Map.addLayer(pointRefCol80compY, {}, 'Point Ref col8.0 ', false);
 Map.addLayer(poitsRefCol71compY, {}, 'Point Ref col7.1', false)
 

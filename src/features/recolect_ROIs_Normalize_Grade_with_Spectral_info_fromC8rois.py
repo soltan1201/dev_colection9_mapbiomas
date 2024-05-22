@@ -10,6 +10,7 @@ import ee
 import gee
 import copy
 import json
+import time
 from icecream import ic 
 from tqdm import tqdm
 from pathlib import Path
@@ -37,7 +38,7 @@ class ClassMosaic_indexs_Spectral(object):
         'bnd_L': ['blue','green','red','nir','swir1','swir2'],
         'bnd_fraction': ['gv','npv','soil'],
         'bioma': 'CAATINGA',
-        'biomas': ['CERRADO','CAATINGA'],
+        'biomas': ['CERRADO','CAATINGA','MATAATLANTICA'],
         'classMapB': [3, 4, 5, 9, 12, 13, 15, 18, 19, 20, 21, 22, 23, 24, 25, 26, 29, 30, 31, 32, 33,
                       36, 39, 40, 41, 46, 47, 48, 49, 50, 62],
         'classNew':  [3, 4, 3, 3, 12, 12, 15, 18, 18, 18, 18, 22, 22, 22, 22, 33, 29, 22, 33, 12, 33,
@@ -673,10 +674,12 @@ class ClassMosaic_indexs_Spectral(object):
                                     .divide(100).toUint16().eq(4).reduce(ee.Reducer.sum())
         return maskAlertyyear.eq(0).rename('mask_alerta')   
 
-
-    def get_class_maskFire(self, yyear):
-        maskFireyyear = ee.Image(self.options['asset_fire']).select("burned_area_" + str(yyear)
-                                    ).unmask(0).eq(0).rename('mask_fire')
+    #https://code.earthengine.google.com/b0ff1ef3aef14267704786be27d202a4
+    def get_class_maskFire(self, yyear, gradeReg):
+        maskFireyyear = ee.ImageCollection(self.options['asset_fire']).filter(
+                                ee.Filter.inList('biome', ['CAATINGA', 'CERRADO', 'MATA_ATLANTICA'])).filter(
+                                    ee.Filter.eq('year', int(yyear))).filterBounds(ee.Geometry(gradeReg)
+                                        ).mosaic().unmask(0).eq(0).rename('mask_fire')                         
 
         return maskFireyyear
 
@@ -834,7 +837,8 @@ class ClassMosaic_indexs_Spectral(object):
                 # print("mascara maksEstaveis ", maksEstaveis.bandNames().getInfo())
 
                 # mask de fogo com os ultimos 5 anos de fogo mapeado 
-                imMaskFire = self.get_mask_Fire_estatics_pixels(anoCount, False)
+                # imMaskFire = self.get_mask_Fire_estatics_pixels(anoCount, False)
+                imMaskFire = self.get_class_maskFire(anoCount,gradeKM)
                 imMaskFire = ee.Image(imMaskFire)
                 # print("mascara imMaskFire ", imMaskFire.bandNames().getInfo())
                 # loaded banda da coleção 
@@ -921,9 +925,11 @@ class ClassMosaic_indexs_Spectral(object):
 
         self.featCStat = ee.FeatureCollection(self.options['inputAssetStats'] + nomeBacia)
         gradeKM = ee.FeatureCollection(self.options['asset_shpGrade']).filter(
-                                                ee.Filter.eq('id', idCodGrad)).geometry()
+                                                ee.Filter.eq('id', int(idCodGrad))).geometry()        
+        # print("número de grades KM ", gradeKM.size().getInfo())
+        # gradeKM = gradeKM.geometry()        
         imgMosaic = ee.ImageCollection(self.options['asset_mosaic_mapbiomas']
-                                                    ).filter(ee.Filter.eq('biome', self.options['bioma'])
+                                                    ).filter(ee.Filter.inList('biome', self.options['biomas'])
                                                         ).filterBounds(gradeKM).select(arqParam.featureBands)        
 
         # imgMosaic = simgMosaic.map(lambda img: self.process_re_escalar_img(img))
@@ -931,37 +937,54 @@ class ClassMosaic_indexs_Spectral(object):
 
         # @collection80: mapas de uso e cobertura Mapbiomas ==> para extrair as areas estaveis
         collection80 = ee.Image(self.options['assetMapbiomas80'])
-        # print(collection80.bandNames().getInfo())
-        gradeKM = ee.FeatureCollection(self.options['asset_shpGrade']).filter(
-                                                ee.Filter.eq('id', idCodGrad)).geometry()
-        # print(baciaN5.getInfo())
-
+        if self.testando:
+            print(collection80.bandNames().getInfo())
+        
         imMasCoinc = None
         maksEstaveis = None
         areaColeta = None
         # sys.exit()
             
-        bandActiva = 'classification_' + str(anoCount)            
+                    
         if anoCount > 2022:
+            bandActiva = 'classification_2022'
             # Loaded camadas de pixeles estaveis
             m_assetPixEst = self.options['asset_estaveis'] + '/masks_estatic_pixels_' + str(2022)
             # mask de fogo com os ultimos 5 anos de fogo mapeado 
-            imMaskFire = self.get_mask_Fire_estatics_pixels(2022, False)
+            # imMaskFire = self.get_mask_Fire_estatics_pixels(2022, False)
+            imMaskFire = self.get_class_maskFire(anoCount,gradeKM)
             # loaded banda da coleção 
             map_yearAct = collection80.select('classification_2022').rename(['class'])                  
             
         else:
+            bandActiva = 'classification_' + str(anoCount)
             # Loaded camadas de pixeles estaveis
             m_assetPixEst = self.options['asset_estaveis'] + '/masks_estatic_pixels_' + str(anoCount)                
             # mask de fogo com os ultimos 5 anos de fogo mapeado 
-            imMaskFire = self.get_mask_Fire_estatics_pixels(anoCount, False)
+            # imMaskFire = self.get_mask_Fire_estatics_pixels(anoCount, False)
+            imMaskFire = self.get_class_maskFire(anoCount, gradeKM)
             # loaded banda da coleção 
             map_yearAct = collection80.select(bandActiva).rename(['class'])
-
+        
+        if self.testando:
+            dictInformation = map_yearAct.getInfo()
+            print("\n ============== banda selecionada map_yearAct: =======" )
+            for kkey, vval in dictInformation.items():
+                print(f" {kkey}   ==> {vval}")
+        
         maksEstaveis = ee.Image(m_assetPixEst).rename('estatic')
-        # print("mascara maksEstaveis ", maksEstaveis.bandNames().getInfo())  
+        if self.testando:
+            dictInformation = maksEstaveis.getInfo()
+            print("\n============== mascara maksEstaveis ==============")
+            for kkey, vval in dictInformation.items():
+                print(f" {kkey}   ==> {vval}")
+
         imMaskFire = ee.Image(imMaskFire)
-        # print("mascara imMaskFire ", imMaskFire.bandNames().getInfo())
+        if self.testando:
+            print("\n****************** mascara imMaskFire ********************")
+            dictInformation = imMaskFire.getInfo()
+            for kkey, vval in dictInformation.items():
+                print(f" {kkey}   ==> {vval}")
 
         # 1 Concordante, 2 concordante recente, 3 discordante recente,
         # 4 discordante, 5 muito discordante
@@ -971,7 +994,11 @@ class ClassMosaic_indexs_Spectral(object):
             asset_PixCoinc = self.options['asset_Coincidencia'] + '/masks_pixels_incidentes_2021'
             
         imMasCoinc = ee.Image(asset_PixCoinc).rename('coincident')
-        # print("mascara coincidentes ", imMasCoinc.bandNames().getInfo())
+        if self.testando:
+            print("\n============== mascara coincidentes =============")
+            dictInformation = imMasCoinc.getInfo()
+            for kkey, vval in dictInformation.items():
+                print(f" {kkey}   ==> {vval}")
 
         if anoCount > 1985:
             imMaksAlert = self.get_class_maskAlerts(anoCount)
@@ -981,10 +1008,14 @@ class ClassMosaic_indexs_Spectral(object):
         else:
             imMaksAlert = ee.Image.constant(1).rename('mask_alerta')
 
+        if self.testando:
+            print(">>>>>>>>>>>>>>> mascara imMaksAlert <<<<<<<<<<<<<<<<<<<")
+            dictInformation = imMaksAlert.getInfo()
+            for kkey, vval in dictInformation.items():
+                print(f" {kkey}   ==> {vval}")
 
-        # print("mascara imMaksAlert ", imMaksAlert.bandNames().getInfo())
-        areaColeta = maksEstaveis.multiply(imMaskFire).multiply(imMaksAlert) \
-                        .multiply(imMasCoinc.lt(3))
+        # areaColeta = imMaskFire.multiply(imMaksAlert)#  #\
+        areaColeta = maksEstaveis.multiply(imMasCoinc.lt(4)).multiply(imMaksAlert).multiply(imMaskFire)
         areaColeta = areaColeta.eq(1) # mask of the area for colects
         
         
@@ -992,29 +1023,37 @@ class ClassMosaic_indexs_Spectral(object):
                                 ee.Image.constant(int(anoCount)).rename('year')).addBands(
                                     imMasCoinc)           
 
-        img_recMosaic = imgMosaic.filter(ee.Filter.eq('year', anoCount)
-                                    ).filterBounds(gradeKM) 
-        img_recMosaic = img_recMosaic.map(lambda img: self.process_normalized_img(img))
-        img_recMosaic = img_recMosaic.median() 
-        # print("size ", img_recMosaic.size().getInfo())  
-        # print("metadato ", img_recMosaic.first().getInfo())
+        img_recMosaic = imgMosaic.filter(ee.Filter.eq('year', anoCount))
+        numImgMosaic = img_recMosaic.size().getInfo()
+        if self.testando:
+            print(" \n Quantas imagens nos temos cobrindo a grade ", numImgMosaic)  
+        
+        if numImgMosaic > 1:
+            img_recMosaicG = img_recMosaic.median().clip(gradeKM) 
+        else:
+            img_recMosaicG = img_recMosaic.first().clip(gradeKM) 
+        # print("metadato ", img_recMosaic.first().bandNames().getInfo())
+        img_recMosaicGNorm = self.process_normalized_img(img_recMosaicG)       
+        if self.testando:
+            print("\n ------------ bands of img_recMosaic  ====== ")
+            dictInformation = img_recMosaicGNorm.bandNames().getInfo()
+            print(f" Bandas   ==> {dictInformation}")
+        img_recMosaicnewB = self.CalculateIndice(img_recMosaicGNorm)
+        time.sleep(8)# esperar 8 segundos
+        if self.testando:
+            bndAdd = img_recMosaicnewB.bandNames().getInfo()
+            print(f"know bands names {len(bndAdd)}")
+            print("  ", bndAdd)
 
-        # print("img_recMosaic   ", img_recMosaic.bandNames().getInfo())
-        img_recMosaicnewB = self.CalculateIndice(img_recMosaic)
-        # bndAdd = img_recMosaicnewB.bandNames().getInfo()
-            
-        # print(f"know bands names {len(bndAdd)}")
-        # print("  ", bndAdd)
-
-        img_recMosaic = img_recMosaic.addBands(ee.Image(img_recMosaicnewB)).addBands(map_yearAct)
-        img_recMosaic = img_recMosaic.updateMask(areaColeta)
+        img_recMosaicG = img_recMosaicG.addBands(ee.Image(img_recMosaicnewB)).addBands(map_yearAct)
+        img_recMosaicG = img_recMosaicG.updateMask(areaColeta)
         nomeBaciaEx = "gradeROIs_" + str(idCodGrad) +  '_' + str(anoCount) + "_wl" 
 
         # sampleRegions()
-        ptosTemp = img_recMosaic.sample(
+        ptosTemp = img_recMosaicG.sample(
                             region=  gradeKM,                              
                             scale= 30,   
-                            numPixels= 10000,
+                            numPixels= 3000,
                             dropNulls= True,
                             # tileScale= 2,                             
                             geometries= True
@@ -1064,14 +1103,14 @@ param = {
     'anoFinal': 2023,
     'sufix': "_1",
     'numeroTask': 6,
-    'numeroLimit': 2,
+    'numeroLimit': 4,
     'conta': {
-        '0': 'caatinga01',
-        '1': 'caatinga02',
-        '2': 'caatinga03',
-        '3': 'caatinga04',
-        '4': 'caatinga05',
-        '5': 'solkan1201',
+        # '0': 'caatinga01',
+        # '1': 'caatinga02',
+        '0': 'caatinga03',
+        '1': 'caatinga04',
+        '2': 'caatinga05',
+        '3': 'solkan1201',
         # '6': 'solkanGeodatin',
         # '20': 'solkanGeodatin'
     },
@@ -1085,11 +1124,14 @@ def gerenciador(cont, param):
         gee.switch_user(param['conta'][str(cont)])
         gee.init()
         gee.tasks(n=param['numeroTask'], return_list=True)
+        cont += 1
 
     elif cont > param['numeroLimit']:
         cont = 0
 
-    cont += 1
+    else:
+        cont += 1
+    
     return cont
 
 def GetPolygonsfromFolder(dictAsset):    
@@ -1111,7 +1153,7 @@ def getlistofRegionYeartoProcessing(lstAssetSaved, lstCodGrade):
 
     Parameters:
     lstAssetSaved (list): A list of existing ROI asset names.
-    lstCodGrade (list): A list of all possivel grade IDs.
+    lstCodGrade (list): A list of all possivel grade IDs. # 1352
 
     Returns:
     lstOut (list): A list of ROI names that are missing in the saved assets.
@@ -1126,14 +1168,12 @@ def getlistofRegionYeartoProcessing(lstAssetSaved, lstCodGrade):
             # agregando o ano para a lista 
             dicttmp[partes[1]] = [int(partes[2])]
         else:
-            # lsttmp = dicttmp[partes[1]]
-            # lsttmp.append(int())
             dicttmp[partes[1]] += [partes[2]]
 
     idGradeKeys = [kk for kk in dicttmp.keys()]
     print(f"we have {len(idGradeKeys)} keys basin ")
     listTarge = []
-    lstOut = []
+    lstOut = []    
     pathroot = None
     print("************* looping all list of  basin ***********" )
     
@@ -1144,7 +1184,13 @@ def getlistofRegionYeartoProcessing(lstAssetSaved, lstCodGrade):
                 # 74113_1986_wl
                 nameAssetW = "gradeROIs_" + str(idGrade) + "_" + str(year) + "_wl"            
                 if year not in lstyears:                
-                    lstOut.append(nameAssetW)                    
+                    lstOut.append(nameAssetW)    
+        else:
+            # if gradeId not in gradelistsaved () then adding gradeId with your years 
+            for year in range(param['anoInicial'], param['anoFinal'] + 1):
+                nameAssetW = "gradeROIs_" + str(idGrade) + "_" + str(year) + "_wl"            
+                lstOut.append(nameAssetW)
+
     
     print("we show the 30 finaly ", lstAssetSaved[-30:])
     return lstOut 
@@ -1179,7 +1225,7 @@ def getListGradesROIsSaved (nList, show_survive):
 
 # listaNameBacias = ['765','766','759','7619','7422']
 
-changeCount = True
+changeCount = False
 cont = 0
 if changeCount:
     cont = gerenciador(cont, param)
@@ -1218,18 +1264,20 @@ if getLstIds:
     nlksIDs.sort()
 else:
     nlksIDs = lstIdCodN5.lstIdsGradeCaat
-print(f"lista de Ids com {len(nlksIDs)} grades no total {len(nlksIDs) * 37}")
+
+numberGradeYearsAll = len(nlksIDs) * 37
+print(f"lista de Ids com {len(nlksIDs)} grades no total {numberGradeYearsAll}")
 
 # nlksIDs = [ ]
 
 if colectSaved:
     lstAssetFolder = GetPolygonsfromFolder(param['asset_ROIs_automatic'])
-    print(f"lista de Features ROIs com {len(lstAssetFolder)} grades  ")       
+    print(f"lista de Features ROIs Grades saved {len(lstAssetFolder)}   ")       
     newlstIdGrades = [kk.split("/")[-1] for kk in lstAssetFolder]
     print("show the first 5 : \n", newlstIdGrades[:5])
     # get the basin saved
-    print(f"we have {len(newlstIdGrades)} asset to search in what year is missing some ROIs")
-    # sys.exit()
+    print(f"we have {len(newlstIdGrades)} asset to search in what year is missing some ROIs from of  {numberGradeYearsAll} possivel")
+    sys.exit()
     lstGradeMissing =  getlistofRegionYeartoProcessing(newlstIdGrades, nlksIDs)
     print(f"we have {len(lstGradeMissing)} asset that are missing")
     lstProcpool = [(cc, kk) for cc, kk in enumerate(lstGradeMissing[:])]    
@@ -1237,7 +1285,7 @@ if colectSaved:
 else:
     lstProcpool = [(cc, kk) for cc, kk in enumerate(nlksIDs[:])]
 
-print("size of list ", len(nlksIDs))
+print("size of list to processe ", len(lstProcpool))
 # sys.exit()
 lstKeysFolder = 'asset_shpGrade'  # , , 'asset_ROIs_manual', 'asset_ROIs_cluster'
 objetoMosaic_exportROI = ClassMosaic_indexs_Spectral(setTeste, dictidGrBasin)
@@ -1246,11 +1294,15 @@ print("============= Get parts of the list ===============")
 # print(lstProcpool[0])
 # objetoMosaic_exportROI.iterate_bacias(lstProcpool[0])
 if setTeste:
-    objetoMosaic_exportROI.iterate_GradesCaatinga(lstProcpool[0])
+    if colectSaved:
+        print("testando o primero dado ")
+        objetoMosaic_exportROI.iterate_idAsset_missing(lstProcpool[0])
+    else:
+        objetoMosaic_exportROI.iterate_GradesCaatinga(lstProcpool[0])
 else:
     print("Não fazer teste")
     step = 60
-    for ll in range(0, len(lstProcpool[:]), step):
+    for ll in range(0, len(lstProcpool[39070:]), step):
         lstProcpoolss = lstProcpool[ll: ll + step]
         if ll > -1:
             with ThreadPool() as pool:

@@ -35,5 +35,7 @@ var text = "";
     🏆 triunfo
     ☕ cafe
     🔗 cadenas
+    🦋 borboletas
+    🕸️ tela de aranha
 */
 
