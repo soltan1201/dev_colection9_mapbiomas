@@ -43,14 +43,17 @@ listaNameBacias = [
 ]
 
 # ee.data.renameAsset(sourceId, destinationId, callback)
-asset_output = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fill'
-asset_input = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fills'
+# asset_output = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fill'
+# asset_input = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fills'
+asset_output = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVP'
+asset_input = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVX'
 changeConta = False
-fromImgCol = False
+fromImgCol = True
+versionMapping = 10
 if changeConta: 
     gerenciador('solkan1201')
 if fromImgCol:
-    imgCol = ee.ImageCollection(asset_input)
+    imgCol = ee.ImageCollection(asset_input).filter(ee.Filter.eq('version', versionMapping))
     lstIds = imgCol.reduceColumns(ee.Reducer.toList(), ['system:index']).get('list').getInfo()
 
     for cc, masset in enumerate(lstIds):

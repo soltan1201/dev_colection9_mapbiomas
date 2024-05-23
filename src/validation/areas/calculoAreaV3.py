@@ -1,6 +1,5 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
-
 '''
 #SCRIPT DE CLASSIFICACAO POR BACIA
 #Produzido por Geodatin - Dados e Geoinformacao
@@ -36,10 +35,10 @@ param = {
     # 'inputAsset': path + 'class_filtered_Tp',   
     'assetCol': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVX" ,
     'assetColprob': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVP" ,
-    'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fill',
+    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fill',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Spatial',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Temporal',
-    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Frequency',
+    'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Frequency',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport',
     'asset_Map' : "projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1",
     'asset_bacias': 'projects/mapbiomas-arida/ALERTAS/auxiliar/bacias_hidrografica_caatinga',
@@ -47,7 +46,7 @@ param = {
     'geral':  True,
     'isImgCol': True,  
     'inBacia': True,
-    'version': 9,
+    'version': 5,
     'sufixo': '_Cv', 
     'assetBiomas': 'projects/mapbiomas-workspace/AUXILIAR/biomas_IBGE_250mil', 
     'biome': 'CAATINGA', 
@@ -55,7 +54,7 @@ param = {
     'scale': 30,
     'driverFolder': 'AREA-EXPORT-COL9', 
     'lsClasses': [3,4,12,15,18,21,22,33],
-    'changeAcount': False,
+    'changeAcount': True,
     'numeroTask': 0,
     'numeroLimit': 37,
     'conta' : {
@@ -91,12 +90,11 @@ def gerenciador(cont, paramet):
 ###    @param item 
 ##############################################
 def convert2featCollection (item):
-
     item = ee.Dictionary(item)
 
     feature = ee.Feature(ee.Geometry.Point([0, 0])).set(
         'classe', item.get('classe'),"area", item.get('sum'))
-        
+
     return feature
 
 #########################################################################
@@ -163,8 +161,7 @@ lstBands = ['classification_' + str(yy) for yy in range(1985, 2024)]
 bioma250mil = ee.FeatureCollection(param['assetBiomas'])\
                     .filter(ee.Filter.eq('Bioma', 'Caatinga')).geometry()
 knowImgcolg = False
-isFilter = False
-
+isFilter = True
 if isFilter and ('POS-CLASS' in param['assetFilters'] or 'toExport' in param['assetFilters']):
     subfolder = "_" + param['assetFilters'].split('/')[-1] 
 else:

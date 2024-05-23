@@ -44,8 +44,8 @@ class processo_filterTemporal(object):
 
     def __init__(self):
         # self.id_bacias = nameBacia
-        self.versInput = 9
-        self.versionTP = 9
+        self.versInput = 10
+        self.versionTP = 10
         self.geom_bacia = ee.FeatureCollection(self.options['asset_bacias_buffer'])#.filter(
                                                     # ee.Filter.eq('nunivotto3', nameBacia)).first().geometry()              
 
@@ -328,7 +328,7 @@ aplicando_TemporalFilter = processo_filterTemporal()
 # for cc, lst in enumerate(aplicando_TemporalFilter.colectAnos):
 #     print(1985 + cc, lst)
 input_asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Temporal/'
-version = 9
+version = 10
 cont = 0
 listBacFalta = []
 knowMapSaved = True

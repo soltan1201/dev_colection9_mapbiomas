@@ -41,8 +41,8 @@ class processo_filterFrequence(object):
 
     def __init__(self, nameBacia):
         self.id_bacias = nameBacia
-        self.versionTP = 5
-        self.versionFR = 5
+        self.versionTP = 10
+        self.versionFR = 10
         self.geom_bacia = ee.FeatureCollection(self.options['asset_bacias_buffer']).filter(
                                                     ee.Filter.eq('nunivotto3', nameBacia)).first().geometry()   
         # filterSP_BACIA_778_V1     

@@ -92,47 +92,23 @@ param = {
     'limit_bacias': "users/CartasSol/shapes/bacias_limit",
     'assetCol': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVX" ,
     'assetColprob': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVP" ,
-    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Spatial',
-    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Frequency',
+    'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Spatial',
+    'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Frequency',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fill',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Temporal',
-    'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport',
-    'asset_Map' : "projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1",
+    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport',
+    # 'asset_Map' : "projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1",
     # 'assetCol6': path_asset + "class_filtered/maps_caat_col6_v2_4",
     'classMapB': [3, 4, 5, 9,12,13,15,18,19,20,21,22,23,24,25,26,29,30,31,32,33,36,37,38,39,40,41,42,43,44,45],
     'classNew': [3, 4, 3, 3,12,12,21,21,21,21,21,22,22,22,22,33,29,22,33,12,33, 21,33,33,21,21,21,21,21,21,21],
     'inBacia': True,
-    'pts_remap' : {
-        "FORMAÇÃO FLORESTAL": 3,
-        "FORMAÇÃO SAVÂNICA": 4,        
-        "MANGUE": 3,
-        "RESTINGA HERBÁCEA": 3,
-        "FLORESTA PLANTADA": 18,
-        "FLORESTA INUNDÁVEL": 3,
-        "CAMPO ALAGADO E ÁREA PANTANOSA": 12,
-        "APICUM": 12,
-        "FORMAÇÃO CAMPESTRE": 12,
-        "AFLORAMENTO ROCHOSO": 29,
-        "OUTRA FORMAÇÃO NÃO FLORESTAL":12,
-        "PASTAGEM": 15,
-        "CANA": 18,
-        "LAVOURA TEMPORÁRIA": 18,
-        "LAVOURA PERENE": 18,
-        "MINERAÇÃO": 22,
-        "PRAIA E DUNA": 22,
-        "INFRAESTRUTURA URBANA": 22,
-        "VEGETAÇÃO URBANA": 22,
-        "OUTRA ÁREA NÃO VEGETADA": 22,
-        "RIO, LAGO E OCEANO": 33,
-        "AQUICULTURA": 33,
-        "NÃO OBSERVADO": 27  
-    },
     'anoInicial': 1985,
     'anoFinal': 2022,  # 2019
     'numeroTask': 6,
     'numeroLimit': 2,
+    'changeAcount': True,
     'conta' : {
-        '0': 'caatinga04'              
+        '0': 'solkanGeodatin'              
     },
     'lsProp': ['ESTADO','LON','LAT','PESO_AMOS','PROB_AMOS','REGIAO','TARGET_FID','UF'],
     "amostrarImg": False,
@@ -220,7 +196,7 @@ def getPointsAccuraciaFromIC (imClass, isImgCBa, ptosAccCorreg, modelo, version,
     
     for cc, _nbacia in enumerate(nameBacias[:]):    
         # nameImg = 'mapbiomas_collection80_Bacia_v' + str(version) 
-        print("processando img == " + str(cc) + " em bacia *** " + _nbacia)
+        print(f"-------  📢📢 processando img #  {cc} na bacia {_nbacia}  🫵 -------- ")
         baciaTemp = ftcol_bacias.filter(ee.Filter.eq('nunivotto3', _nbacia)).geometry()    
 
         pointTrueTemp = ptosAccCorreg.filterBounds(baciaTemp)
@@ -236,8 +212,8 @@ def getPointsAccuraciaFromIC (imClass, isImgCBa, ptosAccCorreg, modelo, version,
             print(" 🚨  reading the one image ")
             mapClassBacia = ee.Image(imClass)
         try:
-            #.unmask(0)
-            pointAccTemp = mapClassBacia.sampleRegions(
+            #
+            pointAccTemp = mapClassBacia.unmask(0).sampleRegions(
                 collection= pointTrueTemp, 
                 properties= lsAllprop, 
                 scale= 30, 
@@ -292,14 +268,14 @@ ptsTrue = ee.FeatureCollection(param['assetpointLapig']).filterBounds(bioma250mi
 pointTrue = ptsTrue.map(lambda feat: change_value_class(feat))
 print("Carregamos {} points ".format(pointTrue.size().getInfo()))  # pointTrue.size().getInfo()
 print("know the first points ", pointTrue.first().getInfo())
-# print(pointTrue.aggregate_histogram('CLASS_2020').getInfo())
-# lsNameClass = [kk for kk in param['pts_remap'].keys()]
-# lsValClass = [kk for kk in param['pts_remap'].values()]
 
 if expPointLapig:
     processoExportar(ptsTrue, param['assetpointLapig'].split("/")[-1], False)
     processoExportar(pointTrue, param['assetpointLapig'].split("/")[-1] + '_reclass', False)
     
+if param['changeAcount']:
+    gerenciador(0, param)
+
 # sys.exit()
 ########################################################
 #   porBacia -----  Image
@@ -343,7 +319,7 @@ if param['isImgCol']:
                                     ee.Filter.eq('classifier', model))
             print(f"########## 🔊 FILTERED BY VERSAO {version} AND MODEL {model} 🔊 ###############") 
             sizeimgCol = mapClassMod.size().getInfo()
-            print(" 🚨 número de mapas bacias ", sizeimgCol) 
+            print(f"===  🚨 número de mapas bacias na Image Collection {sizeimgCol} no modelo  {model} =====") 
             # sys.exit()               
             if sizeimgCol > 0:
                 # getPointsAccuraciaFromIC (imClass, isImgCBa, ptosAccCorreg, modelo, version, exportByBasin, exportarAsset)
@@ -354,6 +330,7 @@ if param['isImgCol']:
         print(f"########## 🔊 FILTERED BY VERSAO {version} 🔊 ###############")              
         mapClassYY = mapClass.filter(ee.Filter.eq('version', version))
         print(" 🚨 número de mapas bacias ", mapClass.size().getInfo())
+
         immapClassYY = ee.Image().byte()
         for yy in range(1985, 2023):
             nmIm = 'CAATINGA-' + str(yy) + '-' + str(version)
@@ -363,7 +340,8 @@ if param['isImgCol']:
                 immapClassYY = imTmp.byte()
             else:
                 immapClassYY = immapClassYY.addBands(imTmp.byte())
-        ## imageCollection converted in image Maps
+        
+        ### imageCollection converted in image Maps
         ### call to function samples  #######
         getPointsAccuraciaFromIC (immapClassYY, False, pointTrue, '', '', True, False, subfolder)
 

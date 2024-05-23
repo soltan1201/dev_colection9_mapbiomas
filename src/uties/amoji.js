@@ -31,11 +31,20 @@ var text = "";
     🫂 abraços
     🔉 son
     🫵 tu
-    🔓  cadeado
+    🔓 cadeado
     🏆 triunfo
     ☕ cafe
     🔗 cadenas
     🦋 borboletas
     🕸️ tela de aranha
+    📈 tendencia 
+    💼 maleta  
+    🌟 estrellas 
+    🔧 ferramenta
+    🧪 testee    
+    💡 bombillo
+    💸 dinero
+    📚 livros
+    🛠️ herramientas
 */
 

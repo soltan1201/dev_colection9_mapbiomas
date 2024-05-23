@@ -43,7 +43,7 @@ class processo_gapfill(object):
         }
 
 
-    def __init__(self, nameBacia, conectarPixels, vers):
+    def __init__(self, nameBacia, conectarPixels, vers, modelo):
         self.id_bacias = nameBacia
         self.geom_bacia = ee.FeatureCollection(self.options['asset_bacias_buffer']).filter(
                                                     ee.Filter.eq('nunivotto3', nameBacia)).first().geometry()   
@@ -56,7 +56,7 @@ class processo_gapfill(object):
         # self.name_imgClass = 'BACIA_' + nameBacia + '_GTB_col8'
         # self.name_imgClass = 'BACIA_' + nameBacia + '_RF_col8'
         # BACIA_776_GTB_col9-v9
-        self.name_imgClass = 'BACIA_' + nameBacia + '_GTB_col9-v' + str(self.version )
+        self.name_imgClass = 'BACIA_' + nameBacia + '_'+ modelo + '_col9-v' + str(self.version )
         # self.name_imgClass = 'BACIA_corr_mista_' + nameBacia + '_V2'
         
         
@@ -220,23 +220,20 @@ def gerenciador(cont):
 listaNameBacias = [
     '741','7421','7422','744','745','746','7492','751','752','753',
     '754','755','756','757','758','759','7621','7622','763','764',
-    '765','766','767',
-    '771', '772','773',
-    '7741','776',
-    '7742','775',
-    '777','778','76111','76116','7612',
-    '7613','7614',
+    '765','766','767', '771', '772','773','7741','776','7742','775',
+    '777','778','76111','76116','7612','7613','7614',
     '7615','7616','7617','7618','7619'
 ]
 # listaNameBacias = [
 #     '7742', '775', '777' # '778', '7615', '7616', '7741', '776', 
 # ]
-versionMap= 9
+models = "RF"  # "RF", "GTB"
+versionMap= 10
 cont = 0
 for idbacia in listaNameBacias[:]:
     print("-----------------------------------------")
     print("----- PROCESSING BACIA {} -------".format(idbacia))
 
     cont = gerenciador(cont)
-    aplicando_gapfill = processo_gapfill(idbacia, True, versionMap) # added band connected is True
+    aplicando_gapfill = processo_gapfill(idbacia, True, versionMap, models) # added band connected is True
     aplicando_gapfill.processing_gapfill()

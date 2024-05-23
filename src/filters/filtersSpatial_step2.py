@@ -39,7 +39,7 @@ param = {
     'first_year': 1985,
     # 'versionTP' : '9',
     # 'versionSP' : '7',
-    'versionGP' : 9,
+    'versionGP' : 10,
     'numeroTask': 6,
     'numeroLimit': 42,
     'conta' : {
@@ -157,7 +157,7 @@ input_asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap
 # input_asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Spatial/'
 if changeAcount:
     cont = gerenciador(cont)
-version = 9
+version = 10
 listBacFalta = []
 knowMapSaved = False
 for cc, idbacia in enumerate(listaNameBacias[:]):   
