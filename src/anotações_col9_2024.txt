@@ -173,3 +173,16 @@ Campos
 '763', '771','772','773', '7741','7742','775','776','777','778',    
 '76111','76116','7612','7614','7615','7616','7617','7618','7619', 
 '7613'
+
+
+
+pos-classificação, tabela de revisao das classificações por bacia 
+https://docs.google.com/spreadsheets/d/11L_wTnkmjW9nRK7UgP6q6fkBOk8dElEyeQ3gnnJ2vUg/edit#gid=1999040808
+
+os scripts utilizados estão na pasta corregir Areas 
+os mapas utilizados foram versão 5 e versão 10
+
+Regras de integração 
+https://docs.google.com/spreadsheets/d/1c1NDlsQ3M1rgN18xQ8DJs5vDBvq_cNYXoR5TBvFnDsU/edit#gid=232062154
+
+

@@ -198,6 +198,10 @@ https://docs.google.com/spreadsheets/d/11L_wTnkmjW9nRK7UgP6q6fkBOk8dElEyeQ3gnnJ2
 os scripts utilizados estão na pasta corregir Areas 
 os mapas utilizados foram versão 5 e versão 10
 
+Regras de integração 
+https://docs.google.com/spreadsheets/d/1c1NDlsQ3M1rgN18xQ8DJs5vDBvq_cNYXoR5TBvFnDsU/edit#gid=232062154
+
+
 
 
 

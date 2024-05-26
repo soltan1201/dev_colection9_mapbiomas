@@ -24,7 +24,7 @@ tqdm.pandas()
 
 
 buildMetricsAcc = True
-buildMetAggrements = False
+buildMetAggrements = True
 modelos = ["GTB","RF"]
 nameBacias = [
       '741', '7421','7422','744','745','746','751','752', '7492',
@@ -151,7 +151,7 @@ def user_prod_acc_err(mat_conf, dim):
 def calculing_Aggrements_AccGlobal_ModelVers(dfAggP, dfacctmp):
 
     def calculing_Aggrements_AccGlobal(row):  
-        vers = row['version']
+        vers = row['Version']
         model = row['Models']
         nbacia = row['Bacia']
         yyear = row['Years']    
@@ -286,11 +286,11 @@ print(f' 📢 We load {len(lst_paths)} tables from folder  {input_path_CSVs.spli
 classificador = "GTB"
 mversion = ''
 modelos = ['RF', 'GTB']
-posclass = ['Gap-fill', 'Spatial', 'Temporal', 'Frequency','toExport']
-version_process = ['10'] # '5','9',
+posclass = ['Gap-fill', 'Spatial', 'Temporal', 'Frequency', 'toExport']
+version_process = ['5','9','10'] # 
 modelos += posclass
-for nmodel in modelos[:]:
-    for vers in version_process:
+for nmodel in modelos[2:3]:
+    for vers in version_process[1:2]:
         lst_df = []
         for cc, path in enumerate(lst_paths[:]): 
             # if cc == 0 or cc == len(lst_paths) - 1:
@@ -322,6 +322,7 @@ for nmodel in modelos[:]:
                 df_CSV['models'] = [classificador] * df_CSV.shape[0]
                 # add to list ofs Dataframes             
                 lst_df.append(df_CSV)
+
 
         # if cc > 10:
         #     break
@@ -406,7 +407,7 @@ for nmodel in modelos[:]:
                 print("the size table is ", dfAccBa.shape)
 
                 pathOutpout = base_path + '/dados/globalTables/'
-                nameTablesGlob = f"regMetricsAccs_{nmodel}_vrs_{vers}_Col9.csv"   
+                nameTablesGlob = f"regMetricsAccs_{nmodel}_vers_{vers}_Col9.csv"   
 
                 print("====== SAVING GLOBAL ACCURACY BY YEARS =========== ")
                 dfAccBa.to_csv(pathOutpout + nameTablesGlob)
@@ -428,7 +429,7 @@ for nmodel in modelos[:]:
 
                 print("Adding metrics Acc in the dictionary by Year")
                 dictAcc = {
-                    "version": lstVersion,
+                    "Version": lstVersion,
                     "Models": [nmodel] * len(lstVersion),
                     "Bacia" : lstBacias,    
                     "Years": lstYear    
@@ -452,6 +453,6 @@ for nmodel in modelos[:]:
                 pathOutpout = base_path + '/dados/globalTables/'
                 # path = Path(pathOutpout)
                 # path.mkdir(parents=True, exist_ok=True)    
-                nameTablesGlob = f"regAggrementsAcc_{nmodel}_{vers}_Col9.csv"
+                nameTablesGlob = f"regAggrementsAcc_{nmodel}_vers_{vers}_Col9.csv"
                 dfAggCalc.to_csv(pathOutpout + nameTablesGlob, index= False)
-                sys.exit()
+                # sys.exit()

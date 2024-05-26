@@ -42,7 +42,7 @@ param = {
     'asset_mask_aflora':'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/layer_afloramento_cluster',
     'year_first': 1985,
     'year_end': 2023,
-    'version': 9,
+    'version': 10,
     'classMapB': [3, 4, 5, 9,12,13,15,18,19,20,21,22,23,24,25,26,29,30,31,32,33,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,62],
     'classNew':  [3, 4, 3, 3,12,12,21,21,21,21,21,22,22,22,22,33,29,22,33,12,33,21,33,33,21,21,21,21,21,21,21,21,21,21, 4,12,21],
     'numeroTask': 6,
@@ -404,7 +404,7 @@ cont = 0
 if changeCount:
     cont = gerenciador(cont)
 list_corr = []
-for nameBa in  nameBacias[1:]:
+for nameBa in  nameBacias[:]:
     print(f"########## 🔊 LOADING BASIN {nameBa} IN VERSAO {param['version']} 🔊 ###############") 
     
     # name_imgClass = 'filter_BACIA_' + nameBa + "_" + dict_version[dict_Bacia_version[nameBa]]  

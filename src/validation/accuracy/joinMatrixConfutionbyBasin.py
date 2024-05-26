@@ -31,7 +31,7 @@ nameBacias = [
       '7616','7617','7618','7619'
 ]
 modelos = ['GTB','RF']
-posclass = ['Gap-fill', 'Spatial', 'Temporal', 'toExport']
+posclass = ['Gap-fill', 'Spatial', 'Frequency', 'Temporal', 'toExport']
 modelos += posclass
 # get dir path of script 
 npath = os.getcwd()
@@ -40,33 +40,34 @@ npath = str(Path(npath).parents[1])
 print("path of CSVs Rois is \n ==>",  npath)
 pathcsvsMC = os.path.join(npath,'dados')
 pathcsvsMC = os.path.join(pathcsvsMC, 'conf_matrix')
-
+version_process = ['5','9','10'] # 
 lstfilesCSVs = glob.glob(pathcsvsMC + '/*.csv')
 for model in modelos:
     lstDF_models = []
-    for cc, pathfile in enumerate(lstfilesCSVs):        
-        if model in pathfile:
-            
-            namefile = pathfile.split("/")[-1]
-            partes = namefile.split("_")
-            nbacia = partes[1]
-            yyear = partes[-2]
-            version = partes[-1].replace('.csv', '')
-            if model in ['GTB','RF'] and len(partes) == 5:
-                print(f"file {cc} | model {model} | year {yyear} | pathfile {pathfile.split("/")[-1]}")
-                dftmp = pd.read_csv(pathfile)
-            else:
-                print(f"file {cc} | m POS- CLASS {model} | year {yyear} | pathfile {pathfile.split("/")[-1]}")
-                dftmp = pd.read_csv(pathfile)
-            dftmp['bacia'] = [nbacia] * dftmp.shape[0]
-            dftmp['model'] = [model] * dftmp.shape[0]
-            dftmp['version'] = [version] * dftmp.shape[0]
-            dftmp['year'] = [yyear] * dftmp.shape[0]
-            print(dftmp)
-            lstDF_models.append(dftmp)
+    for vers in version_process:
+        for cc, pathfile in enumerate(lstfilesCSVs):        
+            if model in pathfile:
+                
+                namefile = pathfile.split("/")[-1]
+                partes = namefile.split("_")
+                nbacia = partes[1]
+                yyear = partes[-2]
+                version = partes[-1].replace('.csv', '')
+                if model in ['GTB','RF'] and len(partes) == 5:
+                    print(f"file {cc} | model {model} | year {yyear} | pathfile {pathfile.split("/")[-1]}")
+                    dftmp = pd.read_csv(pathfile)
+                else:
+                    print(f"file {cc} | m POS- CLASS {model} | year {yyear} | pathfile {pathfile.split("/")[-1]}")
+                    dftmp = pd.read_csv(pathfile)
+                dftmp['bacia'] = [nbacia] * dftmp.shape[0]
+                dftmp['model'] = [model] * dftmp.shape[0]
+                dftmp['version'] = [version] * dftmp.shape[0]
+                dftmp['year'] = [yyear] * dftmp.shape[0]
+                print(dftmp)
+                lstDF_models.append(dftmp)
 
-    nametable = 'Matrices_Confusion_model_' + model + '.csv'
-    dfModels = pd.concat(lstDF_models, axis=0, ignore_index=True)
-    pathExp = npath + '/dados/globalTables/' + nametable
-    dfModels.to_csv(pathExp)
-    print(f" we save the table {nametable} with {dfModels.shape} shapes")
+        nametable = 'Matrices_Confusion_model_' + model + '_vers_'+ str(vers) +'.csv'
+        dfModels = pd.concat(lstDF_models, axis=0, ignore_index=True)
+        pathExp = npath + '/dados/globalTables/' + nametable
+        dfModels.to_csv(pathExp)
+        print(f" we save the table {nametable} with {dfModels.shape} shapes")

@@ -40,21 +40,24 @@ param = {
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Temporal',
     'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Frequency',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport',
-    'asset_Map' : "projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1",
+    # 'asset_Map' : "projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1",
+    'asset_Map': 'projects/mapbiomas-workspace/public/collection7_1/mapbiomas_collection71_integration_v1',
     'asset_bacias': 'projects/mapbiomas-arida/ALERTAS/auxiliar/bacias_hidrografica_caatinga',
     'collection': '9.0',
     'geral':  True,
     'isImgCol': True,  
     'inBacia': True,
-    'version': 5,
+    'version': 10,
     'sufixo': '_Cv', 
     'assetBiomas': 'projects/mapbiomas-workspace/AUXILIAR/biomas_IBGE_250mil', 
     'biome': 'CAATINGA', 
     'source': 'geodatin',
     'scale': 30,
+    'year_inic': 1985,
+    'year_end': 2023,
     'driverFolder': 'AREA-EXPORT-COL9', 
     'lsClasses': [3,4,12,15,18,21,22,33],
-    'changeAcount': True,
+    'changeAcount': False,
     'numeroTask': 0,
     'numeroLimit': 37,
     'conta' : {
@@ -128,7 +131,7 @@ def iterandoXanoImCruda(imgAreaRef, imgMapp, limite):
     imgMapp = imgMapp.clip(limite)
     imgAreaRef = imgAreaRef.clip(limite)
     areaGeral = ee.FeatureCollection([])    
-    for year in range(1985, 2022):
+    for year in range(param['year_inic'], param['year_end'] + 1):
         bandAct = "classification_" + str(year) 
         areaTemp = calculateArea (imgMapp.select(bandAct), imgAreaRef, limite)        
         areaTemp = areaTemp.map( lambda feat: feat.set('year', year))
@@ -156,7 +159,7 @@ def processoExportar(areaFeat, nameT, ipos):
 #testes do dado
 # https://code.earthengine.google.com/8e5ba331665f0a395a226c410a04704d
 # https://code.earthengine.google.com/306a03ce0c9cb39c4db33265ac0d3ead
-# get raster with area km2
+# get raster with area km2st.write("tenemos um analises aqui Area")
 lstBands = ['classification_' + str(yy) for yy in range(1985, 2024)]
 bioma250mil = ee.FeatureCollection(param['assetBiomas'])\
                     .filter(ee.Filter.eq('Bioma', 'Caatinga')).geometry()
@@ -228,26 +231,31 @@ if param['isImgCol']:
         
         nameCSV = 'areaXclasse_' + param['biome'] + '_Col' + param['collection'] + "_" + model + "_vers_" + str(version)
 
-        for nbacia in nameBacias:
+        for cc, nbacia in enumerate(nameBacias):
             ftcol_bacias = ee.FeatureCollection(param['asset_bacias']).filter(
                                 ee.Filter.eq('nunivotto3', nbacia)).geometry()
             limitInt = bioma250mil.intersection(ftcol_bacias)
             areaM = iterandoXanoImCruda(pixelArea, immapClassYY, limitInt) 
             nameCSVBa = nameCSV + "_" + nbacia 
-            processoExportar(areaM, nameCSVBa)
+            processoExportar(areaM, nameCSVBa, cc)
     
 else:
-    print("########## 🔊 LOADING MAP RASTER ###############")
-    mapClassRaster = ee.Image(param['assetCol']).byte()
+    print("########## 🔊 LOADING MAP RASTER FROM IMAGE OBJECT ###############")
+    assetPathRead = param['asset_Map'] 
+    print(f" ------ {assetPathRead} ---- ")
+    nameImg = assetPathRead.split('/')[-1].replace('mapbiomas_collection', '')
+    mapClassRaster = ee.Image(assetPathRead).byte()
     ### call to function samples  #######
-    nameCSV = 'areaXclasse_' + param['biome'] + '_Col' + param['collection'] + "_" + model + "_vers_" + str(version)
-    for nbacia in nameBacias:
+    nameCSV = 'areaXclasse_' + param['biome'] + "_Col" + nameImg
+
+    for cc, nbacia in enumerate(nameBacias):
         ftcol_bacias = ee.FeatureCollection(param['asset_bacias']).filter(
-                            ee.Filter.eq('nunivotto3', _nbacia)).geometry()
+                            ee.Filter.eq('nunivotto3', nbacia)).geometry()
         limitInt = bioma250mil.intersection(ftcol_bacias)
         areaM = iterandoXanoImCruda(pixelArea, mapClassRaster, limitInt) 
-        nameCSVBa = nameCSV + "_" + nbacia 
-        processoExportar(areaM, nameCSVBa)
+        nameCSVBa = nameCSV + "_" + nbacia
+        print(f" #{cc}  we processing ==> {nameCSVBa}   -- ") 
+        processoExportar(areaM, nameCSVBa, cc)
 
 
 

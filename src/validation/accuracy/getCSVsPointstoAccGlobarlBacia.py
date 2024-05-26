@@ -92,9 +92,9 @@ param = {
     'limit_bacias': "users/CartasSol/shapes/bacias_limit",
     'assetCol': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVX" ,
     'assetColprob': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVP" ,
-    'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Spatial',
-    'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Frequency',
-    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fill',
+    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Spatial',
+    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Frequency',
+    'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fill',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Temporal',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport',
     # 'asset_Map' : "projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1",
@@ -158,7 +158,7 @@ def change_value_class(feat):
     return feat_tmp
 
 
-def getPointsAccuraciaFromIC (imClass, isImgCBa, ptosAccCorreg, modelo, version, exportByBasin, exportarAsset,subbfolder):
+def getPointsAccuraciaFromIC (imClass, isImgCBa, ptosAccCorreg, modelo, thisvers, exportByBasin, exportarAsset,subbfolder):
     """
     This function is responsible for collecting points of accuracy from a given image classification.
 
@@ -225,9 +225,9 @@ def getPointsAccuraciaFromIC (imClass, isImgCBa, ptosAccCorreg, modelo, version,
             if exportByBasin:
                 if 'col9/' in param['assetColprob']:
                     if modelo != '':
-                        name = 'occTab_corr_Caatinga_' + _nbacia + "_" + modelo + subbfolder + "_" + str(version) + "_Col9" 
+                        name = 'occTab_corr_Caatinga_' + _nbacia + "_" + modelo + subbfolder + "_" + str(thisvers) + "_Col9" 
                     else:
-                        name = 'occTab_corr_Caatinga_' + _nbacia + "_" + str(version) + "_Col9" 
+                        name = 'occTab_corr_Caatinga_' + _nbacia + "_" + str(thisvers) + "_Col9" 
                 else:
                     name =  'occTab_corr_Caatinga_' + param['asset_Map'].split('/')[-1]
                 # export by basin             
@@ -245,9 +245,9 @@ def getPointsAccuraciaFromIC (imClass, isImgCBa, ptosAccCorreg, modelo, version,
     if not exportByBasin:
         if 'col9/' in param['asset_Map']:
             if modelo != '':
-                name = 'occTab_corr_Caatinga_Col9_' + modelo + "_" + str(version) + "_Col9" 
+                name = 'occTab_corr_Caatinga_Col9_' + modelo + "_" + str(thisvers) + "_Col9" 
             else:
-                name = 'occTab_corr_Caatinga_Col9_' + str(version) + "_Col9" 
+                name = 'occTab_corr_Caatinga_Col9_' + str(thisvers) + "_Col9" 
         else:
             name =  'occTab_corr_Caatinga_' + param['asset_Map'].split('/')[-1]
         processoExportar(pointAll, name, exportarAsset)
@@ -260,7 +260,7 @@ expPointLapig = False
 knowImgcolg = True
 param['isImgCol'] = True
 param['inBacia'] = True
-version = 5
+version = 9
 bioma250mil = ee.FeatureCollection(param['assetBiomas'])\
                     .filter(ee.Filter.eq('Bioma', 'Caatinga')).geometry()
 ## os pontos só serão aqueles que representam a Caatinga 

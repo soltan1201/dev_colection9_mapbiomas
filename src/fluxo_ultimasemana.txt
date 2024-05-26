@@ -1,0 +1,5 @@
+c
+
+passo 
+    colocar no fluxo dos filtros de pos-classificação as camadas de integração (solo, remoção de floresta, afloramento)
+    colocar as árreas por classe cruzadas com a área de 

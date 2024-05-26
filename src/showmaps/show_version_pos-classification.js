@@ -90,7 +90,7 @@ function get_layerIncidentes(mapYY71, mapYY80, mapYY90){
 
 
 
-var selBacia = '741';
+var selBacia = 'all';
 var yearcourrent = 2020;
 var version = 5;
 var assetCol9 = param.asset_MapC9X;
@@ -153,13 +153,14 @@ var imgMapCol9GTBjoin = null;
 var imgMapCol9SPjoin = null;
 var imgMapCol9GFjoin = null;
 var imgMapmixedJoin = null;
-
+var ptosfromBacia = null;
 
 if (selBacia === 'all'){
     imgMapCol9GTBjoin = imgMapCol9GTB.min();
     imgMapCol9SPjoin = imgMapCol9SP.min();
     imgMapCol9GFjoin = imgMapCol9GF.min();
     imgMapmixedJoin = imgMapmixed.min();
+    ptosfromBacia = poitsRefCol71comp;
 }else{
     FeatColbacia = FeatColbacia.filter(ee.Filter.eq('nunivotto3', selBacia));   
     imgMapCol9GTBjoin = imgMapCol9GTB.filter(ee.Filter.eq("id_bacia", selBacia)); 
@@ -169,7 +170,7 @@ if (selBacia === 'all'){
     Mosaicos = Mosaicos.filterBounds(FeatColbacia);
     poitsRefCol71compY = poitsRefCol71compY.filterBounds(FeatColbacia);
     pointRefCol80compY = pointRefCol80compY.filterBounds(FeatColbacia);
-    var ptosfromBacia = poitsRefCol71comp.filterBounds(FeatColbacia);
+    ptosfromBacia = poitsRefCol71comp.filterBounds(FeatColbacia);
 }
 
 var incidencias = get_layerIncidentes(imgMapCol71, imgMapCol8, imgMapmixedJoin);
