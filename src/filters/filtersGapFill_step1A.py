@@ -37,7 +37,7 @@ class processo_gapfill(object):
             # 'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/POS-CLASS/misto/',
             'inputAsset8': 'projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1',
             'asset_bacias_buffer' : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/bacias_hidrograficaCaatbuffer5k',
-            # 'asset_bacias_buffer' : 'projects/mapbiomas-arida/ALERTAS/auxiliar/bacias_hidrografica_caatinga',
+            'asset_gedi': 'users/potapovpeter/GEDI_V27',
             'classMapB' : [3, 4, 5, 9,12,13,15,18,19,20,21,22,23,24,25,26,29,30,31,32,33,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,62],
             'classNew'  : [3, 4, 3, 3,12,12,21,21,21,21,21,22,22,22,22,33,29,22,33,12,33, 21,33,33,21,21,21,21,21,21,21,21,21,21, 4,12,21]
         }
@@ -97,7 +97,7 @@ class processo_gapfill(object):
                     )
         return ee.Image(imgT)
 
-    def applyGapFill(self):
+    def applyGapFill(self, applyGDfilter):
         lst_band_conn = []
         lstImgMap = ee.Image().toByte()
         previousImage = None        
@@ -113,6 +113,14 @@ class processo_gapfill(object):
 
                 maskGap = currentImage.eq(0)
                 newBandActive = currentImage.where(maskGap, currentMap8)
+                if applyGDfilter: 
+                    # colocando floresta sobre a condição do GEDI remaping savana
+                    maskGedi = ee.Image(self.options['asset_gedi']).gt(6)
+                    maskFlorest = currentImage.lt(5).multiply(4)
+                    newBandActive = newBandActive.where(maskFlorest.gt(0), maskFlorest)
+                    newBandActive = newBandActive.where(maskGedi.gt(0), ee.Image.constant(3))
+                    # colocando floresta sobre a condição do GEDI
+                    # newBandActive = newBandActive.where(maskGedi.gt(0), ee.Image.constant(3))
                 previousImage = copy.deepcopy(newBandActive)
               
             else:
@@ -121,9 +129,7 @@ class processo_gapfill(object):
                 
                 newBandActive = currentImage.where(maskGap, previousImage)
             
-            lstImgMap = lstImgMap.addBands(newBandActive)
-            
-                
+            lstImgMap = lstImgMap.addBands(newBandActive)               
 
         imageFilledTn = ee.Image.cat(lstImgMap).select(self.lstbandNames)
         if self.conectarPixels:
@@ -137,11 +143,11 @@ class processo_gapfill(object):
             # print("banda col 8", imageFilledTn.bandNames().getInfo())
             return imageFilledTn
 
-    def processing_gapfill(self):
+    def processing_gapfill(self, applyGDmask):
 
 
         # apply the gap fill
-        imageFilled = self.applyGapFill()
+        imageFilled = self.applyGapFill(applyGDmask)
         print("passou")
         # print(imageFilled.bandNames().getInfo())
 
@@ -220,8 +226,8 @@ def gerenciador(cont):
 
 
 listaNameBacias = [
-    '744','754','741','7421','7422','745','746','7492','751','752','753',
-    '755','756','757','758','759','7621','7622','763','764',
+    '744','741','7421','7422','745','746','7492','751','752','753',
+    '754','755','756','757','758','759','7621','7622','763','764',
     '765','766','767', '771', '772','773','7741','776','7742','775',
     '777','778','76111','76116','7612','7613','7614',
     '7615','7616','7617','7618','7619'
@@ -229,13 +235,14 @@ listaNameBacias = [
 # listaNameBacias = [
 #     '7742', '775', '777' # '778', '7615', '7616', '7741', '776', 
 # ]
-models = "GTB"  # "RF", "GTB"
-versionMap= 13
+models = "RF"  # "RF", "GTB"
+versionMap= 11
 cont = 0
+applyGdfilter = True
 for idbacia in listaNameBacias[:]:
     print("-----------------------------------------")
     print("----- PROCESSING BACIA {} -------".format(idbacia))
 
     cont = gerenciador(cont)
     aplicando_gapfill = processo_gapfill(idbacia, True, versionMap, models) # added band connected is True
-    aplicando_gapfill.processing_gapfill()
+    aplicando_gapfill.processing_gapfill(applyGdfilter)

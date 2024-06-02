@@ -29,22 +29,24 @@ except:
     raise
 
 param = {      
-    'output_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Spatial/',
-    # 'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/POS-CLASS/Frequency/',
-    # 'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Temporal/',
-    'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fill/',
+    'output_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/SpatialV2/',
+    # 'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/FrequencyV2/',
+    'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/TemporalV2',
+    # 'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fillV2/',
     # 'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/POS-CLASS/Spatial/',
     'asset_bacias_buffer' : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/bacias_hidrograficaCaatbuffer5k',            
     'last_year' : 2023,
     'first_year': 1985,
+    'janela': 5,
+    'step': 2,
     # 'versionTP' : '9',
     # 'versionSP' : '7',
-    'versionGP' : 10,
+    'versionGP' : 15,
     'numeroTask': 6,
     'numeroLimit': 42,
     'conta' : {
         '0': 'caatinga01',
-        '7': 'caatinga02',
+        '2': 'caatinga02',
         '14': 'caatinga03',
         '21': 'caatinga04',
         '28': 'caatinga05',        
@@ -62,19 +64,24 @@ def buildingLayerconnectado(imgClasse):
     return imageFilledConnected
 
 
-def apply_spatialFilterConn (name_bacia):
+def apply_spatialFilterConn (name_bacia, nmodel):
     min_connect_pixel = 6
     geomBacia = ee.FeatureCollection(param['asset_bacias_buffer']).filter(
                 ee.Filter.eq('nunivotto3', name_bacia)).first().geometry()
 
     # name_imgClass = 'filterTP_BACIA_'+ name_bacia  + "_V" + param['versionTP']
-    name_imgClass = 'filterGF_BACIA_'+ name_bacia  + "_V" + str(param['versionGP'])
+    # name_imgClass = 'filterGF_BACIA_'+ name_bacia  + "_" + nmodel + "_V" + str(param['versionGP'])
     # name_imgClass = 'filterSP_BACIA_'+ name_bacia  + "_V" + param['versionTP']
 
-    imgClass = ee.Image(param['input_asset'] + name_imgClass)#.clip(geomBacia) 
+    if 'Temporal' in param['input_asset']:
+        name_imgClass = 'filterTP_BACIA_'+ name_bacia + f"_GTB_J{param['janela']}_V" + str(param['versionGP'])
+    else:
+        name_imgClass = 'filterFQ_BACIA_'+ name_bacia + "_V" + str(param['versionGP'])
+
+    imgClass = ee.Image(param['input_asset'] + "/" + name_imgClass)#.clip(geomBacia) 
     numBands = len(imgClass.bandNames().getInfo())
 
-    if numBands <= 38:
+    if numBands <= 40:
         imgClass = buildingLayerconnectado(imgClass)
 
     for cc, yband_name in enumerate(lst_bands_years[:]):
@@ -87,13 +94,14 @@ def apply_spatialFilterConn (name_bacia):
             class_tmp = imgClass.select(yband_name).blend(moda_kernel)
             class_output = class_output.addBands(class_tmp)
     
-    nameExp = 'filterSP_BACIA_'+ str(name_bacia) + "_V" + str(param['versionGP'])
+    nameExp = 'filterSP_BACIA_'+ str(name_bacia) + "_" + nmodel + "_V" + str(param['versionGP']) + '_step' + str(param['step'])
 
     # class_output = class_output.set('version', param['versionSP'])
     class_output = class_output.clip(geomBacia).set(
                         'version', param['versionGP'], 'biome', 'CAATINGA',
                         'collection', '8.0', 'id_bacia', name_bacia,
-                        'sensor', 'Landsat', 'source','geodatin',
+                        'sensor', 'Landsat', 'source','geodatin', 
+                        'model', nmodel, 'step', param['step'], 
                         'system:footprint', geomBacia# imgClass.get('system:footprint')
                     )
     processoExportar(class_output,  nameExp, geomBacia)
@@ -143,12 +151,15 @@ def gerenciador(cont):
     return cont
 
 
+# listaNameBacias = [
+#     '744','754','741','7421','7422','745','746','7492', '751', 
+#     '752', '753','755','758','759','7621','7622','763','764','765',
+#     '766','767','771','773', '778','76111','76116',
+#     '7612','7614','7615','7616','7617','7618','7619', '7613',
+#     '756','757','772','7741','776','7742','775','777',
+# ]
 listaNameBacias = [
-    '741','7421','7422','744','745','746','7492', '751', 
-    '752', '753','755','758','759','7621','7622','763','764','765',
-    '766','767','771','773', '778','76111','76116',
-    '7612','7614','7615','7616','7617','7618','7619', '7613',
-    '754','756','757','772','7741','776','7742','775','777',
+    '756','757','758','754',
 ]
 changeAcount = False
 lstqFalta =  []
@@ -157,7 +168,8 @@ input_asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap
 # input_asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Spatial/'
 if changeAcount:
     cont = gerenciador(cont)
-version = 10
+version = 15
+modelo = 'GTB'
 listBacFalta = []
 knowMapSaved = False
 for cc, idbacia in enumerate(listaNameBacias[:]):   
@@ -173,7 +185,7 @@ for cc, idbacia in enumerate(listaNameBacias[:]):
     else: 
         if idbacia not in lstqFalta:            
             print("----- PROCESSING BACIA {} -------".format(idbacia))        
-            apply_spatialFilterConn(idbacia)
+            apply_spatialFilterConn(idbacia, modelo)
             cont = gerenciador(cont)
 
 

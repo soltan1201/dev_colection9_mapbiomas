@@ -12,7 +12,8 @@ except:
     raise
 
 # asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fill'
-# asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Spatial'
+asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Spatial'
+# asset = "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVP"
 
 lsBacias = [
     '741','7421','7422','744','745','746','7492','751','752','753',
@@ -24,7 +25,7 @@ lsBacias = [
     '778','7612','7613','7615','7617'
 ]
 
-imgCol = ee.ImageCollection(asset)
+imgCol = ee.ImageCollection(asset).filter(ee.Filter.eq('version', 11))
 lst_id = imgCol.reduceColumns(ee.Reducer.toList(), ['system:index']).get('list').getInfo()
 
 for cc, idss in enumerate(lst_id):    

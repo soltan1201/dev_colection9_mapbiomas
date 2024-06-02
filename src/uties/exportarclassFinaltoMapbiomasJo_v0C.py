@@ -42,7 +42,7 @@ def gerenciador(cont, paramet):
         gee.tasks(n= paramet['numeroTask'], return_list= True)        
     
     elif cont > paramet['numeroLimit']:
-        cont = 0
+        return 0
     
     cont += 1    
     return cont
@@ -56,21 +56,23 @@ param = {
     'version': 10,
     'collection': 9.0,
     'source': 'geodatin',
+    'setUniqueCount': True,
     'theme': None, 
     'numeroTask': 0,
-    'numeroLimit': 38,
+    'numeroLimit': 27,
     'conta' : {
         '0': 'caatinga01',
         '7': 'caatinga02',
         '14': 'caatinga03',
         '21': 'caatinga04',
         '27': 'caatinga05',        
-        '33': 'solkan1201',  
+        # '33': 'solkan1201',  
         # '28': 'rodrigo',
         # '32': 'diegoGmail'
     }
 }
-processExport = False
+countFix = 27
+processExport = True
 metadados = {}
 bioma5kbuf = ee.FeatureCollection(param['asset_caat_buffer']).geometry()
 imgColExp = ee.ImageCollection(param['inputAsset']).filter(
@@ -86,7 +88,11 @@ imgColExp = imgColExp.map(lambda img: ee.Image.cat(img).toByte()).min()
 print("lista de bandas da imagem min \n ", imgColExp.bandNames().getInfo())
 
 for ii, year in enumerate(range(1985, 2024)):  #    
-    gerenciador(ii , param)
+    if param['setUniqueCount']:
+        gerenciador(countFix, param)
+        countFix = 22
+    else:
+        gerenciador(ii , param)
     bandaAct = 'classification_' + str(year) 
     # print("Banda activa: " + bandaAct)
     # img_banda = 'CAATINGA-' + str(year) +  '-' + str(param['version'])

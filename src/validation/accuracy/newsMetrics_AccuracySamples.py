@@ -62,7 +62,7 @@ def getPathCSV (nfolders):
     return pathparent, roisPathAcc
 
 def allocation_erros (dfRefClass, showInfo):
-    lstClassEst = [3,4,12,15,18,22,27,33]
+    lstClassEst = [3,4,12,21,22,27,33]
     conf_matrix = confusion_matrix(
                         y_true= dfRefClass['reference'], 
                         y_pred= dfRefClass['classification'], 
@@ -285,12 +285,12 @@ lst_paths = glob.glob(input_path_CSVs + '/*.csv')
 print(f' 📢 We load {len(lst_paths)} tables from folder  {input_path_CSVs.split("/")[-1]}')
 classificador = "GTB"
 mversion = ''
-modelos = ['RF', 'GTB']
-posclass = ['Gap-fill', 'Spatial', 'Temporal', 'Frequency', 'toExport']
-version_process = ['5','9','10'] # 
+modelos = ['GTB'] #  'RF',
+posclass = ['Gap-fill', 'Spatial', 'Temporal', 'Frequency'] # , 'toExport'
+version_process = ['13'] # '5','9','10','11', '12'
 modelos += posclass
-for nmodel in modelos[2:3]:
-    for vers in version_process[1:2]:
+for nmodel in modelos[:]:
+    for vers in version_process[:]:
         lst_df = []
         for cc, path in enumerate(lst_paths[:]): 
             # if cc == 0 or cc == len(lst_paths) - 1:
@@ -340,11 +340,11 @@ for nmodel in modelos[2:3]:
             print(dfacc.head(10))
             print("=================================================")
             # sys.exit()
-            classInic = [0 ,3,4, 9,10,12,15,18,21,22,27,29,33,50]
-            classFin  = [27,3,4,12,12,12,15,18,15,22,27,22,33, 3]
-            if nmodel in posclass:
-                classInic = [3,4, 9,10,12,15,18,21,22,27,29,33,50]
-                classFin  = [3,4,12,12,12,21,21,21,22,27,22,33, 3]
+            # classInic = [0 ,3,4, 9,10,12,15,18,21,22,27,29,33,50]
+            # classFin  = [27,3,4,12,12,12,15,18,15,22,27,22,33, 3]
+            # if nmodel in posclass:
+            classInic = [3,4, 9,10,12,15,18,21,22,27,33,50]
+            classFin  = [3,4,12,12,12,21,21,21,22,27,33, 3]
             # concat_df['class'] = concat_df['class'].replace([0,1,2,3,4],[0,1,0,0,1])
             # Remap column values in inplace
             lstClassRef = []
@@ -353,12 +353,13 @@ for nmodel in modelos[2:3]:
             dfacc[lstColRef] = dfacc[lstColRef].replace(classInic, classFin) 
             dfacc[lstColPred] = dfacc[lstColPred].replace(classInic, classFin)
 
-            print("corregindo  os valores 0 e 27 ")
-            # for colpred in lstColPred:
-            #     dfacc = dfacc[dfacc[colpred] != 0]
+            # print("corregindo  os valores 0 e 27 ")
+            print("remove class 27 from  dataset ")
+            for colpred in lstColPred:
+                dfacc = dfacc[dfacc[colpred] != 27]
 
-            # for colref in lstColRef:
-            #     dfacc = dfacc[dfacc[colref] != 27]
+            for colref in lstColRef:
+                dfacc = dfacc[dfacc[colref] != 27]
 
             lstClassRef = [kk for kk in dfacc[lstColRef].stack().drop_duplicates().tolist()]
             lstClassPred = [kk for kk in dfacc[lstColPred].stack().drop_duplicates().tolist()]

@@ -48,7 +48,7 @@ param = {
     'isImgCol': True,  
     'inBacia': True,
     'collection': '9.0',
-    'version': 5,
+    'version': 13,
     'assetBiomas': 'projects/mapbiomas-workspace/AUXILIAR/biomas_IBGE_250mil', 
     'asset_bacias_buffer' : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/bacias_hidrograficaCaatbuffer5k',
     'asset_bacias': "projects/mapbiomas-arida/ALERTAS/auxiliar/bacias_hidrografica_caatinga",
@@ -59,15 +59,15 @@ param = {
     'lsClasses': [3,4,12,21,22,33,29],
     'changeAcount': False,
     'numeroTask': 2,
-    'numeroLimit': 42,
+    'numeroLimit': 420,
     'conta' : {
         '0': 'caatinga01',
-        '7': 'caatinga02',
-        '14': 'caatinga03',
-        '21': 'caatinga04',
-        '28': 'caatinga05',        
-        '35': 'solkan1201',
-        '100': 'solkanGeodatin'
+        '70': 'caatinga02',
+        '140': 'caatinga03',
+        '210': 'caatinga04',
+        '280': 'caatinga05',        
+        '350': 'solkan1201',
+        # '420': 'solkanGeodatin'
     }
 }
 
@@ -105,7 +105,7 @@ def gerenciador(cont, paramet):
         gee.tasks(n= paramet['numeroTask'], return_list= True)        
     
     elif cont > paramet['numeroLimit']:
-        cont = 0
+        return 0
     
     cont += 1    
     return cont
@@ -118,7 +118,7 @@ def convert2featCollection (item):
     item = ee.Dictionary(item)
 
     feature = ee.Feature(ee.Geometry.Point([0, 0])).set(
-        'classeConc', item.get('classeConc'),"area", item.get('sum'))
+        'aggrement', item.get('aggrement'),"area", item.get('sum'))
         
     return feature
 
@@ -130,10 +130,9 @@ def convert2featCollection (item):
 #########################################################################
 # https://code.earthengine.google.com/5a7c4eaa2e44f77e79f286e030e94695
 def calculateArea (image, pixelArea, geometry):
-
-    pixelArea = pixelArea.addBands(image.rename('classeConc')).clip(geometry)#.addBands(
+    pixelArea = pixelArea.addBands(ee.Image(image).rename('aggrement')).clip(geometry)#.addBands(
                                 # ee.Image.constant(yyear).rename('year'))
-    reducer = ee.Reducer.sum().group(1, 'classeConc')
+    reducer = ee.Reducer.sum().group(1, 'aggrement')
     optRed = {
         'reducer': reducer,
         'geometry': geometry,
@@ -243,22 +242,18 @@ def iterandoXanoImCrudaCSV(imgAreaRef, imgMappCC, limite, nameAggremClass, namBa
     dfArea.to_csv('tableCoincd/' + nomeCSVtable + '.csv', index= False)
 
 
-def iterandoXanoImCruda(imgAreaRef, imgMappCC, limite, nameAggremClass, namBacia):
+def iterandoXanoImCruda(imgAreaRef, nameMappAgg, limite, valClass, namBacia):
 
-    valClass = int(nameAggremClass.split("_")[-1])
-    print(f"name to aggrement class {nameAggremClass}   ==> {valClass}")
-    imgMappC8 = ee.Image(param['inputAsset']).clip(limite) 
     imgAreaRef = imgAreaRef.clip(limite)
-    # print(imgMappC8.getInfo())
+    concordante = ee.ImageCollection(param['assetOut']).filter(
+                            ee.Filter.eq('system:index', nameMappAgg)).first() 
+    # print("show number bands ", concordante.bandNames().getInfo())
     areaGeral = ee.FeatureCollection([])
 
     for year in range(1985, 2023):
-
-        nameImgConc = ''
-        concordante = ee.Image(nameImgConc)                
-        areatemp = calculateArea (concordante, imgAreaRef, limite)        
-        print(f"processing year {year}")
-     
+        bandAct = 'aggrement_' + str(year)         
+        areatemp = calculateArea (concordante.select(bandAct), imgAreaRef, limite)        
+        # print(f"processing year {year} e area {areatemp.getInfo()}")     
         areaTemp = areatemp.map( lambda feat: feat.set('year', int(year), 'bacia', namBacia, 'classe', valClass))  # 
         areaGeral = areaGeral.merge(areaTemp)
 
@@ -266,7 +261,7 @@ def iterandoXanoImCruda(imgAreaRef, imgMappCC, limite, nameAggremClass, namBacia
 
         
 #exporta a imagem classificada para o asset
-def processoExportar(areaFeat, nameT, ciposc):      
+def processoExportarSHP(areaFeat, nameT, ciposc):      
     optExp = {
           'collection': ee.FeatureCollection(areaFeat), 
           'description': nameT, 
@@ -274,7 +269,7 @@ def processoExportar(areaFeat, nameT, ciposc):
         }    
     task = ee.batch.Export.table.toDrive(**optExp)
     task.start() 
-    print(f" # {ipos} salvando ... " + nameT + "..!")      
+    print(f" # {ciposc} salvando ... " + nameT + "..!")      
 
 #testes do dado
 # https://code.earthengine.google.com/8e5ba331665f0a395a226c410a04704d
@@ -332,11 +327,7 @@ nameBacias = [
     '7619', '7613','772'
 ]
 listBacFalta = []
-version = param['version']
-cont = 0
-if param['changeAcount']:
-    gerenciador(100, param)
-
+cont = 350
 lstBands = ['classification_' + str(yy) for yy in range(1985, 2024)]
 bioma250mil = ee.FeatureCollection(param['assetBiomas'])\
                     .filter(ee.Filter.eq('Bioma', 'Caatinga')).geometry()
@@ -405,15 +396,21 @@ if param['isImgCol']:
                             # sim limites 
                             savedErro, nomeMapExp = sendingAggrementXanotoAsset(pixelArea, mapClassBacia, nameImgCorre, nbacia, nameAssetBa, model, subfolder)
                             if savedErro:
-                                dictClassAggrFails.append(nomeMapExp)                                
+                                dictClassAggrFails.append(nomeMapExp)                
     
                             cont = gerenciador(cont, param)
                         else:
-                            nameAggreImg = ''
-                            areaM = iterandoXanoImCruda(pixelArea, nameAggreImg, limitInt, nameImgCorre, nbacia) 
-                            print("  ddddd ", ee.FeatureCollection(areaM).first().getInfo())
-                            print(f"show the feature Area << {nameCSVBa} >> \n", ee.FeatureCollection(areaM).getInfo())
-                            processoExportar(areaM, nameCSVBa, cc)
+                            # Col90_GTB_toExport_vers10_AgrC_21_7618
+                            nClass = nameImgCorre.replace('Agreement_Class_', '')
+                            nameAggreImg = f'Col90_{model}{subfolder}_vers{version}_AgrC_{nClass}_{nbacia}'
+                            print(" we process = ", nameAggreImg)
+                            areaM = iterandoXanoImCruda(pixelArea, nameAggreImg, limitInt, nClass, nbacia) 
+                            # print("  ddddd ", ee.FeatureCollection(areaM).first().getInfo())
+                            # print(f"show the feature Area << {nameAggreImg} >> ")
+                            # print(ee.FeatureCollection(areaM).getInfo())
+                            processoExportarSHP(areaM, nameAggreImg, cc)
+                            cont = gerenciador(cont, param)
+                            # sys.exit()
     else:
         print(f"########## 🔊 FILTERED BY VERSAO {version} 🔊 ###############")              
         mapClassYY = mapClass.filter(ee.Filter.eq('version', version))

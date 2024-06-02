@@ -58,8 +58,8 @@ var param = {
     asset_ptosDifLapigvsCol7: 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/occTab_acc_Dif_Caat_mapbiomas_71_integration_v1',
     asset_ptosDifLapigvsCol8: 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/occTab_acc_Dif_Caat_mapbiomas_80_integration_v1',
     asset_Gapfill : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fill',   
-    asset_Spatial : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Spatial', 
-    asset_Temporal : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Temporal', 
+    asset_Spatial : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/SpatialV2', 
+    asset_Temporal : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/TemporalV2', 
     asset_Frequence: 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Frequency',
     assset_Frequency: 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/FrequencyV2',
     asset_mixed: 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport',
@@ -154,7 +154,31 @@ var imgMapCol8= ee.Image(param.assetMapC8).updateMask(maskBacia.gt(0))
                         .select(banda_activa);
 var imgMapCol9Yv15 = ee.ImageCollection(param.asset_MapC9Y)
                             .filter(ee.Filter.eq('version', 15))
+                            .select(banda_activa).min()
+                            .remap(param.classMapB, param.classNew);
+var imgMapCol9FQv15 = ee.ImageCollection(param.assset_Frequency)  
+                            .filter(ee.Filter.eq('version', 15))
                             .select(banda_activa).min();
+                            
+var imgMapCol9SPv15 = ee.ImageCollection(param.asset_Spatial)
+                        .filter(ee.Filter.eq('version', 15))
+                        .select(banda_activa).min();               
+                        
+var imgMapCol9TPj3v15 = ee.ImageCollection(param.asset_Temporal)
+                        .filter(ee.Filter.eq('version', 15))
+                        .filter(ee.Filter.eq('janela', 3))
+                        .select(banda_activa).min();  
+
+var imgMapCol9TPj4v15 = ee.ImageCollection(param.asset_Temporal)
+                        .filter(ee.Filter.eq('version', 15))
+                        .filter(ee.Filter.eq('janela', 4))
+                        .select(banda_activa).min(); 
+                        
+var imgMapCol9TPj5v15 = ee.ImageCollection(param.asset_Temporal)
+                        .filter(ee.Filter.eq('version', 15))
+                        .filter(ee.Filter.eq('janela', 5))
+                        .select(banda_activa).min();
+                            
 var imgMapCol9GTB =  ee.ImageCollection(assetCol9)
                             .filter(ee.Filter.eq('version', version))
                             .filter(ee.Filter.eq("classifier", "GTB"))
@@ -293,32 +317,31 @@ Map.addLayer(FeatColbacia, {color: 'green'}, 'bacia', false);
 Map.addLayer(mosaic_year, visualizar.visMosaic,'Mosaic Col8', false);
 
 var baciaBuf = ee.Image().byte().paint({
-                    featureCollection: FeatColbacia,
-                    color: 1,
-                    width: 3
+                        featureCollection: FeatColbacia,
+                        color: 1,
+                        width: 3
                     });
-
 
 // var imgMapCol71temp = imgMapCol71.select(banda_activa).remap(param.classMapB, param.classNew);
 // var imgMapCol8temp = imgMapCol8.select(banda_activa).remap(param.classMapB, param.classNew);
 
 Map.addLayer(imgMapCol9FQjoin,  visualizar.visclassCC, 'Class Frequency ' + String(versnew));
-Map.addLayer(imgMapCol9TPjoin,  visualizar.visclassCC, 'Class Temporal J3' + String(versnew), false);
-Map.addLayer(imgMapCol9TPJ4join,  visualizar.visclassCC, 'Class Temporal J4' + String(versnew), false);
-// Map.addLayer(imgMapCol9SPjoin,  visualizar.visclassCC, 'Class Spatial ' + String(versnew), false);
+Map.addLayer(imgMapCol9TPj3v15,  visualizar.visclassCC, 'Class Temporal J3 v15', false);
+Map.addLayer(imgMapCol9TPj4v15,  visualizar.visclassCC, 'Class Temporal J4 v15', false);
+Map.addLayer(imgMapCol9TPj5v15,  visualizar.visclassCC, 'Class Temporal J5 v15', false);
+// Map.addLayer(imgMapCol9SPv15,  visualizar.visclassCC, 'Class Spatial 15' , false);
 // Map.addLayer(imgMapCol9GFjoin,  visualizar.visclassCC, 'Class Gap-fill ' + String(versnew), false);
-Map.addLayer(imgMapCol9GTBjoin,  visualizar.visclassCC, 'Class GTB ' + String(version), false);
+// Map.addLayer(imgMapCol9GTBjoin,  visualizar.visclassCC, 'Class GTB ' + String(version), false);
 Map.addLayer(imgMapCol9GTBNjoin,  visualizar.visclassCC, 'Class GTB ' + String(versnew), false);
 Map.addLayer(imgMapCol9Yv15,  visualizar.visclassCC, 'Class GTB 15', false);
-
-// Map.addLayer(imgMapCol9RFNjoin,  visualizar.visclassCC, 'Class RF ' + String(versnew), false);
+Map.addLayer(imgMapCol9FQv15,  visualizar.visclassCC, 'Class Freq 15', false);
 // Map.addLayer(imgMapmixedJoin,  visualizar.visclassCC, 'Class Mixed', false);
 Map.addLayer(imgMapCol71, visualizar.visclassCC,'Col71_' + String(yearcourrent), false);
 Map.addLayer(imgMapCol8,  visualizar.visclassCC, 'Col8_'+ String(yearcourrent), false);
-Map.addLayer(incidencias,  visualizar.visIncident, 'Inc_'+ String(yearcourrent), false);
-Map.addLayer(maskGEDI.selfMask(), {min:0, max: 1, palette: '00A36C'}, 'mask GEDI', false)
-Map.addLayer(ptosfromBacia, {color: 'red'}, 'ptos do Lapig', false);
-Map.addLayer(pointRefCol80compY, {}, 'Point Ref col8.0 ', false);
+// Map.addLayer(incidencias,  visualizar.visIncident, 'Inc_'+ String(yearcourrent), false);
+// Map.addLayer(maskGEDI.selfMask(), {min:0, max: 1, palette: '00A36C'}, 'mask GEDI', false)
+// Map.addLayer(ptosfromBacia, {color: 'red'}, 'ptos do Lapig', false);
+// Map.addLayer(pointRefCol80compY, {}, 'Point Ref col8.0 ', false);
 // Map.addLayer(poitsRefCol71compY, {}, 'Point Ref col7.1', false);
 // Map.addLayer(featSearch, {}, 'bacia Analises');
 Map.addLayer(baciaBuf, {palette: 'FF0000'}, 'caatinga buffer');
@@ -331,7 +354,7 @@ var listaPontos = [3,4,12,21,22,33];
 listaPontos.forEach(function(nClasse){
     var temFeatPoint =  pointsLapigC.filter(ee.Filter.eq('CLASS_' + String(yearcourrent), nClasse));
     print(nClasse, temFeatPoint);
-    Map.addLayer(temFeatPoint , {color: 'red'}, 'ptos classe ' + String(nClasse));
+    Map.addLayer(temFeatPoint , {color: 'red'}, 'ptos classe ' + String(nClasse), false);
 })
 
 

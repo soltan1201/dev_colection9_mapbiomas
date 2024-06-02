@@ -23,10 +23,13 @@ def getPathCSV (nfolders):
     roisPathAcc = pathparent + '/dados/' + nfolders
     return pathparent, roisPathAcc
 
-
-
-
-classes = [3,4,12,15,18,21,22,27,29,33] # 
+data_remap = True
+if data_remap:
+    classes = [3,4,12,21,22,27,29,33]
+else:
+    classes = [3,4,12,15,18,21,22,27,29,33] # 
+classMapB = [ 0, 3, 4, 5, 6, 9,11,12,13,15,18,19,20,21,22,23,24,25,26,29,30,31,32,33,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,62]
+classNew =  [27, 3, 4, 3, 3, 3,12,12,12,21,21,21,21,21,22,22,22,22,33,29,22,33,12,33,21,33,33,21,21,21,21,21,21,21,21,21,21, 4,12,21]
 columnsInt = [
     'Forest Formation', 'Savanna Formation', 'Grassland', 'Pasture',
     'Agriculture', 'Mosaic of Uses', 'Non vegetated area', 'Rocky Outcrop', 'Water'
@@ -90,7 +93,7 @@ print("path the base ", base_path)
 print("path of CSVs from folder :  \n ==> ", input_path_CSVs)
 
 # sys.exit()
-processCol9 = False
+processCol9 = True
 showlstGerral = True
 filesAreaCSV = glob.glob(input_path_CSVs + '/*.csv')
 print("==================================================================================")
@@ -103,11 +106,10 @@ if showlstGerral:
     print("==================================================================================")
 
 
-
 if processCol9:
-    modelos = ['RF', 'GTB']
-    posclass = ['Gap-fill', 'Spatial', 'Temporal', 'Frequency', 'toExport']
-    version_process = ['5','9','10'] # 
+    modelos = [ 'GTB'] # 'RF', "GTB"
+    posclass = ['Gap-fill', 'Spatial', 'Temporal', 'Frequency',] # ,  'toExport'
+    version_process = ['13'] # '5','9','10','11', '12', 
     modelos += posclass
     for nmodel in modelos[:]:
         for vers in version_process:
@@ -141,10 +143,10 @@ if processCol9:
                 print(f" === 📲 We have now <<{ndfArea.shape[0]}>> row in the DataFrame Area ===")
                 print(ndfArea.head())
                 classInic = [ 0,3,4, 9,10,12,15,18,21,22,27,29,33,50]
-                classFin  = [27,3,4,12,12,12,15,18,15,22,27,22,33, 3]
+                classFin  = [27,3,4,12,12,12,21,21,21,22,27,29,33, 3]
                 if nmodel in posclass:
                     classInic = [ 0,3,4, 9,10,12,15,18,21,22,27,29,33,50]
-                    classFin  = [27,3,4,12,12,12,21,21,21,22,27,22,33, 3]
+                    classFin  = [27,3,4,12,12,12,21,21,21,22,27,29,33, 3]
                 
                 ndfArea['classe'] = ndfArea['classe'].replace(classInic, classFin) 
                 # ndfArea = ndfArea[ndfArea['classe'] != 0]
@@ -178,16 +180,14 @@ if processCol9:
 
 else:
     lstColection = ['Col71', 'Col80']
-    lstDF = []
-    classMapB = [ 0, 3, 4, 5, 6, 9,11,12,13,15,18,19,20,21,22,23,24,25,26,29,30,31,32,33,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,62]
-    classNew =  [27, 3, 4, 3, 3, 3,12,12,12,15,18,18,18,21,22,22,22,22,33,29,22,33,12,33,18,33,33,18,18,18,18,18,18,18,18,18,18, 4,12,18]
     for col in lstColection:
         cc = 0
+        lstDF = []
         for pathLayerA in filesAreaCSV:
             nameFiles = pathLayerA.split("/")[-1]
-            partes = nameFiles.replace("areaXclasse_CAATINGA", "").split("_")
+            partes = nameFiles.replace("areaXclasse_CAAT", "").split("_")
 
-            if col in nameFiles:     
+            if col in nameFiles and '_CAAT_' in nameFiles:     
                 cc += 1           
                 nbacia = partes[-1].replace(".csv", "")
                 print(f" ====== loading {nameFiles} ========") 
@@ -206,7 +206,8 @@ else:
             print(f" === 📲 We have now <<{ndfArea.shape[0]}>> row in the DataFrame Area ===")
             print(ndfArea.head())
             print(ndfArea['classe'].unique())
-            ndfArea['classe'] = ndfArea['classe'].replace(classMapB, classNew) 
+            if not data_remap:
+                ndfArea['classe'] = ndfArea['classe'].replace(classMapB, classNew) 
             # ndfArea = ndfArea[ndfArea['classe'] != 0]
             # get values uniques 
             lstClasses = [kk for kk in ndfArea['classe'].unique()]
@@ -227,7 +228,7 @@ else:
             print(" size dfAreaBiome = ", ndfAllArea.shape)
             print(ndfAllArea.head())
 
-            nameexport = f"/dados/globalTables/areaXclasse_CAATINGA_{col}.csv"
+            nameexport = f"/dados/globalTables/areaXclasse_CAATINGA_{col}_red.csv"
             print("we going to export with name Coleção => ", nameexport)
             ndfAllArea.to_csv(base_path + nameexport)
             print(" -------- DONE ! --------------")

@@ -3,3 +3,21 @@ c
 passo 
     colocar no fluxo dos filtros de pos-classificação as camadas de integração (solo, remoção de floresta, afloramento)
     colocar as árreas por classe cruzadas com a área de 
+
+
+
+Areas calculadas 
+RF => 10, 5 
+GTB => 5, 9 , 10
+
+Frequence ==> 5, 9, 10
+Gap fill  ==> 5, 9, 10
+Spatial   ==> 5, 9, 10
+Temporal  ==> 5, 9, 10
+toExport  ==> 5, 9, 10
+
+toExport v9 -> 741
+GTB v9 -> 766
+
+
+https://dpi.tools/image-dpi-converter

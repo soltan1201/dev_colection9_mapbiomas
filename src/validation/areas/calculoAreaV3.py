@@ -30,7 +30,8 @@ nameBacias = [
       '776','76111','76116','7612','7613','7614','7615','777','778',
       '7616','7617','7618','7619'
 ] 
-
+classMapB = [ 0, 3, 4, 5, 6, 9,11,12,13,15,18,19,20,21,22,23,24,25,26,29,30,31,32,33,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,62]
+classNew =  [27, 3, 4, 3, 3, 3,12,12,12,21,21,21,21,21,22,22,22,22,33,29,22,33,12,33,21,33,33,21,21,21,21,21,21,21,21,21,21, 4,12,21]
 param = {
     # 'inputAsset': path + 'class_filtered_Tp',   
     'assetCol': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVX" ,
@@ -40,14 +41,15 @@ param = {
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Temporal',
     'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Frequency',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport',
-    # 'asset_Map' : "projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1",
-    'asset_Map': 'projects/mapbiomas-workspace/public/collection7_1/mapbiomas_collection71_integration_v1',
+    'asset_Map' : "projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1",
+    # 'asset_Map': 'projects/mapbiomas-workspace/public/collection7_1/mapbiomas_collection71_integration_v1',
     'asset_bacias': 'projects/mapbiomas-arida/ALERTAS/auxiliar/bacias_hidrografica_caatinga',
     'collection': '9.0',
     'geral':  True,
     'isImgCol': True,  
+    'remapRaster': True,
     'inBacia': True,
-    'version': 10,
+    'version': 13,
     'sufixo': '_Cv', 
     'assetBiomas': 'projects/mapbiomas-workspace/AUXILIAR/biomas_IBGE_250mil', 
     'biome': 'CAATINGA', 
@@ -57,7 +59,7 @@ param = {
     'year_end': 2023,
     'driverFolder': 'AREA-EXPORT-COL9', 
     'lsClasses': [3,4,12,15,18,21,22,33],
-    'changeAcount': False,
+    'changeAcount': True,
     'numeroTask': 0,
     'numeroLimit': 37,
     'conta' : {
@@ -76,7 +78,6 @@ def gerenciador(cont, paramet):
     numberofChange = [kk for kk in paramet['conta'].keys()]
     
     if str(cont) in numberofChange:
-
         print("conta ativa >> {} <<".format(paramet['conta'][str(cont)]))        
         gee.switch_user(paramet['conta'][str(cont)])
         gee.init()        
@@ -94,7 +95,6 @@ def gerenciador(cont, paramet):
 ##############################################
 def convert2featCollection (item):
     item = ee.Dictionary(item)
-
     feature = ee.Feature(ee.Geometry.Point([0, 0])).set(
         'classe', item.get('classe'),"area", item.get('sum'))
 
@@ -108,7 +108,6 @@ def convert2featCollection (item):
 #########################################################################
 
 def calculateArea (image, pixelArea, geometry):
-
     pixelArea = pixelArea.addBands(image.rename('classe'))#.addBands(
                                 # ee.Image.constant(yyear).rename('year'))
     reducer = ee.Reducer.sum().group(1, 'classe')
@@ -131,9 +130,22 @@ def iterandoXanoImCruda(imgAreaRef, imgMapp, limite):
     imgMapp = imgMapp.clip(limite)
     imgAreaRef = imgAreaRef.clip(limite)
     areaGeral = ee.FeatureCollection([])    
-    for year in range(param['year_inic'], param['year_end'] + 1):
+    yearEnd = param['year_end']
+    if not param['isImgCol']:
+        if 'collection80_' in param['asset_Map']:
+            yearEnd -= 1
+        elif 'collection71_' in param['asset_Map']:
+            yearEnd -= 2
+    if param['remapRaster']:
+        print(" 🚨 📢 we are to remap the raste 🚨 ")
+
+    for year in range(param['year_inic'], yearEnd + 1):
         bandAct = "classification_" + str(year) 
-        areaTemp = calculateArea (imgMapp.select(bandAct), imgAreaRef, limite)        
+        if param['remapRaster']:
+            mapToCalc = imgMapp.select(bandAct).remap(classMapB , classNew)
+            areaTemp = calculateArea (mapToCalc, imgAreaRef, limite)
+        else:
+            areaTemp = calculateArea (imgMapp.select(bandAct), imgAreaRef, limite)        
         areaTemp = areaTemp.map( lambda feat: feat.set('year', year))
         areaGeral = areaGeral.merge(areaTemp)      
     
@@ -150,8 +162,7 @@ def processoExportar(areaFeat, nameT, ipos):
           'description': nameT, 
           'folder': param["driverFolder"],
         #   'priority': 700        
-        }
-    
+        }    
     task = ee.batch.Export.table.toDrive(**optExp)
     task.start() 
     print(f"🔉 {ipos} salvando ...📲   {nameT} ... ")      
@@ -179,6 +190,9 @@ pixelArea = ee.Image.pixelArea().divide(10000)
 if param['isImgCol']:
     if isFilter:
         imgsMaps = ee.ImageCollection(param['assetFilters'])
+        if 'Temporal' in param['assetFilters']:
+            imgsMaps = imgsMaps.filter(ee.Filter.neq('janela', 4))
+            subfolder += '_J4'
     else:
         if int(version) > 6:  # 
             imgsMaps = ee.ImageCollection(param['assetColprob'])# .select(lstBands)
@@ -192,7 +206,7 @@ if param['isImgCol']:
     if getid_bacia:
         nameBands = 'classification'
         prefixo = ""
-        for model in ['GTB','RF']:   # 
+        for model in ['GTB']:   # 'GTB', 'RF
             if isFilter and model != 'RF':
                 mapClassMod = imgsMaps.filter(
                                 ee.Filter.eq('version', version))
@@ -244,16 +258,21 @@ else:
     assetPathRead = param['asset_Map'] 
     print(f" ------ {assetPathRead} ---- ")
     nameImg = assetPathRead.split('/')[-1].replace('mapbiomas_collection', '')
+    # reading the image raster maps collections 8.0 or 7.1
     mapClassRaster = ee.Image(assetPathRead).byte()
+    print("know the bands names from mapClassRaster ", mapClassRaster.bandNames().getInfo())
     ### call to function samples  #######
-    nameCSV = 'areaXclasse_' + param['biome'] + "_Col" + nameImg
+    nameCSV = 'areaXclasse_' + param['biome'][:4] + "_Col" + nameImg
 
+    # sys.exit()
     for cc, nbacia in enumerate(nameBacias):
         ftcol_bacias = ee.FeatureCollection(param['asset_bacias']).filter(
                             ee.Filter.eq('nunivotto3', nbacia)).geometry()
         limitInt = bioma250mil.intersection(ftcol_bacias)
         areaM = iterandoXanoImCruda(pixelArea, mapClassRaster, limitInt) 
         nameCSVBa = nameCSV + "_" + nbacia
+        if param['remapRaster']:
+            nameCSVBa += "_remap"
         print(f" #{cc}  we processing ==> {nameCSVBa}   -- ") 
         processoExportar(areaM, nameCSVBa, cc)
 

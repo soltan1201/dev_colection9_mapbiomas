@@ -65,7 +65,7 @@ def processoExportar(ROIsFeat, nameT, porAsset):
         optExp = {
             'collection': ROIsFeat, 
             'description': nameT, 
-            'folder':"ptosAccCol9",
+            'folder':"ptosAccCol9corr",
             # 'priority': 1000          
             }
         task = ee.batch.Export.table.toDrive(**optExp)
@@ -93,14 +93,15 @@ param = {
     'assetCol': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVX" ,
     'assetColprob': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVP" ,
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Spatial',
-    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Frequency',
-    'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fill',
+    'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Frequency',
+    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fill',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Temporal',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport',
     # 'asset_Map' : "projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1",
     # 'assetCol6': path_asset + "class_filtered/maps_caat_col6_v2_4",
-    'classMapB': [3, 4, 5, 9,12,13,15,18,19,20,21,22,23,24,25,26,29,30,31,32,33,36,37,38,39,40,41,42,43,44,45],
-    'classNew': [3, 4, 3, 3,12,12,21,21,21,21,21,22,22,22,22,33,29,22,33,12,33, 21,33,33,21,21,21,21,21,21,21],
+    'classMapB': [3, 4, 5, 9,12,13,15,18,19,20,21,22,23,24,25,26,29,30,31,32,33,36,39,40,41,46,47,48,49,50,62],
+    'classNew':  [3, 4, 3, 3,12,12,21,21,21,21,21,22,22,22,22,33,29,22,33,12,33,21,21,21,21,21,21,21, 3,12,21],
+    'classesMapAmp':  [3, 4, 3, 3,12,12,15,18,18,18,21,22,22,22,22,33,29,22,33,12,33,18,18,18,18,18,18,18, 3,12,18],
     'inBacia': True,
     'anoInicial': 1985,
     'anoFinal': 2022,  # 2019
@@ -260,7 +261,7 @@ expPointLapig = False
 knowImgcolg = True
 param['isImgCol'] = True
 param['inBacia'] = True
-version = 9
+version = 13
 bioma250mil = ee.FeatureCollection(param['assetBiomas'])\
                     .filter(ee.Filter.eq('Bioma', 'Caatinga')).geometry()
 ## os pontos só serão aqueles que representam a Caatinga 
@@ -309,10 +310,13 @@ if param['isImgCol']:
     if getid_bacia:         
         nameBands = 'classification'
         prefixo = ""
-        for model in ['GTB','RF']:   # 
+        for model in ['GTB']:   # 'GTB', 'RF'
             if isFilter and model != 'RF':
                 mapClassMod = mapClass.filter(
                                 ee.Filter.eq('version', version))
+                if 'Temporal' in param['assetFilters']:
+                    mapClassMod = mapClassMod.filter(ee.Filter.neq('janela', 4))
+                    subfolder += '_J4'
             else:
                 mapClassMod = mapClass.filter(
                                 ee.Filter.eq('version', version)).filter(

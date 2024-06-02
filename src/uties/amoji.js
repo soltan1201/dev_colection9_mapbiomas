@@ -46,5 +46,6 @@ var text = "";
     💸 dinero
     📚 livros
     🛠️ herramientas
+    📝 writers
 */
 

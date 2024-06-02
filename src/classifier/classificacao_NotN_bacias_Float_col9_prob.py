@@ -16,6 +16,7 @@ import csv
 import copy
 import sys
 import math
+import pandas as pd
 from pathlib import Path
 import arqParametros as arqParams 
 import collections
@@ -383,10 +384,11 @@ def calculate_indices_x_blocos(image):
 
 param = {    
     'bioma': "CAATINGA", #nome do bioma setado nos metadados
+    'biomas': ["CAATINGA","CERRADO", "MATAATLANTICA"],
     'asset_bacias': "projects/mapbiomas-arida/ALERTAS/auxiliar/bacias_hidrografica_caatinga",
     'asset_bacias_buffer' : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/bacias_hidrograficaCaatbuffer5k',
     'asset_IBGE': 'users/SEEGMapBiomas/bioma_1milhao_uf2015_250mil_IBGE_geo_v4_revisao_pampa_lagoas',
-    'assetOut': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVP/',
+    'assetOut': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVY/',
     'assetROIs': {'id':'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN2clusterNN'},
     'assetROIsExt': {'id':'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN2manualNN'}, 
     'assetROIgrade': {'id': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/roisGradesgrouped'},   
@@ -395,7 +397,7 @@ param = {
     'classMapB': [3, 4, 5, 9,12,13,15,18,19,20,21,22,23,24,25,26,29,30,31,32,33,36,37,38,39,40,41,42,43,44,45],
     'classNew': [3, 4, 3, 3,12,12,21,21,21,21,21,22,22,22,22,33,29,22,33,12,33, 21,33,33,21,21,21,21,21,21,21],
     'asset_mosaic': 'projects/nexgenmap/MapBiomas2/LANDSAT/BRAZIL/mosaics-2',
-    'version': 10,
+    'version': 15,
     'anoInicial': 1985,
     'anoFinal': 2023,
     'sufix': "_01",    
@@ -404,12 +406,12 @@ param = {
     'numeroLimit': 42,
     'conta' : {
         '0': 'caatinga01',
-        '7': 'caatinga02',
+        '2': 'caatinga02',
         '14': 'caatinga03',
         '21': 'caatinga04',
         '28': 'caatinga05',        
         '35': 'solkan1201',
-        # '36': 'rodrigo',
+        # '36': 'caatinga04',
         # '35': 'diegoGmail',    
     },
     'pmtRF': {
@@ -562,25 +564,76 @@ def processoExportar(mapaRF, regionB, nameB):
     for keys, vals in dict(task.status()).items():
         print ( "  {} : {}".format(keys, vals))
 
-def process_reduce_ROIsXclass(featColROIs, lstclassVal ):
-    #12': 1304, '15': 1247, '18': 1280, '22': 1635, '3': 1928, '33': 1361, '4': 1378
+def process_reduce_ROIsXclass(featColROIs, featColROIsbase ,lstclassVal, dfProp, mbacia):
+    # 12': 1304, '15': 1247, '18': 1280, '22': 1635, '3': 1928, '33': 1361, '4': 1378
     dictQtLimit = {
-        3: 1200,
-        4: 4500,
+        3: 600,
+        4: 2500,
         12: 600,
-        15: 1500,
-        18: 800,
+        15: 1200,
+        18: 900,
         21: 1200,
         22: 1000,
-        33: 800
+        33: 400
     }
     nFeatColROIs = ee.FeatureCollection([])
+    lstBac21 = ["76111","76116","7742","757","758","759","771","772","773","775","776","777"]
     for ccclass in lstclassVal:
-        tmpROIs = featColROIs.filter(ee.Filter.eq('class', int(ccclass))).randomColumn('random')
-        threhold = ee.Number(dictQtLimit[ccclass]).divide(tmpROIs.size())
-        tmpROIs = tmpROIs.filter(ee.Filter.lte('random', threhold))
-        nFeatColROIs = nFeatColROIs.merge(tmpROIs)
+        # print("classse ", ccclass)
+        if ccclass in [15, 18]:
+            myClass = 21
+        else:
+            myClass = int(ccclass)
+        try:
+            valpropCC = dfProp[dfProp['classe'] == myClass]['area_prob'].values[0]
+            if ccclass == 21 and str(mbacia) not in ['771', '7613', '7617', '7615']:
+                valpropCC += 0.1
+            if str(mbacia) in ['771', '7613', '7617', '7615'] and ccclass == 4:
+                valpropCC += 0.15
 
+            if str(mbacia) in ['776', '757', '758'] and ccclass == 3:   # 7622
+                valpropCC += 0.1
+
+            if ccclass == 3:
+                if valpropCC < 0.05:
+                    valpropCC = 0.15
+            if str(mbacia) in lstBac21:
+                if ccclass == 21:
+                    valpropCC += 0.25
+            
+        except:
+            valpropCC = 0.01
+
+        if str(mbacia) in ['754','756', '7614','7421'] and ccclass == 4:
+            valpropCC = 0.2
+            dictQtLimit[ccclass] = 1300
+        # print(" valpropCC ", valpropCC)
+        tmpROIs = featColROIs.filter(ee.Filter.eq('class', int(ccclass))).randomColumn('random')
+        threhold = ee.Number(dictQtLimit[ccclass]).multiply(valpropCC).divide(tmpROIs.size())
+        tmpROIs = tmpROIs.filter(ee.Filter.lte('random', threhold))
+        
+        tmpROIff = featColROIsbase.filter(ee.Filter.eq('class', int(ccclass))).randomColumn('random')
+        threhold2 = ee.Number(dictQtLimit[ccclass]).divide(tmpROIff.size())
+        tmpROIff = tmpROIff.filter(ee.Filter.lte('random', threhold2))
+        # if ccclass  == 4:
+        #     print("size class 4 ", tmpROIs.size().getInfo())
+        #     print("size class 4 ", tmpROIff.size().getInfo(), "  ", valpropCC)
+
+        if str(mbacia) in ['771', '7613', '7617', '7615'] and ccclass == 12:
+            tmpROIs = tmpROIs.limit(200)
+            tmpROIff = tmpROIff.limit(200)
+        if str(mbacia) in ['757', '758'] and ccclass == 12:
+            tmpROIs = tmpROIs.limit(350)
+            tmpROIff = tmpROIff.limit(350)
+        if ccclass == 22:
+            tmpROIs = tmpROIs.limit(100)
+            tmpROIff = tmpROIff.limit(100)
+        if ccclass == 4 and str(mbacia) in lstBac21:
+            tmpROIs = tmpROIs.limit(1000)
+            tmpROIff = tmpROIff.limit(1000)
+
+        nFeatColROIs = nFeatColROIs.merge(tmpROIs).merge(tmpROIff)
+    
     return nFeatColROIs
 
 def GetPolygonsfromFolder(nBacias, lstClasesBacias, yyear):    
@@ -588,7 +641,16 @@ def GetPolygonsfromFolder(nBacias, lstClasesBacias, yyear):
     getlistPtos = ee.data.getList(param['assetROIs'])
     getlistPtosExt = ee.data.getList(param['assetROIsExt'])
     ColectionPtos = ee.FeatureCollection([])
-
+    dictQtLimit = {
+        3: 800,
+        4: 5500,
+        12: 1600,
+        15: 1200,
+        18: 800,
+        21: 1500,
+        22: 1200,
+        33: 400
+    }
     for idAsset in getlistPtos:         
         path_ = idAsset.get('id')
         lsFile =  path_.split("/")
@@ -600,30 +662,18 @@ def GetPolygonsfromFolder(nBacias, lstClasesBacias, yyear):
             FeatTemp = ee.FeatureCollection(path_)
              # print(FeatTemp.size().getInfo())
             ColectionPtos = ColectionPtos.merge(FeatTemp) # .select(bandasComunsCorr)
+    nFeatColROIs = ee.FeatureCollection([])
+    for ccclass in lstClasesBacias:
+        tmpROIs = ColectionPtos.filter(ee.Filter.eq('class', int(ccclass))).randomColumn('random')
+        threhold = ee.Number(dictQtLimit[ccclass]).divide(tmpROIs.size())
+        tmpROIs = tmpROIs.filter(ee.Filter.lte('random', threhold))
+        nFeatColROIs = nFeatColROIs.merge(tmpROIs)
 
-    # if yyear in [2016, 2021]:
-    #     print("yyear ", yyear, " adicionando ")
-    #     for idAsset in getlistPtosExt:         
-    #         path_ = idAsset.get('id')
-    #         lsFile =  path_.split("/")
-    #         name = lsFile[-1]
-    #         newName = name.split('_')
-    #         # print(newName[0])
-    #         if str(newName[0]) in nBacias:
-    #             FeatTemp = ee.FeatureCollection(path_)
-    #             # print(FeatTemp.size().getInfo())
-    #             try:
-    #                 ColectionPtos = ColectionPtos.merge(FeatTemp)  # .select(bandasComunsCorr)
-    #             except:
-    #                 print(f"erro in {newName[0]} ano {yyear}")
-
-    ColectionPtos = process_reduce_ROIsXclass(ee.FeatureCollection(ColectionPtos), lstClasesBacias)    
-    return  ColectionPtos
+    return  ee.FeatureCollection(nFeatColROIs)
 
 
 def FiltrandoROIsXimportancia(nROIs, baciasAll, nbacia):
 
-    print("aqui  ")
     limitCaat = ee.FeatureCollection('users/CartasSol/shapes/nCaatingaBff3000')
     # selecionando todas as bacias vizinhas 
     baciasB = baciasAll.filter(ee.Filter.eq('nunivotto3', nbacia))
@@ -691,8 +741,9 @@ lstSat = ["l5","l7","l8"];
 pathJson = getPathCSV("regJSON/")
 ftcol_bacias = ee.FeatureCollection(param['asset_bacias'])
 imagens_mosaico = ee.ImageCollection(param['asset_mosaic']).filter(
-                            ee.Filter.eq('biome', param['bioma'])).filter(
-                                ee.Filter.inList('satellite', lstSat)).select(
+                            ee.Filter.inList('biome', param['biomas'])).filter(
+                                ee.Filter.inList('satellite', lstSat)).filterBounds(
+                                    ftcol_bacias.geometry()).select(
                                             arqParams.featuresreduce)
 # process_normalized_img
 imagens_mosaic = imagens_mosaico.map(lambda img: process_re_escalar_img(img))          
@@ -721,6 +772,11 @@ def iterandoXBacias( _nbacia, myModel, makeProb):
     classifiedRF = None;
     # selectBacia = ftcol_bacias.filter(ee.Filter.eq('nunivotto3', _nbacia)).first()
     # https://code.earthengine.google.com/2f8ea5070d3f081a52afbcfb7a7f9d25 
+
+    dfareasCC = pd.read_csv('areaXclasse_CAATINGA_Col71_red.csv')
+    print("df areas CC ", dfareasCC.columns)
+    dfareasCC = dfareasCC[dfareasCC['Bacia'] == _nbacia]
+    print(" dfareasCC shape table ", dfareasCC.shape)
     
     baciabuffer = ee.FeatureCollection(param['asset_bacias_buffer']).filter(
                             ee.Filter.eq('nunivotto3', _nbacia)).first().geometry()
@@ -731,21 +787,26 @@ def iterandoXBacias( _nbacia, myModel, makeProb):
     print("lista de bacias ", lstSoViz)
     # lista de classe por bacia 
     lstClassesUn = param['dict_classChangeBa'][_nbacia]
-
+    # sys.exit()
     imglsClasxanos = ee.Image().byte()
     imglsClasxanos_prob = ee.Image().byte()
     mydict = None
     pmtroClass = copy.deepcopy(param['pmtGTB'])
     # print("area ", baciabuffer.area(0.1).getInfo())
     bandas_imports = []
-    for cc, ano in enumerate(list_anos[:]):
-        
+    for cc, ano in enumerate(list_anos[:]):        
         #se o ano for 2018 utilizamos os dados de 2017 para fazer a classificacao
         bandActiva = 'classification_' + str(ano)        
-        print( "banda activa: " + bandActiva)   
+        print( "banda activa: " + bandActiva) 
+
+        if ano < 2022:
+            dfareasccYY = dfareasCC[dfareasCC['year'] == ano][['area', 'classe']]
+            total = dfareasccYY['area'].sum()
+            dfareasccYY['area_prob'] = dfareasccYY['area'] / total
+            # print(" ", dfareasccYY.head(9))
 
         if ano < 2023:
-            keyDictFeat = _nbacia + "_" + str(ano)
+            keyDictFeat = _nbacia + "_" + str(ano) 
             bandas_lst = dictFeatureImp[keyDictFeat][:]
             # print(lsNamesBacias)
             if (_nbacia in ['778']) or (_nbacia == '764' and ano == 1995):
@@ -756,11 +817,12 @@ def iterandoXBacias( _nbacia, myModel, makeProb):
                 nameFeatROIs = 'joined_ROIs_' + _nbacia + "_" + str(ano) + '_wl'
                 print("loading Rois JOINS = ", nameFeatROIs)
                 ROIs_toTrain = ee.FeatureCollection(param['asset_joinsGrBa'] + '/' + nameFeatROIs)       
-                ROIs_toTrain = ROIs_toTrain.filter(ee.Filter.inList('class', lstClassesUn))     
-                ROIs_toTrain = process_reduce_ROIsXclass(ROIs_toTrain, lstClassesUn)
+                ROIs_toTrain = ROIs_toTrain.filter(ee.Filter.inList('class', lstClassesUn))                 
                 ROIs_toTrainViz = GetPolygonsfromFolder(lstSoViz, lstClassesUn, ano)
-                ROIs_toTrain = ROIs_toTrain.merge(ROIs_toTrainViz).map(lambda feat: feat.set('class', ee.Number(feat.get('class')).toInt8()))
-        
+                ROIs_toTrain = process_reduce_ROIsXclass(ROIs_toTrain, ROIs_toTrainViz, lstClassesUn, dfareasccYY, _nbacia)
+                ROIs_toTrain = ROIs_toTrain.map(lambda feat: feat.set('class', ee.Number(feat.get('class')).toInt8()))
+
+        # sys.exit()
         # excluindo a classe 12
         if '745' == _nbacia:
             ROIs_toTrain = ROIs_toTrain.filter(ee.Filter.neq('class', 12))
@@ -780,7 +842,7 @@ def iterandoXBacias( _nbacia, myModel, makeProb):
                 # print(" ")
                 print("===  {}  ===".format(ROIs_toTrain.aggregate_histogram('class').getInfo()))            
                 # ===  {'12': 1304, '15': 1247, '18': 1280, '22': 1635, '3': 1928, '33': 1361, '4': 1378}  ===
-            
+            pass
             #cria o mosaico a partir do mosaico total, cortando pelo poligono da bacia    
             colmosaicMapbiomas = imagens_mosaic.filter(ee.Filter.eq('year', ano)
                                         ).filterBounds(baciabuffer).median()
@@ -790,7 +852,7 @@ def iterandoXBacias( _nbacia, myModel, makeProb):
             mosaicMapbiomas = mosaicMapbiomas.select(bandasComuns, bandasComunsCorr)
             # print(mosaicMapbiomas.size().getInfo())
             ################################################################
-            listBandsMosaic = mosaicMapbiomas.bandNames().getInfo()
+            # listBandsMosaic = mosaicMapbiomas.bandNames().getInfo()
             # print("bandas do mosaico ", listBandsMosaic)
             # sys.exit()
             # print('NUMERO DE BANDAS MOSAICO ',len(listBandsMosaic) )
@@ -970,12 +1032,16 @@ arqFeitos = open(path_MGRS, 'a+')
 
 # 100 arvores
 nameBacias = [
-    # '745','741', '7421','7422','744','746','7492','751','752','753',
-    # '754','755','756','757','758','759','7621','7622','763','764',
-    # '765',
-    '766','767','771','772','773', '7741','776','7742','775',
-    '777','778','76111','76116','7612','7614','7615','7616','7617',
-    '7618','7619','7613'
+    # '744','745','741', '7422','746','7492','751','752','753',
+    # '754','756',
+    #  '755',
+    # '757','758',
+    # '759','7621','7622','763','764',
+    # '765', '766','767','771', '772', '773', '7741','776','7742',
+    # '775','777','778','76111','76116','7612',
+    '7614','7421',
+    # '7615','7616',
+    # '7617','7618','7619', '7613'
 ]
 # nameBacias = [
 #     '766', '772', '773', '7741', '7742', '776', '777', '778', 
@@ -983,10 +1049,11 @@ nameBacias = [
 #     '7619', '7613'
 # ]
 
-modelo = "RF"# "GTB"# "RF"
+modelo = "GTB"# "GTB"# "RF"
 knowMapSaved = False
 listBacFalta = []
-cont = 21
+cont = 14
+# cont = gerenciador(cont)
 for _nbacia in nameBacias[:]:
     if knowMapSaved:
         try:
@@ -995,14 +1062,13 @@ for _nbacia in nameBacias[:]:
             print(" 🚨 loading ", nameMap, " ", len(imgtmp.bandNames().getInfo()), " bandas 🚨")
         except:
             listBacFalta.append(_nbacia)
-    else:
-        cont = gerenciador(cont) 
+    else:        
         print("-------------------.kmkl-------------------------------------")
         print("--------    classificando bacia " + _nbacia + "-----------------")   
         print("--------------------------------------------------------") 
         iterandoXBacias(_nbacia, modelo, False) 
         arqFeitos.write(_nbacia + '\n')
-
+        cont = gerenciador(cont) 
 arqFeitos.close()
 
 

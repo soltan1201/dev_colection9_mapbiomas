@@ -22,7 +22,6 @@ from sklearn.metrics import precision_score, recall_score
 from sklearn.metrics import f1_score, jaccard_score
 tqdm.pandas()
 
-
 nameBacias = [
       '741', '7421','7422','744','745','746','751','752',  # '7492',
       '753', '754','755','756','757','758','759','7621','7622','763',
@@ -30,8 +29,8 @@ nameBacias = [
       '776','76111','76116','7612','7613','7614','7615',  # '777','778',
       '7616','7617','7618','7619'
 ]
-modelos = ['GTB','RF']
-posclass = ['Gap-fill', 'Spatial', 'Frequency', 'Temporal', 'toExport']
+modelos = ['GTB']# ,'RF'
+posclass = ['Frequency'] # , 'Gap-fill', 'Spatial', , 'Temporal','toExport'
 modelos += posclass
 # get dir path of script 
 npath = os.getcwd()
@@ -40,7 +39,7 @@ npath = str(Path(npath).parents[1])
 print("path of CSVs Rois is \n ==>",  npath)
 pathcsvsMC = os.path.join(npath,'dados')
 pathcsvsMC = os.path.join(pathcsvsMC, 'conf_matrix')
-version_process = ['5','9','10'] # 
+version_process = ['13'] # '5','9','10','11','12', 
 lstfilesCSVs = glob.glob(pathcsvsMC + '/*.csv')
 for model in modelos:
     lstDF_models = []

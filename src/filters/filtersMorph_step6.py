@@ -31,13 +31,14 @@ except:
 class processo_filterTemporal(object):
 
     options = {
-            'output_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/POS-CLASS/morfologico/',
+            'output_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/morfologico/',
             # 'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/class_filtered_Fq/',
-            'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/POS-CLASS/SSpatial/',
+            'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/SpatialV2/',
             'asset_bacias_buffer' : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/bacias_hidrograficaCaatbuffer5k',            
-            'last_year' : 2022,
+            'last_year' : 2023,
             'first_year': 1985,
-            'janela' : 3
+            'janela' : 3,
+            'step': 2,
         }
     # weights = [
     #         [1, 1, 1, 1, 1, 1, 1],
@@ -62,16 +63,16 @@ class processo_filterTemporal(object):
 
     def __init__(self):
         # self.id_bacias = nameBacia
-        self.versionInput = '6'
-        self.versionOutput = '1'
+        self.versionInput = 15
+        self.versionOutput = 15
         self.geom_bacia = ee.FeatureCollection(self.options['asset_bacias_buffer'])#.filter(
                                                     # ee.Filter.eq('nunivotto3', nameBacia)).first().geometry()              
 
         self.lstbandNames = ['classification_' + str(yy) for yy in range(self.options['first_year'], self.options['last_year'] + 1)]
         self.years = [yy for yy in range(self.options['first_year'], self.options['last_year'] + 1)]
 
-        self.ordem_exec_class = [3,12]
-        self.classOutput = 4
+        self.ordem_exec_class = [4, 21]
+        # self.classOutput = 4
         # mykernel = ee.Kernel.fixed(weights= self.weights)       
 
 
@@ -84,16 +85,17 @@ class processo_filterTemporal(object):
         maskClass = imagem.eq(valor)
         # capturando os pixels de sal e pimenta
         # apply filter morphological
-        maskMorfolica = maskClass.focalMin(**self.pmtrosMin)
-        maskMorfolica = maskMorfolica.focalMax(**self.pmtrosMax)
-        maskMorfolica = maskMorfolica.multiply(maskClass)        
+        maskMorfolica = maskClass.focalMax(**self.pmtrosMin)
+        maskMorfolica = maskMorfolica.focalMin(**self.pmtrosMax)
+        # maskMorfolica = maskMorfolica.multiply(maskClass)   isso aqui deixa igual que o inicial , invalida o processo anterior       
 
-        maskChange = maskClass.subtract(maskMorfolica)
-        img_out = imagem.where(maskChange.eq(1), self.classOutput)
+        # pixels resgatados pelo morfologico ficaram em -1 
+        maskChange = maskClass.subtract(maskMorfolica) 
+        img_out = imagem.where(maskChange.eq(-1), valor)
         return img_out
 
     
-    def applyMorphologicalFilter(self, id_bacias): 
+    def applyMorphologicalFilter(self, id_bacias, nmodel): 
               
         # clase = {
         #         '21': "agro",
@@ -104,10 +106,11 @@ class processo_filterTemporal(object):
         #         '29': 'aflora'
         #     }        
 
-        name_imgClass = 'filterSP_BACIA_'+ id_bacias + '_V' + self.versionInput
+        name_imgClass = 'filterSP_BACIA_'+ str(id_bacias) + "_" + nmodel + "_V" + str(self.versionInput) + '_step' + str(self.options['step']) 
         print("processing image ", name_imgClass)
         imgClass = ee.Image(self.options['input_asset'] + name_imgClass)  
 
+        # sys.exit()
         for id_class in self.ordem_exec_class:
             imgOutput = ee.Image().byte()
             print("processing class {} == bacia {} ".format(id_class, id_bacias))            
@@ -129,13 +132,14 @@ class processo_filterTemporal(object):
                             'version',  self.versionOutput, 
                             'biome', 'CAATINGA',
                             'type_filter', 'morfologico',
-                            'collection', '8.0',
+                            'collection', '9.0',
+                            'model', nmodel,
                             'id_bacia', id_bacias,
                             'sensor', 'Landsat',
                             'system:footprint' , geom
                         )
         imageFilled = ee.Image.cat(imageFilled).clip(geom)        
-        name_toexport = 'filterMO_BACIA_'+ str(id_bacias) + "_V" + self.versionOutput
+        name_toexport = 'filterMO_BACIA_'+ str(id_bacias) + "_V" + str(self.versionOutput)
         self.processoExportar(imageFilled, name_toexport, geom)    
 
     #exporta a imagem classificada para o asset
@@ -164,7 +168,7 @@ param = {
     'numeroLimit': 42,
     'conta' : {
         '0': 'caatinga01',
-        '7': 'caatinga02',
+        '2': 'caatinga02',
         '14': 'caatinga03',
         '21': 'caatinga04',
         '28': 'caatinga05',        
@@ -192,24 +196,28 @@ def gerenciador(cont):
         gee.tasks(n= param['numeroTask'], return_list= True)        
     
     elif cont > param['numeroLimit']:
-        cont = 0
-    
+        cont = 0    
     cont += 1    
     return cont
 
 
-listaNameBacias = [
-    '741','7421','7422','744','745','746','7492','751','752','753',
-    '754','755','756','757','758','759','7621','7622','763','764',
-    '765','766','767','771','772','773', '7741','7742','775','776',
-    '777','778','76111','76116','7612','7614','7615','7616',
-    '7617','7618','7619', '7613',
-]
-aplicando_TemporalFilter = processo_filterTemporal()
+# listaNameBacias = [
+#     '741','7421','7422','744','745','746','7492','751','752','753',
+#     '754','755','756','757','758','759','7621','7622','763','764',
+#     '765','766','767','771','772','773', '7741','7742','775','776',
+#     '777','778','76111','76116','7612','7614','7615','7616',
+#     '7617','7618','7619', '7613',
+# ]
 
+listaNameBacias = [
+    '754','756','757','758',
+]
+modelo = 'GTB'
+aplicando_TemporalFilter = processo_filterTemporal()
+# sys.exit()
 cont = 0
-for idbacia in listaNameBacias[1:]:    
+for idbacia in listaNameBacias[:1]:    
     cont = gerenciador(cont)
     print("----- PROCESSING BACIA {} -------".format(idbacia))
     
-    aplicando_TemporalFilter.applyMorphologicalFilter(idbacia)
+    aplicando_TemporalFilter.applyMorphologicalFilter(idbacia, modelo)

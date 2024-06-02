@@ -140,7 +140,7 @@ https://scikit-learn.org/stable/modules/generated/sklearn.metrics.jaccard_score.
 https://scikit-learn.org/stable/auto_examples/miscellaneous/plot_display_object_visualization.html#sphx-glr-auto-examples-miscellaneous-plot-display-object-visualization-py
 https://scikit-learn.org/stable/modules/classes.html#module-sklearn.metrics
 
-
+https://solved.eco.br/avaliacao-de-acuracia-ou-concordancia/
 
 
 

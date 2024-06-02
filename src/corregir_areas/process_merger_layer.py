@@ -46,14 +46,14 @@ param = {
     'classMapB': [3, 4, 5, 9,12,13,15,18,19,20,21,22,23,24,25,26,29,30,31,32,33,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,62],
     'classNew':  [3, 4, 3, 3,12,12,21,21,21,21,21,22,22,22,22,33,29,22,33,12,33,21,33,33,21,21,21,21,21,21,21,21,21,21, 4,12,21],
     'numeroTask': 6,
-    'numeroLimit': 42,
+    'numeroLimit': 27,
     'conta' : {
         '0': 'caatinga01',
         '7': 'caatinga02',
         '14': 'caatinga03',
         '21': 'caatinga04',
-        '28': 'caatinga05',        
-        '35': 'solkan1201',     
+        # '28': 'caatinga05',        
+        # '35': 'solkan1201',     
     }
 }
 nameBacias = [
@@ -110,7 +110,7 @@ def gerenciador(cont):
         gee.tasks(n= param['numeroTask'], return_list= True)        
     
     elif cont > param['numeroLimit']:
-        cont = 0
+        return 0
     
     cont += 1    
     return cont
