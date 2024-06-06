@@ -30,7 +30,9 @@ param = {
     'inputAssetpolg': {'id':'users/CartasSol/coleta/polygonsCorr'},
     'asset_bacias_buffer' : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/bacias_hidrograficaCaatbuffer5k',
     'assetMap': 'projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1',
-    'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Frequency/',
+    # 'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Frequency/',
+    'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/TemporalV3/',
+    'input_assetSp': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/SpatialV3/',
     'input_solo': 'users/diegocosta/doctorate/Bare_Soils_Caatinga',
     'outputAsset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport/',
     'asset_florestErrNe' : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/shpExtras/shpExtraspoligons_rev_sombrasrelNer',
@@ -40,29 +42,39 @@ param = {
     'asset_restingaRafa' : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/shpExtras/poligons_region_restingaRafa',
     'correct_past_to_Grass' : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/shpExtras/geom_correct21_12_7612_7613_76116',
     'asset_mask_aflora':'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/layer_afloramento_cluster',
+    'asset_campo_chapada': 'users/mapbiomascaatinga04/ROI_AREAS_CAMPO_CHAPADA',
+    'asset_bioma_raster' : 'projects/mapbiomas-workspace/AUXILIAR/biomas-raster-41',
+    'asset_uso_mata_atlantica': 'projects/ee-mapbiomascaatinga04/assets/bacias_mata_caatinga',
     'year_first': 1985,
     'year_end': 2023,
-    'version': 10,
+    'version': 24,
     'classMapB': [3, 4, 5, 9,12,13,15,18,19,20,21,22,23,24,25,26,29,30,31,32,33,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,62],
     'classNew':  [3, 4, 3, 3,12,12,21,21,21,21,21,22,22,22,22,33,29,22,33,12,33,21,33,33,21,21,21,21,21,21,21,21,21,21, 4,12,21],
     'numeroTask': 6,
-    'numeroLimit': 27,
+    'numeroLimit': 42,
     'conta' : {
-        '0': 'caatinga01',
-        '7': 'caatinga02',
-        '14': 'caatinga03',
-        '21': 'caatinga04',
-        # '28': 'caatinga05',        
-        # '35': 'solkan1201',     
+        '0': 'caatinga01',   # 
+        '2': 'caatinga02',
+        '4': 'caatinga03',
+        '6': 'caatinga04',
+        '8': 'caatinga05',        
+        '10': 'solkan1201',    
+        '12': 'solkanGeodatin',
+        '14': 'diegoUEFS',
+        '16': 'superconta'                
     }
 }
 nameBacias = [
     '741','7421','7422','744','745','746','7492','751','752','753',
     '754','755','756','757','758','759','7621','7622','763','764',
-    '765','766','767','771','772','773', '7741','7742','775','776',
-    '777','778','76111','76116','7612','7614','7615','7616','7617',
-    '7618','7619', '7613'
+    '765','766','767','771','772','773', '7741','7742','775',
+    '776','777','778','76111',
+    '7614','7615','7616','7617','7618','7619', '7613' ,  '7612','76116',
 ]
+nameBaciasRodadas = [
+    '753', '755', '772','7741','757'
+]
+
 
 dict_class = {
     '3':  'Forest Formation',
@@ -91,8 +103,8 @@ lst_bacias_relebo = [
     '753', '754', '756', '7621', '763', '765', '771', '772', '773', 
     '7741', '7742', '776', '7612', '7615', '7619', '7613'
 ]
-
-
+lst_bacias_campo_chapada = ['776', '7741']
+lst_bacias_uso_MA = ['757', '758', '759', '76111', '76116', '771', '772', '773']
 #============================================================
 #========================METODOS=============================
 #============================================================
@@ -130,8 +142,8 @@ def GetPolygonsfromFolder():
     return  dict_pol
 
 def corregir_pixels_inPol_inColecao(imgClass_temp, bufferBacia, polRecort, dictProp, nameBac):
-    print("properties ", dictProp)
     
+    print("properties ", dictProp)    
     lstBandNames = ['classification_' + str(yy) for yy in range(param['year_first'], param['year_end'] + 1)]
     imgClassFinal = ee.Image().toByte();
     areaFixa = ee.Feature(bufferBacia.difference(polRecort), {'value': 1})
@@ -168,7 +180,7 @@ def corregir_pixels_inPol_inColecao(imgClass_temp, bufferBacia, polRecort, dictP
                         'version', param['version'], 'biome', 'CAATINGA',
                         'collection', '9.0', 'id_bacia', nameBac,
                         'sensor', 'Landsat', 'source','geodatin',
-                        'system:footprint', bufferBacia# imgClass_temp.get('system:footprint')
+                        'system:footprint', bufferBacia
                     )
     
     return imgClassFinal
@@ -255,9 +267,6 @@ def corregir_pixels_BetwenColecao(imgClass_temp, bufferBacia, CC, nameBac):
                         'system:footprint', imgClass_temp.get('system:footprint')
                     )
     return imgClassFinal
-
-
-
 
 def corregir_pixels_Aflora(imgClass_temp, bufferBacia, maskAflo, nameBac):
     rec_maskAflo = maskAflo.clip(bufferBacia)
@@ -365,6 +374,112 @@ def corregir_pixels_inPol_Relevo(imgClass_temp, bufferBacia, polRelevo, nameBac)
     return imgClassFinal
 
 
+
+def integration_soil_layer(imgClass_temp, bufferBacia, nameBac):
+    mapsSoil = ee.Image(param['input_solo'])
+    # print(imgClass_temp.bandNames().getInfo())
+    lstBandNames = ['classification_' + str(yy) for yy in range(param['year_first'], param['year_end'] + 1)]
+    imgClassFinal = ee.Image().toByte();    
+    
+    for yyear in range(param['year_first'], param['year_end'] + 1):
+        print("###### change pixels with Relevo in year [{}] ########".format(yyear))
+        bandaAct = 'classification_' + str(yyear)
+        
+        if yyear < 2019:
+            bandSoil = f"Caatinga_{yyear}_classification_{yyear}"
+            layerSoilYY = mapsSoil.select(bandSoil)
+        # print(f" lodadin layer {bandSoil}")
+        imgClasBand = ee.Image(imgClass_temp.select(bandaAct))#.remap(param['classMapB'], param['classNew'])       
+        
+        if yyear in [1985, 1986, 2023]:
+            imgClasBand = imgClasBand.where(imgClasBand.eq(22), 21)
+        # integrando o solo 
+        # print("  class ",imgClasBand.bandNames().getInfo() )
+        # print("   soil ", layerSoilYY.bandNames().getInfo())
+        imgClasBand = imgClasBand.where(layerSoilYY.eq(1), 22)
+    
+        imgClassFinal = imgClassFinal.addBands(imgClasBand.rename(bandaAct))
+
+    imgClassFinal = imgClassFinal.select(lstBandNames)
+    imgClassFinal = imgClassFinal.set(
+                        'version', param['version'], 'biome', 'CAATINGA',
+                        'collection', '9.0', 'id_bacia', nameBac,
+                        'sensor', 'Landsat', 'source','geodatin',
+                        'system:footprint', bufferBacia 
+                    )
+    return imgClassFinal
+
+def corregir_pixels_campos_chapada(imgClass_temp, bufferBacia, maskChapada, nameBac):
+    #  projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport/BACIA_741_mixed_V10 
+    nameLayer = f"BACIA_{nameBac}_mixed_V10"
+    layerVers10 = ee.Image(param['outputAsset'] + nameLayer)        
+    
+    # rec_maskAflo = maskChapada.geometry().intersection(bufferBacia)
+    
+    areaFixa = ee.Feature(bufferBacia.difference(maskChapada.geometry()), {'value': 0}) # .
+    areaToChange = ee.Feature(maskChapada.geometry(), {'value': 1})
+    areaTo_mask = ee.FeatureCollection([areaFixa, areaToChange])
+    maskToChange = areaTo_mask.reduceToImage(['value'], ee.Reducer.first())
+    
+
+
+    lstBandNames = ['classification_' + str(yy) for yy in range(param['year_first'], param['year_end'] + 1)]
+    imgClassFinal = ee.Image().toByte();
+
+    for yyear in range(param['year_first'], param['year_end'] + 1):
+        print("###### change pixels Campo in year [{}] ########".format(yyear))
+        bandaAct = 'classification_' + str(yyear)
+        imgClasBand = ee.Image(imgClass_temp.select(bandaAct))
+        layer_campo = layerVers10.select(bandaAct).eq(12)
+        layer_campo = maskToChange.eq(1).And(layer_campo.eq(1))
+        imgClasBand = imgClasBand.where(layer_campo.eq(1), layer_campo.multiply(12))
+        bandaAct = 'classification_' + str(yyear)
+        imgClassFinal = imgClassFinal.addBands(imgClasBand.rename(bandaAct))
+
+    imgClassFinal = imgClassFinal.select(lstBandNames)
+    imgClassFinal = imgClassFinal.set(
+                        'version', param['version'], 'biome', 'CAATINGA',
+                        'collection', '9.0', 'id_bacia', nameBac,
+                        'sensor', 'Landsat', 'source','geodatin',
+                        'system:footprint', bufferBacia
+                    )
+    return imgClassFinal
+
+
+def corregir_pixels_uso(imgClass_temp, bufferBacia, limiteMataAt, nameBac):
+    #  projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport/BACIA_741_mixed_V10 
+    biomaRaster = ee.Image(param['asset_bioma_raster']).eq(5);
+    biomaRaster = biomaRaster.add(ee.Image(param['asset_bioma_raster']).eq(2));
+    imgMapCol80 = ee.Image(param['assetMap']).updateMask(biomaRaster)    
+    # rec_maskAflo = maskChapada.geometry().intersection(bufferBacia)    
+    areaFixa = ee.Feature(bufferBacia.difference(limiteMataAt.geometry()), {'value': 0})
+    areaToChange = ee.Feature(limiteMataAt.geometry(), {'value': 1})
+    areaTo_mask = ee.FeatureCollection([areaFixa, areaToChange])
+    maskToChange = areaTo_mask.reduceToImage(['value'], ee.Reducer.first())
+
+    lstBandNames = ['classification_' + str(yy) for yy in range(param['year_first'], param['year_end'] + 1)]
+    imgClassFinal = ee.Image().toByte();
+
+    for yyear in range(param['year_first'], param['year_end'] + 1):
+        print("###### change pixels Campo in year [{}] ########".format(yyear))
+        bandaAct = 'classification_' + str(yyear)
+        imgClasBand = ee.Image(imgClass_temp.select(bandaAct))
+        if yyear < 2023:
+            layerYY21 = imgMapCol80.select(bandaAct).eq(15) 
+            layerYY21 = maskToChange.eq(1).And(layerYY21.eq(1))
+        imgClasBand = imgClasBand.where(layerYY21.eq(1), layerYY21.multiply(21)) # colocando uso 
+
+        imgClassFinal = imgClassFinal.addBands(imgClasBand.rename(bandaAct))
+
+    imgClassFinal = imgClassFinal.clip(bufferBacia).select(lstBandNames)
+    imgClassFinal = imgClassFinal.set(
+                        'version', param['version'], 'biome', 'CAATINGA',
+                        'collection', '9.0', 'id_bacia', nameBac,
+                        'sensor', 'Landsat', 'source','geodatin',
+                        'system:footprint', bufferBacia
+                    )
+    return imgClassFinal
+
 #exporta a imagem classificada para o asset
 def processoExportar(mapaRF,  nomeDesc, geom_bacia):
     
@@ -382,21 +497,29 @@ def processoExportar(mapaRF,  nomeDesc, geom_bacia):
     task.start() 
     print("salvando ... " + nomeDesc + "..!")
     # print(task.status())
-    for keys, vals in dict(task.status()).items():
-        print ( "  {} : {}".format(keys, vals))
+    # for keys, vals in dict(task.status()).items():
+    #     print ( "  {} : {}".format(keys, vals))
+
+    
 
 ## ============================================================##
 ## ==================LOADING ALL DATASETS =====================##
 ## ============================================================##
-changeCount = False
+changeCount = True
+lstBands = ['classification_' + str(yy) for yy in range(param['year_first'], param['year_end'] + 1)]
+
 dict_bacias_asset = GetPolygonsfromFolder()
 lst_keyBacias = [kk for kk in dict_bacias_asset.keys()]
+
 polg_sombra = ee.FeatureCollection(param['asset_florestErrNe']).merge(
                         ee.FeatureCollection(param['asset_florestErrRa'])).geometry()
 polg_restinga = ee.FeatureCollection(param['asset_restingaNeri']).merge(
                         ee.FeatureCollection(param['asset_restingaRafa'])).geometry()
 mask_afloramento = ee.Image(param['asset_mask_aflora'])
-lstBands = ['classification_' + str(yy) for yy in range(param['year_first'], param['year_end'] + 1)]
+
+
+limite_chapada = ee.FeatureCollection(param['asset_campo_chapada'])
+limit_regions_MA = ee.FeatureCollection(param['asset_uso_mata_atlantica'])
 
 geoBacias = ee.FeatureCollection(param['asset_bacias_buffer'])
 # nameBacias = ['745'] # ,'746','778''76116'
@@ -405,72 +528,51 @@ if changeCount:
     cont = gerenciador(cont)
 list_corr = []
 for nameBa in  nameBacias[:]:
-    print(f"########## 🔊 LOADING BASIN {nameBa} IN VERSAO {param['version']} 🔊 ###############") 
     
-    # name_imgClass = 'filter_BACIA_' + nameBa + "_" + dict_version[dict_Bacia_version[nameBa]]  
-    # name_toexport = 'filterFQ_BACIA_'+ str(self.id_bacias) + "_V" + str(self.versionFR)
+    if nameBa in nameBaciasRodadas:
 
-    name_imgClass = 'filterFQ_BACIA_' + str(nameBa) + "_V" + str(param['version']) 
-    
-    imgClass = ee.Image(param['input_asset'] + name_imgClass).select(lstBands)  
-    bandasImgMap = imgClass.bandNames().getInfo()
-    print("Bacia ", nameBa, " => numero de bandas ", len(bandasImgMap))
-    print(bandasImgMap)
-    limBacia = geoBacias.filter(ee.Filter.eq('nunivotto3', nameBa)).geometry()
-    
-    # print(lst_keyBacias)
-    # print("entrar no loop ", nameBa in lst_keyBacias)
-    # sys.exit()
-    # if nameBa in lst_keyBacias : # and nameBa not in list_corr
-    #     print("Bacia IS ")
-    #     # try: 
-    #     feat_pog = ee.FeatureCollection(dict_bacias_asset[nameBa])           
-    #     size_pol = feat_pog.size().getInfo()
-    #     print("      size ", size_pol)
+        print(f"########## 🔊 LOADING BASIN {nameBa} IN VERSAO {param['version']} 🔊 ###############")         
+        # name_imgClass = 'filter_BACIA_' + nameBa + "_" + dict_version[dict_Bacia_version[nameBa]]  
+        # name_toexport = 'filterFQ_BACIA_'+ str(self.id_bacias) + "_V" + str(self.versionFR)
         
-    #     if size_pol == 1:
-    #         dictPropert = feat_pog.first().getInfo()['properties']
-    #         print("polygon = ", dictPropert)
-    #         if dictPropert['fCol'] == 'c8' and dictPropert['eCol'] == 'c8':
-    #             imgBaClass = corregir_pixels_inPol_inColecao(imgClass, limBacia, feat_pog.first().geometry(), dictPropert, nameBa)
-    #         else:
-    #             imgBaClass = corregir_pixels_inPol_BetwenColecao(imgClass, limBacia, feat_pog.first().geometry(), dictPropert, nameBa)
-    #     elif size_pol > 1:
-    #         lst_id = feat_pog.reduceColumns(ee.Reducer.toList(), ['system:index']).get('list').getInfo()
-    #         for cc, ids in enumerate(lst_id):
-    #             featSelect = feat_pog.filter(ee.Filter.eq('system:index', ids))
-    #             dictPropert = featSelect.first().getInfo()['properties']
-    #             if cc == 0:
-    #                 if dictPropert['fCol'] == 'c8' and dictPropert['eCol'] == 'c8':
-    #                     imgBaClass = corregir_pixels_inPol_inColecao(imgClass, limBacia, featSelect.geometry(), dictPropert, nameBa)
-    #                 else:
-    #                     imgBaClass = corregir_pixels_inPol_BetwenColecao(imgClass, limBacia, featSelect.geometry(), dictPropert, nameBa)
-    #             else:
-    #                 if dictPropert['fCol'] == 'c8' and dictPropert['eCol'] == 'c8':
-    #                     imgBaClass = corregir_pixels_inPol_inColecao(imgBaClass, limBacia, featSelect.geometry(), dictPropert, nameBa)
-    #                 else:
-    #                     imgBaClass = corregir_pixels_inPol_BetwenColecao(imgBaClass, limBacia, featSelect.geometry(), dictPropert, nameBa)
-    #     # except:
-    #     #     print("   ENTRPU AQUI A TROCAR O CAMPO ")
-    #     #     imgBaClass = corregir_pixels_BetwenColecao(imgClass, limBacia, 12)
-    
-    # else:  
-    #     if nameBa  in list_corr:
-    #         print("   ENTRPU AQUI A TROCAR O CAMPO ")
-    #         imgBaClass = corregir_pixels_BetwenColecao(imgClass, limBacia, 21, nameBa)
-    #     else:
-    #         print("passou igual ")
-    #         imgBaClass = imgClass
-    imgBaClass = imgClass
-    if nameBa in lst_Bacia_aflo:
-        imgBaClass = corregir_pixels_Aflora(imgBaClass, limBacia, mask_afloramento, nameBa)
+        # name_imgClass = f"filterTP_BACIA_{nameBa}_GTB_J5_V{param['version']}"    
+        # name_imgClass = f"filterTP_BACIA_{nameBa}_GTB_J5_V{param['version']}"
+        # name_imgClass = 'filterFQ_BACIA_' + str(nameBa) + "_V" + str(param['version'])   input_assetSp
+        # filterTP_BACIA_778_GTB_J5_V22
+        name_imgClass = f"filterTP_BACIA_{nameBa}_GTB_J5_V22"
+        imgClass = ee.Image(param['input_asset'] + name_imgClass).select(lstBands[:-1])  
 
-    if nameBa in lst_bacias_restinga:
-        imgBaClass = corregir_pixels_inPol_Restinga(imgBaClass, limBacia, polg_restinga, nameBa)
+        name_imgClassSp = f"filterSPU_BACIA_{nameBa}_GTB_V{param['version']}"
+        imgClassSp = ee.Image(param['input_assetSp'] + name_imgClassSp) 
+        imgClass = imgClass.addBands(imgClassSp)
+        bandasImgMap = imgClass.bandNames().getInfo()
+        print("Bacia ", nameBa, " => numero de bandas ", len(bandasImgMap))
+        # print(bandasImgMap)
 
-    if nameBa in lst_bacias_relebo:
-        imgBaClass = corregir_pixels_inPol_Relevo(imgBaClass, limBacia, polg_sombra, nameBa)
+        limBacia = geoBacias.filter(ee.Filter.eq('nunivotto3', nameBa)).geometry()
+        
+        # print(lst_keyBacias)
+        # print("entrar no loop ", nameBa in lst_keyBacias)
+        # sys.exit()
 
-    name_mapExp = 'BACIA_' + str(nameBa) + "_mixed_V" + str(param['version']) 
-    processoExportar(imgBaClass.clip(limBacia),  name_mapExp, limBacia)
-    cont = gerenciador(cont)
+        imgBaClass = imgClass
+        imgBaClass = integration_soil_layer(imgBaClass, limBacia, nameBa)
+
+        print(" layer soil ", imgBaClass.bandNames().getInfo())
+        # sys.exit()
+        if nameBa in lst_Bacia_aflo:
+            imgBaClass = corregir_pixels_Aflora(imgBaClass, limBacia, mask_afloramento, nameBa)
+
+        if nameBa in lst_bacias_restinga:
+            imgBaClass = corregir_pixels_inPol_Restinga(imgBaClass, limBacia, polg_restinga, nameBa)
+
+        if nameBa in lst_bacias_campo_chapada:
+            imgBaClass = corregir_pixels_campos_chapada(imgBaClass, limBacia, limite_chapada, nameBa)
+        # print("know bandas ", imgBaClass.bandNames().getInfo())
+        if nameBa in lst_bacias_uso_MA:
+            imgBaClass = corregir_pixels_uso(imgBaClass, limBacia, limit_regions_MA, nameBa) 
+
+        # print("know bandas ", imgBaClass.bandNames().getInfo())
+        name_mapExp = 'BACIA_' + str(nameBa) + "_mixed_V244"# + str(23) 
+        processoExportar(imgBaClass.clip(limBacia).select('classification_2023'),  name_mapExp, limBacia)
+        cont = gerenciador(cont)

@@ -79,9 +79,10 @@ def processoExportar(ROIsFeat, nameT, porAsset):
 nameBacias = [
     '7421','741', '7422','744','745','746','751', '752', '7492',
     '753', '754','755','756','757','758','759','7621','7622','763',
-    '764','766','771','772','773', '7741','7742','775',
-    '776','76111','76116','7612','7613','7614','7615',  '777','778',
-    '7616','7617','7618', '7619', '765', '767'
+    '764','766','771','772','773', '7742','775',  '7741',
+    '76111','76116','7612','7613','7614','7615',  '777','778',
+    '7616','7617','7618', '7619', '765', '767', '776',
+    # '7741', '776'
 ] 
 
 param = {
@@ -93,10 +94,10 @@ param = {
     'assetCol': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVX" ,
     'assetColprob': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVP" ,
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Spatial',
-    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/SpatialV3',
+    'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/SpatialV3',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/FrequencyV3',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fillV2',
-    'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/TemporalV3',
+    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/TemporalV3',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport',
     # 'asset_Map' : "projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1",
     # 'assetCol6': path_asset + "class_filtered/maps_caat_col6_v2_4",
@@ -108,7 +109,7 @@ param = {
     'anoFinal': 2022,  # 2019
     'numeroTask': 6,
     'numeroLimit': 2,
-    'changeAcount': True,
+    'changeAcount': False,
     'conta' : {
         '0': 'solkanGeodatin'              
     },
@@ -260,7 +261,7 @@ expPointLapig = False
 knowImgcolg = True
 param['isImgCol'] = True
 param['inBacia'] = True
-version = 21
+version = 22
 bioma250mil = ee.FeatureCollection(param['assetBiomas'])\
                     .filter(ee.Filter.eq('Bioma', 'Caatinga')).geometry()
 ## os pontos só serão aqueles que representam a Caatinga 
@@ -294,18 +295,18 @@ if param['isImgCol']:
     if isFilter:
         mapClass = ee.ImageCollection(param['assetFilters'])
         if 'Temporal' in param['assetFilters']:
-            mapClass = mapClass.filter(ee.Filter.eq('janela', 4))
-            subfolder += 'J4'
+            mapClass = mapClass.filter(ee.Filter.eq('janela', 5))
+            subfolder += 'J5'
             print(mapClass.first().get('system:index').getInfo())
             # lstInf = mapClass.reduceColumns(ee.Reducer.toList(), ['id_bacia']).get('list').getInfo()
             # print(lstInf)
             # sys.exit()
         if 'Spatial' in param['assetFilters']:
-            mapClass = mapClass.filter(ee.Filter.eq('step', 1)).filter(
-                            ee.Filter.eq('type_filter', 'spatial_use'))
-            subfolder += 'St1'
+            mapClass = mapClass.filter(
+                            ee.Filter.eq('filter', 'spatial_use'))
+            subfolder += 'su'
             print(mapClass.size().getInfo())
-            sys.exit()
+            # sys.exit()
         if 'Frequency' in param['assetFilters']:
             # mapClass = mapClass.filter(ee.Filter.eq('type_filter', 'frequence_natUso'))
             

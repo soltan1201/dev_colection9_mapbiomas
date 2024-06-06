@@ -52,31 +52,33 @@ param = {
     'asset_caat_buffer': 'users/CartasSol/shapes/caatinga_buffer5km',
     'outputAsset': 'projects/mapbiomas-workspace/COLECAO9/classificacao', 
     'inputAsset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport',
+    'newinputAsset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport',  # BACIA_778_mixed_V244
     'biome': 'CAATINGA', #configure como null se for tema transversal
-    'version': 10,
+    'version': 25,
     'collection': 9.0,
     'source': 'geodatin',
     'setUniqueCount': True,
     'theme': None, 
     'numeroTask': 0,
-    'numeroLimit': 27,
+    'numeroLimit': 39,
     'conta' : {
-        '0': 'caatinga01',
-        '7': 'caatinga02',
-        '14': 'caatinga03',
-        '21': 'caatinga04',
-        '27': 'caatinga05',        
-        # '33': 'solkan1201',  
-        # '28': 'rodrigo',
-        # '32': 'diegoGmail'
+        '0': 'caatinga01',   # 
+        '2': 'caatinga02',
+        '4': 'caatinga03',
+        '6': 'caatinga04',
+        '8': 'caatinga05',        
+        '10': 'solkan1201',    
+        '12': 'solkanGeodatin',
+        '14': 'diegoUEFS',
+        '16': 'superconta' 
     }
 }
-countFix = 27
-processExport = True
+countFix = 16
+processExport = False
 metadados = {}
 bioma5kbuf = ee.FeatureCollection(param['asset_caat_buffer']).geometry()
 imgColExp = ee.ImageCollection(param['inputAsset']).filter(
-                                    ee.Filter.eq('version', 10))
+                                            ee.Filter.eq('version', 22))
 numMaps = imgColExp.size().getInfo()
 print(f' We have {numMaps} imagens maps by basin in this asset')
 if numMaps != 42:
@@ -87,40 +89,46 @@ if numMaps != 42:
 imgColExp = imgColExp.map(lambda img: ee.Image.cat(img).toByte()).min()
 print("lista de bandas da imagem min \n ", imgColExp.bandNames().getInfo())
 
-for ii, year in enumerate(range(1985, 2024)):  #    
+for ii, year in enumerate(range(2023, 2024)):  #    
     if param['setUniqueCount']:
-        gerenciador(countFix, param)
-        countFix = 22
+        countFix = gerenciador(countFix, param)
+        countFix = 16
     else:
-        gerenciador(ii , param)
-    bandaAct = 'classification_' + str(year) 
-    # print("Banda activa: " + bandaAct)
-    # img_banda = 'CAATINGA-' + str(year) +  '-' + str(param['version'])
-    imgExtraBnd = imgColExp.select([bandaAct], ['classification'])
-    imgYear = imgExtraBnd.clip(bioma5kbuf).set('biome', param['biome'])\
-                    .set('year', year)\
-                    .set('version', str(param['version']))\
-                    .set('collection', param['collection'])\
-                    .set('source', param['source'])\
-                    .set('theme',None)\
-                    .set('system:footprint', bioma5kbuf)    
-
+        countFix = gerenciador(ii , param)
+    if year == 2023:
+        imgColExpNew = ee.ImageCollection(param['inputAsset']).filter(
+                                                ee.Filter.eq('version', 24))
+        imgColExpNew = imgColExpNew.map(lambda img: ee.Image.cat(img).toByte()).min()
     
-    name = param['biome'] + '-' + str(year) + '-' + str(param['version'])
-    if processExport:
-        optExp = {   
-            'image': imgYear.byte(), 
-            'description': name, 
-            'assetId': param['outputAsset'] + '/' + name, 
-            'region': bioma5kbuf.getInfo()['coordinates'], #
-            'scale': 30, 
-            'maxPixels': 1e13,
-            "pyramidingPolicy": {".default": "mode"}
-        }
+        bandaAct = 'classification_' + str(year) 
+        # print("Banda activa: " + bandaAct)
+        # img_banda = 'CAATINGA-' + str(year) +  '-' + str(param['version'])
+        imgExtraBnd = imgColExpNew.select([bandaAct], ['classification'])
+        imgYear = imgExtraBnd.clip(bioma5kbuf).set('biome', param['biome'])\
+                        .set('year', year)\
+                        .set('version', str(param['version']))\
+                        .set('collection', param['collection'])\
+                        .set('source', param['source'])\
+                        .set('theme',None)\
+                        .set('system:footprint', bioma5kbuf)    
 
-        task = ee.batch.Export.image.toAsset(**optExp)
-        task.start() 
-        print("salvando ... banda  " + name + "..!")
-    else:
-        print(f"verficando => {name} >> {imgYear.bandNames().getInfo()}")
-    # sys.exit()
+        
+        name = param['biome'] + '-' + str(year) + '-' + str(param['version'])
+        if processExport:
+            optExp = {   
+                'image': imgYear.byte(), 
+                'description': name, 
+                'assetId': param['outputAsset'] + '/' + name, 
+                'region': bioma5kbuf.getInfo()['coordinates'], #
+                'scale': 30, 
+                'maxPixels': 1e13,
+                "pyramidingPolicy": {".default": "mode"}
+            }
+
+            task = ee.batch.Export.image.toAsset(**optExp)
+            task.start() 
+            print("salvando ... banda  " + name + "..!")
+        else:
+            print(f"verficando => {name} >> {imgYear.bandNames().getInfo()}")
+        
+        # sys.exit()

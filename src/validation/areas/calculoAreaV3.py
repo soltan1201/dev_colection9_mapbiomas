@@ -25,10 +25,11 @@ sys.setrecursionlimit(1000000000)
 #nome das bacias que fazem parte do bioma
 nameBacias = [
     '741', '7421','7422','744','745','746','751','752','7492',
-    '753', '754','755','756','757','758','759','7621','7622','763',
-    '764','765','766','771','772','773', '7741','7742','775',
+    '753', '754','755','756','757','759','7621','7622','763', '758',
+    '764','765','766','771','772', '7741','7742','775', '773',
     '776','76111','76116','7612','7613','7614','7615','777',
     '778','7616','7617','7618', '7619', '767'
+    # '758', '773'
 ] 
 classMapB = [ 0, 3, 4, 5, 6, 9,11,12,13,15,18,19,20,21,22,23,24,25,26,29,30,31,32,33,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,62]
 classNew =  [27, 3, 4, 3, 3, 3,12,12,12,21,21,21,21,21,22,22,22,22,33,29,22,33,12,33,21,33,33,21,21,21,21,21,21,21,21,21,21, 4,12,21]
@@ -50,7 +51,7 @@ param = {
     'isImgCol': True,  
     'remapRaster': True,
     'inBacia': True,
-    'version': 21,
+    'version': 22,
     'sufixo': '_Cv', 
     'assetBiomas': 'projects/mapbiomas-workspace/AUXILIAR/biomas_IBGE_250mil', 
     'biome': 'CAATINGA', 
@@ -60,7 +61,7 @@ param = {
     'year_end': 2023,
     'driverFolder': 'AREA-EXPORT-COL9', 
     'lsClasses': [3,4,12,15,18,21,22,33],
-    'changeAcount': False,
+    'changeAcount': True,
     'numeroTask': 0,
     'numeroLimit': 37,
     'conta' : {
@@ -193,16 +194,16 @@ if param['isImgCol']:
     if isFilter:
         imgsMaps = ee.ImageCollection(param['assetFilters'])
         if 'Temporal' in param['assetFilters']:
-            imgsMaps = imgsMaps.filter(ee.Filter.eq('janela', 4))
-            subfolder += 'J4'
+            imgsMaps = imgsMaps.filter(ee.Filter.eq('janela', 5))
+            subfolder += 'J5'
             print(imgsMaps.size().getInfo())
             # idList = imgsMaps.reduceColumns(ee.Reducer.toList(), ['system:index']).get('list').getInfo()
             # for ids in idList:
             #     print("    ", ids)
         if 'Spatial' in param['assetFilters']:
-            imgsMaps = imgsMaps.filter(ee.Filter.eq('step', 1))
-            subfolder += 'St1'
-            # print(imgsMaps.size().getInfo())
+            imgsMaps = imgsMaps.filter(ee.Filter.eq('filter', 'spatial_use'))
+            subfolder += 'su'
+            print(imgsMaps.size().getInfo())
         if 'Frequency' in param['assetFilters']:
             # neq ==>  'nat'   e  eq ===>  natUso
             # imgsMaps = imgsMaps.filter(ee.Filter.eq('type_filter', 'frequence_natUso'))

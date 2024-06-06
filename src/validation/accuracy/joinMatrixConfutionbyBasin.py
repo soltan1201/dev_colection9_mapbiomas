@@ -33,7 +33,7 @@ nameBacias = [
 modelos = ['GTB']# ,'RF'
 # , 'Gap-fill', 'Spatial','Frequency' , 'Temporal','toExport', 
 # 'Gap-fillV2','SpatialV2St1', 'FrequencyV2nat','FrequencyV2natUso','SpatialV2St3','TemporalV2J3'
-posclass = ['TemporalV3J3'] #, 'FrequencyV3St1' , 'SpatialV3St1', 'TemporalV3J3','TemporalV3J4','TemporalV3J5' 
+posclass = ['TemporalV3J5'] #, 'FrequencyV3St1' , 'SpatialV3St1', 'TemporalV3J3','TemporalV3J4','TemporalV3J5' 
 modelos = posclass
 # get dir path of script 
 npath = os.getcwd()
@@ -42,7 +42,7 @@ npath = str(Path(npath).parents[1])
 print("path of CSVs Rois is \n ==>",  npath)
 pathcsvsMC = os.path.join(npath,'dados')
 pathcsvsMC = os.path.join(pathcsvsMC, 'conf_matrix')
-version_process = ['21'] # '5','9','10','11','12', '13, '15','16','17', '20'
+version_process = ['22'] # '5','9','10','11','12', '13, '15','16','17', '20'
 lstfilesCSVs = glob.glob(pathcsvsMC + '/*.csv')
 for model in posclass:
     lstDF_models = []

@@ -287,7 +287,7 @@ classificador = "GTB"
 mversion = ''
 modelos = ['GTB'] #  'RF',
 # 'Gap-fillV2','SpatialV2St1', 'FrequencyV2nat', 'FrequencyV2natUso','SpatialV2St3','TemporalV2J3'
-posclass = ['TemporalV3J3']#  , 'FrequencyV3St1', 'SpatialV3St1', 'TemporalV3J3','TemporalV3J4','TemporalV3J5'  , 'FrequencyV3St2'['SpatialV2'] # , 'toExport''Gap-fill', 'Spatial', 'Temporal', 'Frequency'
+posclass = ['TemporalV3J4','TemporalV3J5','SpatialV3su']#  , 'FrequencyV3St1', 'SpatialV3St1', 'TemporalV3J3','TemporalV3J4','TemporalV3J5'  , 'FrequencyV3St2'['SpatialV2'] # , 'toExport''Gap-fill', 'Spatial', 'Temporal', 'Frequency'
 version_process = ['21'] # '5','9','10','11', '12', '15', '16', '17'
 modelos = posclass
 for nmodel in modelos[:]:

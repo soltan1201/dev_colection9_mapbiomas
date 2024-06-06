@@ -36,8 +36,8 @@ class processo_filterTemporal(object):
             'output_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/TemporalV3/',
             # 'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/FrequencyV3',
             # 'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/POS-CLASS/merge/',
-            # 'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/SpatialV3',
-            'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/TemporalV3',
+            'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/SpatialV3',
+            # 'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/TemporalV3',
             'asset_bacias_buffer' : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/bacias_hidrograficaCaatbuffer5k',            
             'last_year' : 2023,
             'first_year': 1985,
@@ -47,8 +47,8 @@ class processo_filterTemporal(object):
 
     def __init__(self):
         # self.id_bacias = nameBacia
-        self.versoutput = 21
-        self.versionInput = 21
+        self.versoutput = 22
+        self.versionInput = 22
         self.geom_bacia = ee.FeatureCollection(self.options['asset_bacias_buffer'])#.filter(
                                                     # ee.Filter.eq('nunivotto3', nameBacia)).first().geometry()              
         self.years = [yy for yy in range(self.options['first_year'], self.options['last_year'] + 1)]  # ,  - 1, -1
@@ -193,7 +193,8 @@ class processo_filterTemporal(object):
             imgClass = ee.ImageCollection(self.options['input_asset']).filter(
                                     ee.Filter.eq('id_bacia', id_bacias)).filter(
                                         ee.Filter.eq('version',  self.versionInput)).filter(
-                                            ee.Filter.eq('step', self.options['step'])).first()  # self.options['step']
+                                            # ee.Filter.eq('step', self.options['step'])).first()  # self.options['step']
+                                                ee.Filter.eq('filter', 'spatial_use')).first()
         # name_imgClass = 'filterFQ_BACIA_'+ str(id_bacias) + "_V" + str(self.versionTP)
 
         
@@ -406,13 +407,15 @@ param = {
     'numeroLimit': 42,
     'conta' : {
         '0': 'caatinga01',
-        '5': 'caatinga02',
-        '10': 'caatinga03',
-        '16': 'caatinga04',
-        '22': 'caatinga05',        
-        '27': 'solkan1201',    
-        '32': 'solkanGeodatin',
-        '37': 'diegoUEFS'    
+        '3': 'caatinga02',
+        '6': 'solkanGeodatin',
+        '9': 'solkan1201', 
+        '12': 'caatinga05',
+        '8': 'caatinga04',        
+           
+        
+        '4': 'caatinga03',
+        #'37': 'diegoUEFS'    
     }
 }
 
@@ -440,20 +443,18 @@ def gerenciador(cont):
 
 
 listaNameBacias = [
-    '744','754','741','7421','7422','745','746','7492','751','752',
-    '753','755','758','759','7621','7622','764','765','766',
-    '767','771','772','7741','7742','773','775', '777', '778',
-    '76111','76116','7612','7614','7615','7616','7617','7618','7619', 
-    '7613','756','757','763','776'    
+   '744','754','741','7421','7422','745','746','7492','751','752',
+   '753','755','758','759','7621','7622','764','765','766',
+   '767','771','772','7741','7742','773','775', '777', '778',
+   '76111','76116','7612','7614','7615','7616','7617','7618','7619', 
+   '7613','756','757','763','776'    
 ]
 
 # listaNameBacias = [
-#     # '754','756','757','758','7614', '7421','771', '772', '775', '777', '7619'
-# ]
-lstBacias = [
-    '772', '775', '76111', '7614', '7619'
-]
-
+#        '752', '753','755', '758'
+#  ]
+lstBacias = []
+#'7421', '746', '764', '765', '772', '7741', '777',
 # input_asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/SpatialV2'
 # imgCol = ee.ImageCollection(input_asset).filter(ee.Filter.neq('step', 2))
 # print("numero de imagens ", imgCol.size().getInfo())
@@ -469,18 +470,18 @@ aplicando_TemporalFilter = processo_filterTemporal()
 # for cc, lst in enumerate(aplicando_TemporalFilter.colectAnos):
 #     print(1985 + cc, lst)
 # 
-# input_asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/SpatialV3/'
-input_asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/TemporalV3/'
-version = 21
+input_asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/SpatialV3/'
+# input_asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/TemporalV3/'
+version = 24
 janela = 5
-cont = 37
+cont = 9
 listBacFalta = []
 knowMapSaved = True
 for cc, idbacia in enumerate(listaNameBacias[:]):   
     if knowMapSaved:
         try:
             if 'Spatial' in input_asset:
-                nameMap = 'filterSP_BACIA_' + idbacia + "_GTB_V" + str(version) + '_step1'
+                nameMap = 'filterSPU_BACIA_' + idbacia + "_GTB_V" + str(version)
             else:
                 nameMap = 'filterTP_BACIA_'+ idbacia + f"_GTB_J{janela}_V" + str(version)
             print(input_asset + nameMap)
@@ -491,7 +492,7 @@ for cc, idbacia in enumerate(listaNameBacias[:]):
         except:
             listBacFalta.append(idbacia)
     else: 
-        if idbacia in lstBacias:
+        if idbacia not in lstBacias:
             cont = gerenciador(cont)
             print("----- PROCESSING BACIA {} -------".format(idbacia))        
             aplicando_TemporalFilter.applyTemporalFilter(idbacia)

@@ -110,8 +110,8 @@ if processCol9:
     modelos = [ 'GTB'] # 'RF', "GTB"
     # 'Gap-fillV2','SpatialV2St1', 'FrequencyV2nat', 
     # posclass = ['FrequencyV2natUso','SpatialV2St3','TemporalV2J3'] # ,  'toExport', 'Gap-fill', 'Spatial', 'Temporal', 'Frequency',
-    posclass = ['TemporalV3J3'] # , 'FrequencyV3St1' 'FrequencyV3St2'. 'SpatialV3St1', 'TemporalV3J3','TemporalV3J4','TemporalV3J5'
-    version_process = ['21'] # '5','9','10','11', '12', '15''16', '17',18
+    posclass = ['TemporalV3J5' ] # , ,'SpatialV3su'''TemporalV3J4',FrequencyV3St1' 'FrequencyV3St2'. 'SpatialV3St1', 'TemporalV3J3','TemporalV3J4','TemporalV3J5'
+    version_process = ['22'] # '5','9','10','11', '12', '15''16', '17',18
     modelos = posclass
     for nmodel in modelos[:]:
         for vers in version_process:
@@ -125,7 +125,8 @@ if processCol9:
                 version = partes[-2]
                 if len(partes) > 4:
                     name_model = partes[1]
-
+                if name_model == nmodel: 
+                    print(f" model {name_model}   {version}")
                 if str(nmodel) == str(name_model) and vers == version:                
                     nbacia = partes[-1].replace(".csv", "")
                     print(f" ====== loading {nameFiles} ========") 
