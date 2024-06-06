@@ -108,9 +108,11 @@ if showlstGerral:
 
 if processCol9:
     modelos = [ 'GTB'] # 'RF', "GTB"
-    posclass = ['Gap-fill', 'Spatial', 'Temporal', 'Frequency',] # ,  'toExport'
-    version_process = ['13'] # '5','9','10','11', '12', 
-    modelos += posclass
+    # 'Gap-fillV2','SpatialV2St1', 'FrequencyV2nat', 
+    # posclass = ['FrequencyV2natUso','SpatialV2St3','TemporalV2J3'] # ,  'toExport', 'Gap-fill', 'Spatial', 'Temporal', 'Frequency',
+    posclass = ['TemporalV3J3'] # , 'FrequencyV3St1' 'FrequencyV3St2'. 'SpatialV3St1', 'TemporalV3J3','TemporalV3J4','TemporalV3J5'
+    version_process = ['21'] # '5','9','10','11', '12', '15''16', '17',18
+    modelos = posclass
     for nmodel in modelos[:]:
         for vers in version_process:
             lstDF = []
@@ -135,8 +137,8 @@ if processCol9:
                     print("ver tamanho ", dftmp.shape)
                     if dftmp.shape[0] > 0:
                         lstDF.append(dftmp)
-
-            if len(lstDF) > 0:   
+            # sys.exit()
+            if len(lstDF) == 42:   
                 ndfArea = pd.concat(lstDF, ignore_index= True)
                 print("columna ", ndfArea.columns)
                 # ndfArea = ndfArea.sort_values(by='year')
@@ -149,7 +151,7 @@ if processCol9:
                     classFin  = [27,3,4,12,12,12,21,21,21,22,27,29,33, 3]
                 
                 ndfArea['classe'] = ndfArea['classe'].replace(classInic, classFin) 
-                # ndfArea = ndfArea[ndfArea['classe'] != 0]
+                ndfArea = ndfArea[ndfArea['classe'] != 27]
                 # Remap column values in inplace
                 # sys.exit()
                 # get values uniques 
@@ -177,7 +179,12 @@ if processCol9:
                 print(" -------- DONE ! --------------")
                 print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
                 print("==================================================================================")
-
+            
+            else:
+                print("================================================================")
+                print(f"      the model  {nmodel} fails {42 - len(lstDF)} image  ")
+                for areadf in lstDF:
+                    print(areadf["Bacia"].iloc[0])
 else:
     lstColection = ['Col71', 'Col80']
     for col in lstColection:

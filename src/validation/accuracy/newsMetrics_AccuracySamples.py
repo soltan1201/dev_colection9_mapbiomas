@@ -62,7 +62,7 @@ def getPathCSV (nfolders):
     return pathparent, roisPathAcc
 
 def allocation_erros (dfRefClass, showInfo):
-    lstClassEst = [3,4,12,21,22,27,33]
+    lstClassEst = [3,4,12,21,22,33]
     conf_matrix = confusion_matrix(
                         y_true= dfRefClass['reference'], 
                         y_pred= dfRefClass['classification'], 
@@ -286,31 +286,33 @@ print(f' 📢 We load {len(lst_paths)} tables from folder  {input_path_CSVs.spli
 classificador = "GTB"
 mversion = ''
 modelos = ['GTB'] #  'RF',
-posclass = ['Gap-fill', 'Spatial', 'Temporal', 'Frequency'] # , 'toExport'
-version_process = ['13'] # '5','9','10','11', '12'
-modelos += posclass
+# 'Gap-fillV2','SpatialV2St1', 'FrequencyV2nat', 'FrequencyV2natUso','SpatialV2St3','TemporalV2J3'
+posclass = ['TemporalV3J3']#  , 'FrequencyV3St1', 'SpatialV3St1', 'TemporalV3J3','TemporalV3J4','TemporalV3J5'  , 'FrequencyV3St2'['SpatialV2'] # , 'toExport''Gap-fill', 'Spatial', 'Temporal', 'Frequency'
+version_process = ['21'] # '5','9','10','11', '12', '15', '16', '17'
+modelos = posclass
 for nmodel in modelos[:]:
     for vers in version_process[:]:
         lst_df = []
         for cc, path in enumerate(lst_paths[:]): 
             # if cc == 0 or cc == len(lst_paths) - 1:
             # print(" loading 🕙 >> ", path.split("/")[-1])      
-            partes = path.split('_')
+            partes = path.split("/")[-1].split('_')
             # print("numero de partes ", len(partes))
             version = partes[-2]
             posClass = None
-            if len(partes) > 9:
-                # classificador = partes[-4]
-                bacia = partes[-5]
-                classificador = partes[-3] # posClass
+            bacia = partes[3]
+            if len(partes) > 6:
+                # classificador = partes[-4]                
+                classificador = partes[5] # posClass
             else:
                 classificador = partes[-3]
-                bacia = partes[-4]
-
-            if nmodel == classificador and vers == version: 
+                # bacia = partes[-4]
+            # if int(version) == 15:
+            #     print(f" {len(partes)} | {bacia} classificador {nmodel} <> {classificador}| and {version} => {vers} >> {vers == version}")
+            if str(nmodel) in str(classificador) and str(vers) == str(version): 
+                print("rodando ")
                 namecol = path.split("/")[-1]    
-                df_CSV = pd.read_csv(path)
-                
+                df_CSV = pd.read_csv(path)                
                 df_CSV = df_CSV.drop(['system:index', ".geo"], axis=1)
                 # if cc == 0 or cc == len(lst_paths) - 1:
                 print(f" 📢 loading 🕙 {namecol} size = <{df_CSV.shape}> | model << {classificador} >> | bacia << {bacia} >> | vers {version}")
@@ -323,10 +325,10 @@ for nmodel in modelos[:]:
                 # add to list ofs Dataframes             
                 lst_df.append(df_CSV)
 
-
+        # sys.exit()
         # if cc > 10:
         #     break
-        if len(lst_df) > 0:
+        if len(lst_df) == 39:
             showPrints = False
             dfacc = pd.concat(lst_df, axis= 0)
             print("size dataframe modifies ", dfacc.shape)
@@ -343,8 +345,8 @@ for nmodel in modelos[:]:
             # classInic = [0 ,3,4, 9,10,12,15,18,21,22,27,29,33,50]
             # classFin  = [27,3,4,12,12,12,15,18,15,22,27,22,33, 3]
             # if nmodel in posclass:
-            classInic = [3,4, 9,10,12,15,18,21,22,27,33,50]
-            classFin  = [3,4,12,12,12,21,21,21,22,27,33, 3]
+            classInic = [3,4, 9,10,12,15,18,21,22,27,29,33,50]
+            classFin  = [3,4,12,12,12,21,21,21,22,27,22,33, 3]
             # concat_df['class'] = concat_df['class'].replace([0,1,2,3,4],[0,1,0,0,1])
             # Remap column values in inplace
             lstClassRef = []
@@ -366,14 +368,13 @@ for nmodel in modelos[:]:
 
             lstClassRef.sort(reverse=False)
             lstClassPred.sort(reverse=False) 
-            print(f" ⚠️ We have {lstClassRef} class from Refence Points ")
+            print(f" ⚠️ We have {lstClassRef} class from Refence Points {dfacc.shape}")
             print(f" ⚠️ We have {lstClassPred} class from Classifications Raster ")
 
             showPrints = True
             # sys.exit()                    
             if buildMetricsAcc: 
                 # Make Dataframe by Year and by Basin
-
                 lstBacias = []
                 lstYear = []
                 lstRegs = ['Caatinga'] + nameBacias                     
@@ -457,3 +458,10 @@ for nmodel in modelos[:]:
                 nameTablesGlob = f"regAggrementsAcc_{nmodel}_vers_{vers}_Col9.csv"
                 dfAggCalc.to_csv(pathOutpout + nameTablesGlob, index= False)
                 # sys.exit()
+
+
+    else:
+        print("  =================================================================")
+        print(f"    the model {nmodel} don´t have all basin , show here {39 - len(lst_df)}")
+        for dfBasin in lst_df:
+            print(dfBasin['bacia'].iloc[0])

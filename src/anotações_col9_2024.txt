@@ -20,7 +20,7 @@ ROIs no asset da coleção 9
 
 amostragem de campo 
     users/nerivaldogeo/pontos_campo_caatinga
-
+    projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/pontos_campo_caatinga_03_2024
 
 pontos de accuracias comparados contra as outras coleções 
 users/mapbiomascaatinga04/occTab_corr_Caatinga_mapbiomas_collection71_integration_v1
@@ -64,7 +64,8 @@ Documentação
     icons e colors
     https://coolsymbol.com/
     https://imagecolorpicker.com/color-code/9932cc
-
+    https://coolors.co/edffec-61e786-5e9f76-5a5766-48435c-9792e3
+    
     biblioteca de índices 
     https://eemont.readthedocs.io/en/latest/ 
 

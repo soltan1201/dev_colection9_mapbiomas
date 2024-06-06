@@ -24,22 +24,23 @@ sys.setrecursionlimit(1000000000)
 
 #nome das bacias que fazem parte do bioma
 nameBacias = [
-      '741', '7421','7422','744','745','746','751','752','7492',
-      '753', '754','755','756','757','758','759','7621','7622','763',
-      '764','765','766','767','771','772','773', '7741','7742','775',
-      '776','76111','76116','7612','7613','7614','7615','777','778',
-      '7616','7617','7618','7619'
+    '741', '7421','7422','744','745','746','751','752','7492',
+    '753', '754','755','756','757','758','759','7621','7622','763',
+    '764','765','766','771','772','773', '7741','7742','775',
+    '776','76111','76116','7612','7613','7614','7615','777',
+    '778','7616','7617','7618', '7619', '767'
 ] 
 classMapB = [ 0, 3, 4, 5, 6, 9,11,12,13,15,18,19,20,21,22,23,24,25,26,29,30,31,32,33,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,62]
 classNew =  [27, 3, 4, 3, 3, 3,12,12,12,21,21,21,21,21,22,22,22,22,33,29,22,33,12,33,21,33,33,21,21,21,21,21,21,21,21,21,21, 4,12,21]
 param = {
     # 'inputAsset': path + 'class_filtered_Tp',   
     'assetCol': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVX" ,
-    'assetColprob': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVP" ,
-    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fill',
+    'assetColprob': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVY" ,
+    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fillV2',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Spatial',
-    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Temporal',
-    'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Frequency',
+    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/SpatialV3',
+    'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/TemporalV3',
+    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/FrequencyV3',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport',
     'asset_Map' : "projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1",
     # 'asset_Map': 'projects/mapbiomas-workspace/public/collection7_1/mapbiomas_collection71_integration_v1',
@@ -49,7 +50,7 @@ param = {
     'isImgCol': True,  
     'remapRaster': True,
     'inBacia': True,
-    'version': 13,
+    'version': 21,
     'sufixo': '_Cv', 
     'assetBiomas': 'projects/mapbiomas-workspace/AUXILIAR/biomas_IBGE_250mil', 
     'biome': 'CAATINGA', 
@@ -59,10 +60,11 @@ param = {
     'year_end': 2023,
     'driverFolder': 'AREA-EXPORT-COL9', 
     'lsClasses': [3,4,12,15,18,21,22,33],
-    'changeAcount': True,
+    'changeAcount': False,
     'numeroTask': 0,
     'numeroLimit': 37,
     'conta' : {
+        # '0': 'caatinga04',
         '0': 'solkanGeodatin'
     }
 }
@@ -191,8 +193,25 @@ if param['isImgCol']:
     if isFilter:
         imgsMaps = ee.ImageCollection(param['assetFilters'])
         if 'Temporal' in param['assetFilters']:
-            imgsMaps = imgsMaps.filter(ee.Filter.neq('janela', 4))
-            subfolder += '_J4'
+            imgsMaps = imgsMaps.filter(ee.Filter.eq('janela', 4))
+            subfolder += 'J4'
+            print(imgsMaps.size().getInfo())
+            # idList = imgsMaps.reduceColumns(ee.Reducer.toList(), ['system:index']).get('list').getInfo()
+            # for ids in idList:
+            #     print("    ", ids)
+        if 'Spatial' in param['assetFilters']:
+            imgsMaps = imgsMaps.filter(ee.Filter.eq('step', 1))
+            subfolder += 'St1'
+            # print(imgsMaps.size().getInfo())
+        if 'Frequency' in param['assetFilters']:
+            # neq ==>  'nat'   e  eq ===>  natUso
+            # imgsMaps = imgsMaps.filter(ee.Filter.eq('type_filter', 'frequence_natUso'))
+            imgsMaps = imgsMaps.filter(ee.Filter.eq('step', 1))
+            # print(imgsMaps.size().getInfo())
+            # print(imgsMaps.aggregate_histogram('version').getInfo())
+            subfolder += 'St1'
+        # sys.exit()
+
     else:
         if int(version) > 6:  # 
             imgsMaps = ee.ImageCollection(param['assetColprob'])# .select(lstBands)

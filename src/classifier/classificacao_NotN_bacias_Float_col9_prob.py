@@ -403,11 +403,11 @@ param = {
     'sufix': "_01",    
     'lsBandasMap': [],
     'numeroTask': 6,
-    'numeroLimit': 42,
+    'numeroLimit': 9,
     'conta' : {
         '0': 'caatinga01',
-        '2': 'caatinga02',
-        '14': 'caatinga03',
+        '3': 'caatinga02',
+        '6': 'caatinga03',
         '21': 'caatinga04',
         '28': 'caatinga05',        
         '35': 'solkan1201',
@@ -525,7 +525,7 @@ def gerenciador(cont):
         gee.tasks(n= param['numeroTask'], return_list= True)        
     
     elif cont > param['numeroLimit']:
-        cont = 0
+        return 0
     
     cont += 1    
     return cont
@@ -578,6 +578,7 @@ def process_reduce_ROIsXclass(featColROIs, featColROIsbase ,lstclassVal, dfProp,
     }
     nFeatColROIs = ee.FeatureCollection([])
     lstBac21 = ["76111","76116","7742","757","758","759","771","772","773","775","776","777"]
+    # lstBac3 = ['766', '776', '764', '765', '7621', '744']
     for ccclass in lstclassVal:
         # print("classse ", ccclass)
         if ccclass in [15, 18]:
@@ -607,6 +608,9 @@ def process_reduce_ROIsXclass(featColROIs, featColROIsbase ,lstclassVal, dfProp,
         if str(mbacia) in ['754','756', '7614','7421'] and ccclass == 4:
             valpropCC = 0.2
             dictQtLimit[ccclass] = 1300
+        if str(mbacia) in ['753', '752'] and ccclass == 4:
+            valpropCC = 0.2
+            dictQtLimit[ccclass] = 800
         # print(" valpropCC ", valpropCC)
         tmpROIs = featColROIs.filter(ee.Filter.eq('class', int(ccclass))).randomColumn('random')
         threhold = ee.Number(dictQtLimit[ccclass]).multiply(valpropCC).divide(tmpROIs.size())
@@ -1031,28 +1035,21 @@ arqFeitos = open(path_MGRS, 'a+')
 # sys.exit()
 
 # 100 arvores
-nameBacias = [
-    # '744','745','741', '7422','746','7492','751','752','753',
-    # '754','756',
-    #  '755',
-    # '757','758',
-    # '759','7621','7622','763','764',
-    # '765', '766','767','771', '772', '773', '7741','776','7742',
-    # '775','777','778','76111','76116','7612',
-    '7614','7421',
-    # '7615','7616',
-    # '7617','7618','7619', '7613'
-]
 # nameBacias = [
-#     '766', '772', '773', '7741', '7742', '776', '777', '778', 
-#     '76111', '76116', '7612', '7615', '7616', '7617', '7618', 
-#     '7619', '7613'
+    # '744','745','741', '7422','746','7492','751','752','753',
+    # '754','756', '755', '757','758', '759','7621','7622','763','764',
+    # '765', '766','767','771', '772', '773', '7741','776','7742',
+    # '775','777','778','76111','76116','7612', '7614','7421',
+    # '7615','7616', '7617','7618','7619', '7613'
 # ]
+nameBacias = [
+    '752', '766', '776', '764', '765', '7621', '744', '753'
+]
 
 modelo = "GTB"# "GTB"# "RF"
 knowMapSaved = False
 listBacFalta = []
-cont = 14
+cont = 0
 # cont = gerenciador(cont)
 for _nbacia in nameBacias[:]:
     if knowMapSaved:

@@ -59,8 +59,7 @@ class processo_filterReshapeFlorest(object):
     # https://code.earthengine.google.com/85a553702bd936707b6e9e5aa3321841
     def applyReshapeFlorest(self):
 
-        mapClassCol = ee.Image().byte()
-        
+        mapClassCol = ee.Image().byte()        
         maskFlorRec = ee.Image.constant(0);
         contFlorest = ee.Image.constant(0);
         contSavana = ee.Image.constant(0);
@@ -75,8 +74,7 @@ class processo_filterReshapeFlorest(object):
             contSavana = contSavana.add(mapYeartmp.eq(4).multiply(maskFlorRec.gt(0)));
           
 
-            if cc + 1 >= self.limitYear: 
-                
+            if cc + 1 >= self.limitYear:                 
                 maskcomparativa = contFlorest.gt(contSavana);  # incluir todos estes pixeis
                 # registrando pixels com algum pixel que não é nem Floresta nem Savana
                 pixelsExcluidos = maskFlorRec.gt(0).multiply(self.limitYear).subtract(contFlorest.add(contSavana))
@@ -120,6 +118,69 @@ class processo_filterReshapeFlorest(object):
         img_output = ee.Image.cat(mapClassCol)
         name_toexport = 'filterRS_BACIA_'+ str(self.id_bacias) + "_V" + self.versionRS
         self.processoExportar(img_output, name_toexport) 
+
+    def applyReshapeFlorest(self):
+
+        mapClassCol = ee.Image().byte()        
+        maskFlorRec = ee.Image.constant(0);
+        contFlorest = ee.Image.constant(0);
+        contSavana = ee.Image.constant(0);
+        for bandaAct in self.lstbandNames[: self.limitYear]:
+            mapFloresttmp = self.imgClass.select(bandaAct)
+            maskFlorest = mapFloresttmp.eq(3)
+            maskFlorRec = maskFlorRec.add(maskFlorest)
+
+        for cc, bandaAct in enumerate(self.lstbandNames[:]):
+            mapYeartmp = copy.deepcopy(self.imgClass.select(bandaAct))
+            contFlorest = contFlorest.add(mapYeartmp.eq(3).multiply(maskFlorRec.gt(0)));
+            contSavana = contSavana.add(mapYeartmp.eq(4).multiply(maskFlorRec.gt(0)));
+          
+
+            if cc + 1 >= self.limitYear:                 
+                maskcomparativa = contFlorest.gt(contSavana);  # incluir todos estes pixeis
+                # registrando pixels com algum pixel que não é nem Floresta nem Savana
+                pixelsExcluidos = maskFlorRec.gt(0).multiply(self.limitYear).subtract(contFlorest.add(contSavana))
+                # adicionar pixeis que não sao da classe 3 ou 4 e coloca os de savana maior
+                pixelsExcluidos = pixelsExcluidos.add(contSavana.gt(contFlorest)).gt(0); 
+                bandaBefore = self.lstbandNames[cc - 1]
+                # seleção da floresta dos ultimos 2 anos
+                florestUlt2YY = self.imgClass.select(bandaBefore).eq(3).add(mapYeartmp.eq(3))
+                florestUlt2YY = florestUlt2YY.eq(2).add(maskcomparativa).gt(0)
+                florestUlt2YY = florestUlt2YY.subtract(pixelsExcluidos).gt(0)   
+
+                if cc  < self.limitYear:                    
+
+                    for nbandaAct in self.lstbandNames[: self.limitYear]:
+                        print("processing retroactivo band = ", nbandaAct)
+                        mapYeartmp = self.imgClass.select(nbandaAct)
+                        # incluido floresta 
+                        # mapYeartmp = mapYeartmp.where(florestUlt2YY.eq(1), florestUlt2YY.multiply(3))
+                        # excluindo floresta e incluindo savana
+                        mapYeartmp = mapYeartmp.where(pixelsExcluidos.eq(1), pixelsExcluidos.multiply(4))
+                        mapClassCol = mapClassCol.addBands(mapYeartmp.rename([nbandaAct]))
+
+                else:
+                    print("processing band = ", bandaAct)
+                    
+                    mapYeartmp = mapYeartmp.where(florestUlt2YY.eq(1), florestUlt2YY.multiply(3))
+                    mapYeartmp = mapYeartmp.where(pixelsExcluidos.eq(1), pixelsExcluidos.multiply(4))
+                    mapClassCol = mapClassCol.addBands(mapYeartmp.rename([bandaAct]))
+                    # print(mapClassCol.bandNames().getInfo())
+
+        mapClassCol = mapClassCol.select(self.lstbandNames).clip(self.geom_bacia)
+        mapClassCol = mapClassCol.set(
+                            'version',  self.versionRS, 
+                            'biome', 'CAATINGA',
+                            'type_filter', 'frequence',
+                            'collection', '8.0',
+                            'id_bacia', self.id_bacias,
+                            'sensor', 'Landsat',
+                            'system:footprint' , self.imgClass.get('system:footprint')
+                        )
+        img_output = ee.Image.cat(mapClassCol)
+        name_toexport = 'filterRS_BACIA_'+ str(self.id_bacias) + "_V" + self.versionRS
+        self.processoExportar(img_output, name_toexport) 
+
 
     ##### exporta a imagem classificada para o asset  ###
     def processoExportar(self, mapaRF,  nomeDesc):

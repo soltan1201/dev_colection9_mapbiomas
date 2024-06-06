@@ -35,7 +35,7 @@ class processo_gapfill(object):
             'output_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fillV2/',
             # 'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVP/',
             'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVX/',
-            'input_asset_prob': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVP/',  # ClassVY
+            'input_asset_prob': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVY/',  # ClassVY
             # 'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/POS-CLASS/misto/',
             'inputAsset8': 'projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1',
             'asset_bacias_buffer' : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/bacias_hidrograficaCaatbuffer5k',
@@ -62,6 +62,7 @@ class processo_gapfill(object):
         # self.name_imgClass = 'BACIA_' + nameBacia + '_RF_col8'
         # BACIA_776_GTB_col9-v9
         self.name_imgClass = 'BACIA_' + nameBacia + '_'+ modelo + '_col9-v' + str(self.version )
+        print("processing image ", self.name_imgClass)
         # self.name_imgClass = 'BACIA_corr_mista_' + nameBacia + '_V2'       
         self.imgMap8 = ee.Image(self.options['inputAsset8']).clip(self.geom_bacia)
         if int(self.version) > 6:  # 
@@ -213,9 +214,9 @@ param = {
     'numeroTask': 6,
     'numeroLimit': 42,
     'conta' : {
-        # '0': 'caatinga01',
-        # '7': 'caatinga02',
-        '0': 'caatinga03',
+        '0': 'caatinga01',
+        '7': 'caatinga02',
+        '14': 'caatinga03',
         '9': 'caatinga04',
         '18': 'caatinga05',        
         '27': 'solkan1201', 
@@ -247,22 +248,28 @@ def gerenciador(cont):
     return cont
 
 
-listaNameBacias = [
+# listaNameBacias = [
     # '744','741','7422','745','746','7492','751','752','753',
     # '755','759','7621','7622',     
-    # '763','764','765','766','767', '771', '772','773','7741',
-    # '776','7742','775',
-    # '777','778','76111','76116','7612','7613','7615','7616',
-    '7617','7618','7619'
+    # '763','764','765',766','767', '771', '772','773','7741',
+    # '776',#'7742','775','777', '778',
+    # '76111','76116','7612','7613','7615','7616',
+    # '7617','7618','7619'
     # '754','756','757','758', '7614', '7421',
 
-]
+# ]
 # listaNameBacias = [
 #     '754','756','757','758',
 # ]
+listaNameBacias = [
+    '744',
+    # '752', '766', '776', '764', 
+    # '765', '7621',  '753'
+]
+
 models = "GTB"  # "RF", "GTB"
-versionMap= 13
-cont = 7
+versionMap= 15
+cont = 14
 for idbacia in listaNameBacias[:]:
     print("-----------------------------------------")
     print("----- PROCESSING BACIA {} -------".format(idbacia))

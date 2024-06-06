@@ -8,6 +8,7 @@ DISTRIBUIDO COM GPLv2
 import os
 import glob 
 import sys
+import time
 import math
 import pandas as pd
 import numpy as np
@@ -30,8 +31,10 @@ nameBacias = [
       '7616','7617','7618','7619'
 ]
 modelos = ['GTB']# ,'RF'
-posclass = ['Frequency'] # , 'Gap-fill', 'Spatial', , 'Temporal','toExport'
-modelos += posclass
+# , 'Gap-fill', 'Spatial','Frequency' , 'Temporal','toExport', 
+# 'Gap-fillV2','SpatialV2St1', 'FrequencyV2nat','FrequencyV2natUso','SpatialV2St3','TemporalV2J3'
+posclass = ['TemporalV3J3'] #, 'FrequencyV3St1' , 'SpatialV3St1', 'TemporalV3J3','TemporalV3J4','TemporalV3J5' 
+modelos = posclass
 # get dir path of script 
 npath = os.getcwd()
 # get dir folder before to path scripts 
@@ -39,14 +42,13 @@ npath = str(Path(npath).parents[1])
 print("path of CSVs Rois is \n ==>",  npath)
 pathcsvsMC = os.path.join(npath,'dados')
 pathcsvsMC = os.path.join(pathcsvsMC, 'conf_matrix')
-version_process = ['13'] # '5','9','10','11','12', 
+version_process = ['21'] # '5','9','10','11','12', '13, '15','16','17', '20'
 lstfilesCSVs = glob.glob(pathcsvsMC + '/*.csv')
-for model in modelos:
+for model in posclass:
     lstDF_models = []
     for vers in version_process:
         for cc, pathfile in enumerate(lstfilesCSVs):        
-            if model in pathfile:
-                
+            if model in pathfile and "_" + vers + '.csv' in pathfile:                
                 namefile = pathfile.split("/")[-1]
                 partes = namefile.split("_")
                 nbacia = partes[1]
@@ -62,11 +64,15 @@ for model in modelos:
                 dftmp['model'] = [model] * dftmp.shape[0]
                 dftmp['version'] = [version] * dftmp.shape[0]
                 dftmp['year'] = [yyear] * dftmp.shape[0]
-                print(dftmp)
+                # print(dftmp)
                 lstDF_models.append(dftmp)
-
-        nametable = 'Matrices_Confusion_model_' + model + '_vers_'+ str(vers) +'.csv'
-        dfModels = pd.concat(lstDF_models, axis=0, ignore_index=True)
-        pathExp = npath + '/dados/globalTables/' + nametable
-        dfModels.to_csv(pathExp)
-        print(f" we save the table {nametable} with {dfModels.shape} shapes")
+        
+        print("list tables  ",  len(lstDF_models))  # 1520
+        time.sleep(1)
+        # sys.exit()
+        if len(lstDF_models) >= 1000:        
+            nametable = 'Matrices_Confusion_model_' + model + '_vers_'+ str(vers) +'.csv'
+            dfModels = pd.concat(lstDF_models, axis=0, ignore_index=True)
+            pathExp = npath + '/dados/globalTables/' + nametable
+            dfModels.to_csv(pathExp)
+            print(f" we save the table {nametable} with {dfModels.shape} shapes")
