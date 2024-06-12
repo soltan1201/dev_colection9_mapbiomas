@@ -102,8 +102,8 @@ listaNameBacias = [
 lstBands = ['classification_' + str(yy) for yy in range(param['year_first'], param['year_end'])]
 print(" lista de bandas ", lstBands)
 
-sys.exit()
-countFix = 16
+
+cont = 0
 processExport = False
 metadados = {}
 bioma5kbuf = ee.FeatureCollection(param['asset_caat_buffer']).geometry()
@@ -111,25 +111,26 @@ imgColExp = ee.ImageCollection(param['inputAsset']).filter(
                                             ee.Filter.eq('version', 22)).select(lstBands)
 numMaps = imgColExp.size().getInfo()
 print(f' We have {numMaps} imagens maps by basin in this asset')
-print("lista de bandas da imagem min \n ", imgColExp.bandNames().getInfo())
+print("lista de bandas da imagem min \n ", imgColExp.first().bandNames().getInfo())
 
 imgColExpNew = ee.ImageCollection(param['inputAsset']).filter(
                                             ee.Filter.eq('version', 24))
 print(f' We have {imgColExpNew.size().getInfo()} imagens maps by basin in this asset')
-
-
+print(f" and {imgColExpNew.first().bandNames().getInfo()} bandas ")
 
 for id_bacia in listaNameBacias:
     geomBacia = ee.FeatureCollection(param['asset_bacias_buffer']).filter(
                                 ee.Filter.eq('nunivotto3', id_bacia)).first().geometry()
 
     imgBacia_parte1 = imgColExp.filter(ee.Filter.eq('id_bacia', id_bacia)).first()
-    print("loading ", imgBacia_parte1.get('system:index').getInfo())    
+    # print("loading ", imgBacia_parte1.get('system:index').getInfo())    
     
     imgBacia_parte2 = imgColExpNew.filter(ee.Filter.eq('id_bacia', id_bacia)).first()
-    print("loading ", imgBacia_parte2.get('system:index').getInfo())    
+    # print("loading ", imgBacia_parte2.get('system:index').getInfo())    
 
-    imgBacia_parte1 = imgBacia_parte1.addBands(imgBacia_parte2)         
+    imgBacia_parte1 = imgBacia_parte1.addBands(imgBacia_parte2.select('classification_2023'))      
+    # print(f" and {imgBacia_parte1.first().bandNames().getInfo()} bandas ")
+
     imgBacia_parte1 = imgBacia_parte1.set(
                         'version', 25, 'biome', 'CAATINGA',
                         'collection', '9.0', 'id_bacia', id_bacia,
@@ -137,6 +138,6 @@ for id_bacia in listaNameBacias:
                         'from', 'mixed', 'model', 'GTB', 'janela', 5, 
                         'system:footprint', geomBacia
                     )
-
+    cont = gerenciador(cont, param) 
     nameExp = f"BACIA_{id_bacia}_mixed_V25"
     processoExportar(imgBacia_parte1,  nameExp, geomBacia)

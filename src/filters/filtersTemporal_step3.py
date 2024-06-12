@@ -41,14 +41,14 @@ class processo_filterTemporal(object):
             'asset_bacias_buffer' : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/bacias_hidrograficaCaatbuffer5k',            
             'last_year' : 2023,
             'first_year': 1985,
-            'janela' : 5,
+            'janela' : 3,
             'step': 1
         }
 
     def __init__(self):
         # self.id_bacias = nameBacia
-        self.versoutput = 22
-        self.versionInput = 22
+        self.versoutput = 38
+        self.versionInput = 38
         self.geom_bacia = ee.FeatureCollection(self.options['asset_bacias_buffer'])#.filter(
                                                     # ee.Filter.eq('nunivotto3', nameBacia)).first().geometry()              
         self.years = [yy for yy in range(self.options['first_year'], self.options['last_year'] + 1)]  # ,  - 1, -1
@@ -56,9 +56,11 @@ class processo_filterTemporal(object):
         self.lstbandNames = ['classification_' + str(yy) for yy in range(self.options['last_year'], self.options['first_year'] - 1, -1)]
         
         print("lista de anos ", self.years)
+        self.lstBandFinal =  ['classification_' + str(yy) for yy in self.years]
+        print("lista de anos ", self.lstBandFinal)
         # self.ordem_exec_first = [4,21,4,3,12] #
         # self.ordem_exec_last = [12]  # 29
-        self.ordem_exec_middle = [21,4,3,12] # ,33, 22,      
+        self.ordem_exec_middle = [4] # ,33, 22,      21,4,3,12
 
         self.colectAnos = [self.mapeiaAnos(
                                 ano, self.options['janela'], self.years) for ano in self.years]
@@ -74,7 +76,7 @@ class processo_filterTemporal(object):
         #     print(cc, " <> ",dictYY[str(cc)])
         #     self.colectAnos.append(dictYY[str(cc)])
 
-
+        # sys.exit()
     ################### CONJUNTO DE REGRAS PARA CONSTRUIR A LISTA DE BANDAS ##############
     def regra_primeira(self, jan, delt, lstYears):
         return lstYears[1 : delt + 1] + [lstYears[0]] + lstYears[delt + 1 : jan]
@@ -181,7 +183,7 @@ class processo_filterTemporal(object):
         # print("imagem bandas Out ", img_out.bandNames().getInfo())
         return img_out
 
-    def applyTemporalFilter(self, id_bacias): 
+    def applyTemporalFilter(self, id_bacias, nmodel): 
 
         if "Temporal" in self.options['input_asset']:
             name_imgClass = 'filterTP_BACIA_'+ str(id_bacias) + f"_GTB_J{self.options['janela'] - 1}_V" + str(self.versoutput) 
@@ -193,15 +195,15 @@ class processo_filterTemporal(object):
             imgClass = ee.ImageCollection(self.options['input_asset']).filter(
                                     ee.Filter.eq('id_bacia', id_bacias)).filter(
                                         ee.Filter.eq('version',  self.versionInput)).filter(
-                                            # ee.Filter.eq('step', self.options['step'])).first()  # self.options['step']
-                                                ee.Filter.eq('filter', 'spatial_use')).first()
+                                            ee.Filter.eq('model', nmodel)).first()    #.filter(  # self.options['step']
+                                                # ee.Filter.eq('filter', 'spatial_use')).first()
         # name_imgClass = 'filterFQ_BACIA_'+ str(id_bacias) + "_V" + str(self.versionTP)
 
         
         # print(imgClass.size().getInfo())
         print("loading ", imgClass.get('system:index').getInfo()) #.bandNames()
         # self.colectAnos = self.colectAnos[1:]
-        # sys.exit()
+        
         # print(" --------- lista de bandas -------------\n", self.colectAnos)
         if self.options['janela'] == 3:
             for id_class in self.ordem_exec_middle[:]:
@@ -210,7 +212,7 @@ class processo_filterTemporal(object):
                 print("processing class {} == janela {} ".format(id_class, self.options['janela'] )) 
 
                 for cc, lstyear in enumerate(self.colectAnos):
-                    # print("  => ", lstyear)
+                    print("  => ", lstyear)
                     if cc == 0:                        
                         # print(f" #{cc} show bands ", imgClass.select(lstyear).bandNames().getInfo())                     
                         imgtmp = self.mask_3_years(id_class, imgClass.select(lstyear))
@@ -225,7 +227,8 @@ class processo_filterTemporal(object):
                     
                     imgOutput = imgOutput.addBands(imgtmp)
                     # time.sleep(3)
-                imgOutput = imgOutput.select(self.lstbandNames)
+                # sys.exit()
+                imgOutput = imgClass.select(self.lstBandFinal[:-1]).addBands(imgOutput.select(['classification_2023']))
                 imgClass = imgOutput
                 # print("comprovando o número de bandas \n ====>", len(imgOutput.bandNames().getInfo()))
                 # sys.exit()
@@ -364,7 +367,7 @@ class processo_filterTemporal(object):
         # imageFilledConnected = imgClass.addBands(
         #                             imgClass.connectedPixelCount(10, True).rename(lst_band_conn))
         geom = self.geom_bacia.filter(ee.Filter.eq('nunivotto3', id_bacias)).first().geometry()
-
+        print(imgClass.bandNames().getInfo())
         imageFilledConnected = imgClass.set(
                             'version',  self.versoutput, 
                             'biome', 'CAATINGA',
@@ -372,12 +375,12 @@ class processo_filterTemporal(object):
                             'collection', '9.0',
                             'id_bacia', id_bacias,
                             'janela', self.options['janela'],
-                            'sensor', 'Landsat', 'model', 'GTB',
+                            'sensor', 'Landsat', 'model',nmodel ,
                             'system:footprint' , geom
                         )
         imageFilledConnected = ee.Image.cat(imageFilledConnected).clip(geom)
         
-        name_toexport = 'filterTP_BACIA_'+ str(id_bacias) + f"_GTB_J{self.options['janela']}_V" + str(self.versoutput)
+        name_toexport = 'filterTP_BACIA_'+ str(id_bacias) + f"_{nmodel}_J{self.options['janela']}_V" + str(self.versoutput)
         self.processoExportar(imageFilledConnected, name_toexport, geom)    
         # sys.exit()
 
@@ -407,15 +410,14 @@ param = {
     'numeroLimit': 42,
     'conta' : {
         '0': 'caatinga01',
-        '3': 'caatinga02',
-        '6': 'solkanGeodatin',
-        '9': 'solkan1201', 
-        '12': 'caatinga05',
-        '8': 'caatinga04',        
-           
-        
-        '4': 'caatinga03',
-        #'37': 'diegoUEFS'    
+        '4': 'caatinga02',
+        '6': 'caatinga03',
+        '8': 'caatinga04',
+        '10': 'caatinga05',        
+        '12': 'solkan1201',    
+        '14': 'solkanGeodatin',
+        '16': 'diegoUEFS' ,
+        '18': 'superconta'      
     }
 }
 
@@ -443,7 +445,7 @@ def gerenciador(cont):
 
 
 listaNameBacias = [
-   '744','754','741','7421','7422','745','746','7492','751','752',
+   '744','754','741','7421', '7422','745','746','7492','751','752',
    '753','755','758','759','7621','7622','764','765','766',
    '767','771','772','7741','7742','773','775', '777', '778',
    '76111','76116','7612','7614','7615','7616','7617','7618','7619', 
@@ -470,18 +472,19 @@ aplicando_TemporalFilter = processo_filterTemporal()
 # for cc, lst in enumerate(aplicando_TemporalFilter.colectAnos):
 #     print(1985 + cc, lst)
 # 
-input_asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/SpatialV3/'
-# input_asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/TemporalV3/'
-version = 24
-janela = 5
-cont = 9
+# input_asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/SpatialV3/'
+input_asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/TemporalV3/'
+version = 30
+janela = 3
+cont = 0
+modelo = "GTB"
 listBacFalta = []
-knowMapSaved = True
+knowMapSaved = False
 for cc, idbacia in enumerate(listaNameBacias[:]):   
     if knowMapSaved:
         try:
             if 'Spatial' in input_asset:
-                nameMap = 'filterSPU_BACIA_' + idbacia + "_GTB_V" + str(version)
+                nameMap = 'filterSPU_BACIA_' + idbacia + f"_{modelo}_V" + str(version)
             else:
                 nameMap = 'filterTP_BACIA_'+ idbacia + f"_GTB_J{janela}_V" + str(version)
             print(input_asset + nameMap)
@@ -495,7 +498,7 @@ for cc, idbacia in enumerate(listaNameBacias[:]):
         if idbacia not in lstBacias:
             cont = gerenciador(cont)
             print("----- PROCESSING BACIA {} -------".format(idbacia))        
-            aplicando_TemporalFilter.applyTemporalFilter(idbacia)
+            aplicando_TemporalFilter.applyTemporalFilter(idbacia, modelo)
 
 
 if knowMapSaved:

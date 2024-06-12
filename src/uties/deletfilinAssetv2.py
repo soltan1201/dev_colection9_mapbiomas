@@ -11,11 +11,12 @@ except:
     print("Unexpected error:", sys.exc_info()[0])
     raise
 
-# asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fill'
-asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport'
-# asset = "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVP"
-# asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/FrequencyV2' #/filterFQnu_BACIA_776_V15
+# asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fillV2'
 # asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/TemporalV3'
+# asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport'
+# asset = "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVP"
+# asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/FrequencyV3' #/filterFQnu_BACIA_776_V15
+asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/SpatialV3'
 # lsBacias = [
     # '741','7421','7422','744','745','746','7492','751','752','753',
     # '754','755','756','757','758','759','7621','7622', '763','764',
@@ -25,11 +26,11 @@ asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport
     # '765','766','767','772','773','7741','7742','776',
     # '778','7612','7613','7615','7617'
 # ]
-lsBacias = ['757', '758', '759', '76111', '76116', '771', '772', '773']
+lsBacias = ['7421','7422','746','751','752','754','7622','766','7741','7614','7615','7616']
 
 
 imgCol = ee.ImageCollection(asset).filter(
-                ee.Filter.eq('version', 22)).filter(
+                ee.Filter.eq('version', 39)) .filter(
                     # ee.Filter.eq('filter', 'spatial_use'))#.filter(
                     ee.Filter.inList('id_bacia', lsBacias))
 lst_id = imgCol.reduceColumns(ee.Reducer.toList(), ['system:index']).get('list').getInfo()

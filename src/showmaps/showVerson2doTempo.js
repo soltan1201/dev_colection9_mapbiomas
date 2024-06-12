@@ -61,7 +61,7 @@ var param = {
     asset_Spatial : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/SpatialV3', 
     asset_Temporal : 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/TemporalV3', 
     assset_Frequency: 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/FrequencyV3',
-    assset_Estavel: 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Estavel',
+    asset_Estavel: 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Estavel',
     asset_mixed: 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport',
     asset_mata_atlantica: 'projects/mapbiomas-workspace/COLECAO9/pos_classificacao-ma/MA_col9_p10e_v135',
     asset_baciasN1raster: 'projects/mapbiomas-workspace/AUXILIAR/bacias-nivel-1-raster',
@@ -120,6 +120,8 @@ function get_layerIncidentes (mapYY71, mapYY80, mapYY90){
     
     return outMaps
 }
+var showposClass = false;
+var calcAggrement = false;
 var showErrorsAcc = false;
 var selBacia = 'all';
 var baciaProcura = '757';
@@ -127,7 +129,7 @@ var yearcourrent = 2020;
 var lstYearshow = [2020,2022]
 var modelo = "GTB";
 var version = 30;
-var newvers = 16;
+var newvers = 25;
 var incluieMA = true;
 var assetCol9 = param.asset_MapC9X;
 if (version > 5){
@@ -162,11 +164,7 @@ var imgMapCol71= ee.Image(param.assetMapC7).updateMask(biomaRaster)
                         .select(bandas_activas);
 var imgMapCol8= ee.Image(param.assetMapC8).updateMask(biomaRaster)
                         .select(bandas_activas);
-var lstVer15inic = [
-                '7421','754','756','757','758','7614','766',
-                '752', '766', '776', '764','765', '7621', '744', 
-                '753'
-        ];
+
 var imgMapCol9GTB =  ee.ImageCollection(param.asset_MapC9Y)
                             .filter(ee.Filter.eq('version', version))
                             .filter(ee.Filter.eq("classifier", 'GTB'))
@@ -177,40 +175,43 @@ var imgMapCol9RF = ee.ImageCollection(param.asset_MapC9Y)
                       .filter(ee.Filter.eq("classifier", "RF"))
                       .select(bandas_activas);
 
-print("  imgMapCol9GTB ", imgMapCol9GTB);
-var imgMapCol9GF = ee.ImageCollection(param.asset_Gapfill)
-                        .filter(ee.Filter.eq('version', 18))
-                        .select(bandas_activas);
-print(" know metadata from imgMapCol Gapfill ", imgMapCol9GF);
-var imgMapCol9FQ = ee.ImageCollection(param.assset_Frequency)
-                        .filter(ee.Filter.eq('version', version))
-                        // .filter(ee.Filter.eq('type_filter', 'frequence'))
-                        .select(bandas_activas);
+var imgMapColEstavel = ee.ImageCollection(param.asset_Estavel)
+                            .filter(ee.Filter.eq('version', version))
+                            .filter(ee.Filter.eq("model", 'GTB'))
+                            .select(bandas_activas);                      
 
-var imgMapCol9SPstp1 = ee.ImageCollection(param.asset_Spatial)
-                        .filter(ee.Filter.eq('version', version))
-                        .filter(ee.Filter.eq('step', 1))
-                        .select(bandas_activas);
-print("spacial step 1", imgMapCol9SPstp1)
-var imgMapCol9TP = ee.ImageCollection(param.asset_Temporal)
-                        .filter(ee.Filter.eq('version', version))
-                        // .filter(ee.Filter.neq('janela', 3))
-                        .select(bandas_activas);
-var imgMapCol9TPJ3 = ee.ImageCollection(param.asset_Temporal)
-                        .filter(ee.Filter.eq('version', version))
-                        .filter(ee.Filter.neq('janela', 3))
-                        .select(bandas_activas);            
-var imgMapCol9TPJ4 = ee.ImageCollection(param.asset_Temporal)
-                        .filter(ee.Filter.eq('version', version))
-                        .filter(ee.Filter.neq('janela', 4))
-                        .select(bandas_activas); 
+if (showposClass){
+    print(" know metadata from imgMapCol Gapfill ", imgMapCol9GF);
+    var imgMapCol9FQ = ee.ImageCollection(param.assset_Frequency)
+                            .filter(ee.Filter.eq('version', version))
+                            // .filter(ee.Filter.eq('type_filter', 'frequence'))
+                            .select(bandas_activas);
 
-var imgMapCol9TPJ5 = ee.ImageCollection(param.asset_Temporal)
-                        .filter(ee.Filter.eq('version', version))
-                        .filter(ee.Filter.neq('janela', 5))
-                        .select(bandas_activas); 
+    var imgMapCol9SPstp1 = ee.ImageCollection(param.asset_Spatial)
+                            .filter(ee.Filter.eq('version', version))
+                            .filter(ee.Filter.eq('step', 1))
+                            .select(bandas_activas);
+    print("spacial step 1", imgMapCol9SPstp1)
+    var imgMapCol9TP = ee.ImageCollection(param.asset_Temporal)
+                            .filter(ee.Filter.eq('version', version))
+                            // .filter(ee.Filter.neq('janela', 3))
+                            .select(bandas_activas);
+    var imgMapCol9TPJ3 = ee.ImageCollection(param.asset_Temporal)
+                            .filter(ee.Filter.eq('version', version))
+                            .filter(ee.Filter.neq('janela', 3))
+                            .select(bandas_activas);            
+    var imgMapCol9TPJ4 = ee.ImageCollection(param.asset_Temporal)
+                            .filter(ee.Filter.eq('version', version))
+                            .filter(ee.Filter.neq('janela', 4))
+                            .select(bandas_activas); 
 
-
+    var imgMapCol9TPJ5 = ee.ImageCollection(param.asset_Temporal)
+                            .filter(ee.Filter.eq('version', version))
+                            .filter(ee.Filter.neq('janela', 5))
+                            .select(bandas_activas); 
+}
+var imgExport = ee.ImageCollection(param.asset_mixed)
+                    .filter(ee.Filter.eq('version', 25))
 
 var Mosaicos = ee.ImageCollection(param.assetIm).filter(
                         ee.Filter.eq('biome', 'CAATINGA')).select(param.bandas);
@@ -243,20 +244,23 @@ var imgMapCol9TPJ3join = null;
 var imgMapCol9TPJ4join = null;
 var imgMapCol9TPJ5join = null;
 var imgMapmixedJoin = null;
+var imgMapColEstavelJoin = null;
 var ptosfromBacia = null;
 
 
 if (selBacia === 'all'){
     imgMapCol9RFjoin = imgMapCol9RF.min().updateMask(biomaRaster);  
-    imgMapCol9GTBjoin = imgMapCol9GTB.min().updateMask(biomaRaster);     
-    imgMapCol9GFjoin = imgMapCol9GF.min().updateMask(biomaRaster);                           
-    imgMapCol9SPstp1join = imgMapCol9SPstp1.min().updateMask(biomaRaster);
-    imgMapCol9FQjoin = imgMapCol9FQ.min().updateMask(biomaRaster);
-    imgMapCol9TPJ3join = imgMapCol9TPJ3.min().updateMask(biomaRaster);
-    imgMapCol9TPJ4join = imgMapCol9TPJ4.min().updateMask(biomaRaster);
-    imgMapCol9TPJ5join = imgMapCol9TPJ5.min().updateMask(biomaRaster);
-    
-    // imgMapmixedJoin = imgMapmixed.min().updateMask(biomaRaster);
+    imgMapCol9GTBjoin = imgMapCol9GTB.min().updateMask(biomaRaster);    
+    if (showposClass){
+        imgMapCol9GFjoin = imgMapCol9GF.min().updateMask(biomaRaster);                           
+        imgMapCol9SPstp1join = imgMapCol9SPstp1.min().updateMask(biomaRaster);
+        imgMapCol9FQjoin = imgMapCol9FQ.min().updateMask(biomaRaster);
+        imgMapCol9TPJ3join = imgMapCol9TPJ3.min().updateMask(biomaRaster);
+        imgMapCol9TPJ4join = imgMapCol9TPJ4.min().updateMask(biomaRaster);
+        imgMapCol9TPJ5join = imgMapCol9TPJ5.min().updateMask(biomaRaster); 
+    }
+    imgMapColEstavelJoin = imgMapColEstavel.min().updateMask(biomaRaster);  
+    imgMapmixedJoin = imgExport.min().updateMask(biomaRaster);
 
 }else{
     FeatColbacia = FeatColbacia.filter(ee.Filter.eq('nunivotto3', selBacia));  
@@ -266,24 +270,26 @@ if (selBacia === 'all'){
     imgMapCol9GTBjoin = imgMapCol9GTB.filter(ee.Filter.eq("id_bacia", selBacia))
                                 .updateMask(biomaRaster)
                                 .remap(param.classMapB, param.classNew);     
-    imgMapCol9SPstp1join = imgMapCol9SPstp1.filter(ee.Filter.eq("id_bacia", selBacia)).min().updateMask(biomaRaster);
-    imgMapCol9TPJ3join = imgMapCol9TPJ3.filter(ee.Filter.eq("id_bacia", selBacia)).min().updateMask(biomaRaster);
-    imgMapCol9TPJ4join = imgMapCol9TPJ4.filter(ee.Filter.eq("id_bacia", selBacia)).min().updateMask(biomaRaster);
-    imgMapCol9TPJ5join = imgMapCol9TPJ5.filter(ee.Filter.eq("id_bacia", selBacia)).min().updateMask(biomaRaster);
-    imgMapCol9GFjoin = imgMapCol9GF.filter(ee.Filter.eq("id_bacia", selBacia)).min().updateMask(biomaRaster);
-    imgMapCol9FQjoin = imgMapCol9FQ.filter(ee.Filter.eq("id_bacia", selBacia)).min().updateMask(biomaRaster);
+    if (showposClass){
+        imgMapCol9SPstp1join = imgMapCol9SPstp1.filter(ee.Filter.eq("id_bacia", selBacia)).min().updateMask(biomaRaster);
+        imgMapCol9TPJ3join = imgMapCol9TPJ3.filter(ee.Filter.eq("id_bacia", selBacia)).min().updateMask(biomaRaster);
+        imgMapCol9TPJ4join = imgMapCol9TPJ4.filter(ee.Filter.eq("id_bacia", selBacia)).min().updateMask(biomaRaster);
+        imgMapCol9TPJ5join = imgMapCol9TPJ5.filter(ee.Filter.eq("id_bacia", selBacia)).min().updateMask(biomaRaster);
+        imgMapCol9GFjoin = imgMapCol9GF.filter(ee.Filter.eq("id_bacia", selBacia)).min().updateMask(biomaRaster);
+        imgMapCol9FQjoin = imgMapCol9FQ.filter(ee.Filter.eq("id_bacia", selBacia)).min().updateMask(biomaRaster);
+    }
+    imgMapColEstavelJoin = imgMapColEstavel.filter(ee.Filter.eq("id_bacia", selBacia)).min().updateMask(biomaRaster);
+    imgMapmixedJoin = imgExport.min().updateMask(biomaRaster);
 }
 
-var imgAnalisesChange = imgMapCol9FQjoin;
+var imgAnalisesChange = imgMapmixedJoin;
 var incidencias = get_layerIncidentes(
+  
                                 imgMapCol71.select('classification_' +  String(bandas_activas[0])), 
                                 imgMapCol8.select('classification_' +  String(bandas_activas[0])), 
                                 imgAnalisesChange.select('classification_' +  String(bandas_activas[0]))
                             );
 
-print(" 📍 imagem no Asset Geral Mapbiomas Col 7.1  ‼️", imgMapCol71);
-print(" 📍 imagem no Asset Geral Mapbiomas Col 8.0  ‼️", imgMapCol8);
-print(" 📍 imagem no Asset Geral X Bacias col 9 GTB", imgMapCol9GTBjoin);
 print(" 📍 imagem no Asset Geral X Bacias pos-Class col 9 Gap Fill", imgMapCol9GFjoin);
 print(" 📍 imagem no Asset Geral X Bacias pos-Class col 9 Spatial", imgMapCol9SPstp1join);
 print(" 📍 imagem no Asset Geral X Bacias pos-Class col 9 Frequence ", imgMapCol9FQjoin);
@@ -309,33 +315,53 @@ pointsLapigC =  pointsLapigC.map(makeDiferencebettwenPoints);
 pointsLapigC = pointsLapigC.filter(ee.Filter.eq('diferente', 1));
 print("pontos revisados ", pointsLapigC.limit(10));
 
+if (lstYearshow[0] < 2022){ 
+  print(" 📍 imagem no Asset Geral Mapbiomas Col 7.1  ‼️", imgMapCol71);
+  Map.addLayer(imgMapCol71.select(bandas_activas[0]), visualizar.visclassCC,'Col71_' + String(lstYearshow[0]), false);
+  Map.addLayer(imgMapCol71.select(bandas_activas[1]), visualizar.visclassCC,'Col71_' + String(lstYearshow[1]), false);
+}else{
+    if (lstYearshow[0] < 2023){
+        print(" 📍 imagem no Asset Geral Mapbiomas Col 8.0  ‼️", imgMapCol8);
+        Map.addLayer(imgMapCol8.select(bandas_activas[0]),  visualizar.visclassCC, 'Col8_'+ String(lstYearshow[0]), false);
+        Map.addLayer(imgMapCol8.select(bandas_activas[1]),  visualizar.visclassCC, 'Col8_'+ String(lstYearshow[1]), false);
+    }
+}
 
-Map.addLayer(imgMapCol71.select(bandas_activas[0]), visualizar.visclassCC,'Col71_' + String(lstYearshow[0]), false);
-Map.addLayer(imgMapCol8.select(bandas_activas[0]),  visualizar.visclassCC, 'Col8_'+ String(lstYearshow[0]), false);
+print(" 📍 imagem no Asset Geral X Bacias col 9 GTB", imgMapCol9GTBjoin);
+
+
 Map.addLayer(mapMT.select(bandas_activas[0]),  visualizar.visclassCC, 'Col9 Mata Atlan_'+ String(lstYearshow[0]), false);
 var mapGTBAno1 = imgMapCol9GTBjoin.select(bandas_activas[0]).remap(param.classMapB, param.classNew);
-Map.addLayer(mapGTBAno1,  visualizar.visclassCC, 'Class GTB ' + String(version), false);
+Map.addLayer(mapGTBAno1,  visualizar.visclassCC, 'Class GTB ' + String(version) + " " + String(lstYearshow[0]), false);
 var mapRFAno1 = imgMapCol9RFjoin.select(bandas_activas[0]).remap(param.classMapB, param.classNew);
 Map.addLayer(mapRFAno1,  visualizar.visclassCC, 'Class RF ' + String(version), false);
-Map.addLayer(imgMapCol9GFjoin.select(bandas_activas[0]),  visualizar.visclassCC, 'Class Gap-fill ' + String(version), false);
-Map.addLayer(imgMapCol9SPstp1join.select(bandas_activas[0]),  visualizar.visclassCC, 'CC Spatial Step 1 ' + String(version), false);
-Map.addLayer(imgMapCol9TPJ3join.select(bandas_activas[0]),  visualizar.visclassCC, 'CC Temporal J3 ' + String(version), false);
-Map.addLayer(imgMapCol9TPJ4join.select(bandas_activas[0]),  visualizar.visclassCC, 'CC Temporal J4 ' + String(version), false);
-Map.addLayer(imgMapCol9TPJ5join.select(bandas_activas[0]),  visualizar.visclassCC, 'CC Temporal J5 ' + String(version), false);
-Map.addLayer(imgMapCol9FQjoin.select(bandas_activas[0]),  visualizar.visclassCC, 'CC Frequency ' + String(version), false);
+Map.addLayer(imgMapmixedJoin.select(bandas_activas[0]),  visualizar.visclassCC, 'rasterCaat exp 25v', false);
 
-Map.addLayer(imgMapCol71.select(bandas_activas[1]), visualizar.visclassCC,'Col71_' + String(lstYearshow[1]), false);
-Map.addLayer(imgMapCol8.select(bandas_activas[1]),  visualizar.visclassCC, 'Col8_'+ String(lstYearshow[1]), false);
+Map.addLayer(imgMapColEstavelJoin.select(bandas_activas[0]),  visualizar.visclassCC, 'CC Florest' + String(version), false);
+if (showposClass){
+    Map.addLayer(imgMapCol9GFjoin.select(bandas_activas[0]),  visualizar.visclassCC, 'Class Gap-fill ' + String(version), false);
+    Map.addLayer(imgMapCol9SPstp1join.select(bandas_activas[0]),  visualizar.visclassCC, 'CC Spatial Step 1 ' + String(version), false);
+    Map.addLayer(imgMapCol9TPJ3join.select(bandas_activas[0]),  visualizar.visclassCC, 'CC Temporal J3 ' + String(version), false);
+    Map.addLayer(imgMapCol9TPJ4join.select(bandas_activas[0]),  visualizar.visclassCC, 'CC Temporal J4 ' + String(version), false);
+    Map.addLayer(imgMapCol9TPJ5join.select(bandas_activas[0]),  visualizar.visclassCC, 'CC Temporal J5 ' + String(version), false);
+    Map.addLayer(imgMapCol9FQjoin.select(bandas_activas[0]),  visualizar.visclassCC, 'CC Frequency ' + String(version), false);
+}
+
+Map.addLayer(mapMT.select(bandas_activas[0]),  visualizar.visclassCC, 'Col9 Mata Atlan_'+ String(lstYearshow[1]), false);
 var mapGTBAno2 = imgMapCol9GTBjoin.select(bandas_activas[1]).remap(param.classMapB, param.classNew);
-Map.addLayer(mapGTBAno2.updateMask(biomaRasterCaat),  visualizar.visclassCC, 'Class GTB ' + String(version), false);
+Map.addLayer(mapGTBAno2.updateMask(biomaRasterCaat),  visualizar.visclassCC, 'Class GTB ' + String(version)+ " " + String(lstYearshow[1]), false);
 var mapRFAno2 = imgMapCol9RFjoin.select(bandas_activas[1]).remap(param.classMapB, param.classNew);
-Map.addLayer(mapRFAno2.updateMask(biomaRasterCaat),  visualizar.visclassCC, 'Class RF ' + String(version), false);
-Map.addLayer(imgMapCol9GFjoin.select(bandas_activas[1]),  visualizar.visclassCC, 'Class Gap-fill ' + String(version), false);
-Map.addLayer(imgMapCol9SPstp1join.select(bandas_activas[1]),  visualizar.visclassCC, 'CC Spatial Step 1 ' + String(version), false);
-Map.addLayer(imgMapCol9TPJ3join.select(bandas_activas[1]),  visualizar.visclassCC, 'CC Temporal J3 ' + String(version), false);
-Map.addLayer(imgMapCol9TPJ4join.select(bandas_activas[1]),  visualizar.visclassCC, 'CC Temporal J4 ' + String(version), false);
-Map.addLayer(imgMapCol9TPJ5join.select(bandas_activas[1]),  visualizar.visclassCC, 'CC Temporal J5 ' + String(version), false);
-Map.addLayer(imgMapCol9FQjoin.select(bandas_activas[1]),  visualizar.visclassCC, 'CC Frequency ' + String(version), false);
+Map.addLayer(imgMapmixedJoin.select(bandas_activas[1]),  visualizar.visclassCC, 'rasterCaat exp 25v', false);
+Map.addLayer(imgMapColEstavelJoin.select(bandas_activas[1]),  visualizar.visclassCC, 'CC Florest' + String(version), false);
+if (showposClass){
+    Map.addLayer(mapRFAno2.updateMask(biomaRasterCaat),  visualizar.visclassCC, 'Class RF ' + String(version), false);
+    Map.addLayer(imgMapCol9GFjoin.select(bandas_activas[1]),  visualizar.visclassCC, 'Class Gap-fill ' + String(version), false);
+    Map.addLayer(imgMapCol9SPstp1join.select(bandas_activas[1]),  visualizar.visclassCC, 'CC Spatial Step 1 ' + String(version), false);
+    Map.addLayer(imgMapCol9TPJ3join.select(bandas_activas[1]),  visualizar.visclassCC, 'CC Temporal J3 ' + String(version), false);
+    Map.addLayer(imgMapCol9TPJ4join.select(bandas_activas[1]),  visualizar.visclassCC, 'CC Temporal J4 ' + String(version), false);
+    Map.addLayer(imgMapCol9TPJ5join.select(bandas_activas[1]),  visualizar.visclassCC, 'CC Temporal J5 ' + String(version), false);
+    Map.addLayer(imgMapCol9FQjoin.select(bandas_activas[1]),  visualizar.visclassCC, 'CC Frequency ' + String(version), false);
+}
 Map.addLayer(maskGEDI.selfMask(), {min:0, max: 1, palette: 'BDE861'}, 'mask GEDI', false);
 Map.addLayer(baciaBuf, {palette: 'FF0000'}, 'caatinga buffer');
 // Map.centerObject(featSearch);
@@ -347,43 +373,41 @@ if (showErrorsAcc){
         Map.addLayer(temFeatPoint , {color: 'red'}, 'ptos classe ' + String(nClasse), false);
     })
 }
-
-var legend = ui.Panel({style: {position: 'bottom-left', padding: '8px 15px'}});
-var makeRow = function(color, name) {
-    var colorBox = ui.Label({
-      style: {color: '#ffffff',
-        backgroundColor: color,
-        padding: '10px',
-        margin: '0 0 4px 0',
-      }
+if (calcAggrement){
+    var legend = ui.Panel({style: {position: 'bottom-left', padding: '8px 15px'}});
+    var makeRow = function(color, name) {
+        var colorBox = ui.Label({
+        style: {color: '#ffffff',
+            backgroundColor: color,
+            padding: '10px',
+            margin: '0 0 4px 0',
+        }
+        });
+        var description = ui.Label({
+        value: name,
+        style: {
+            margin: '0px 0 4px 6px',
+        }
+        }); 
+        return ui.Panel({
+        widgets: [colorBox, description],
+        layout: ui.Panel.Layout.Flow('horizontal')}
+    )};
+    
+    var title = ui.Label({
+        value: 'Coincidencias das classes',
+        style: {
+            fontWeight: 'bold',
+            fontSize: '16px',
+            margin: '0px 0 4px 0px'
+        }
     });
-    var description = ui.Label({
-      value: name,
-      style: {
-        margin: '0px 0 4px 6px',
-      }
-    }); 
-    return ui.Panel({
-      widgets: [colorBox, description],
-      layout: ui.Panel.Layout.Flow('horizontal')}
-  )};
-  
-  var title = ui.Label({
-    value: 'Coincidencias das classes',
-    style: {
-          fontWeight: 'bold',
-          fontSize: '16px',
-          margin: '0px 0 4px 0px'
-      }
-  });
-  
-  legend.add(title);
-  legend.add(makeRow('#faf3dd','Concordante'));
-  legend.add(makeRow('#c8d5b9','Concordante Recente'));
-  legend.add(makeRow('#f19c79','Discordante Recente'));
-  legend.add(makeRow('#fec601','Discordante'));
-  legend.add(makeRow('#013a63','Muito discordante'));
-  Map.add(legend);
-
-
-
+    
+    legend.add(title);
+    legend.add(makeRow('#faf3dd','Concordante'));
+    legend.add(makeRow('#c8d5b9','Concordante Recente'));
+    legend.add(makeRow('#f19c79','Discordante Recente'));
+    legend.add(makeRow('#fec601','Discordante'));
+    legend.add(makeRow('#013a63','Muito discordante'));
+    Map.add(legend);
+}

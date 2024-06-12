@@ -28,19 +28,21 @@ nameBacias = [
     '753', '754','755','756','757','759','7621','7622','763', '758',
     '764','765','766','771','772', '7741','7742','775', '773',
     '776','76111','76116','7612','7613','7614','7615','777',
-    '778','7616','7617','7618', '7619', '767'
-    # '758', '773'
+    '778','7616','7617','7618', '7619', '767', '758', '773'
 ] 
+# nameBacias = [
+#     '763','7618'
+# ]
 classMapB = [ 0, 3, 4, 5, 6, 9,11,12,13,15,18,19,20,21,22,23,24,25,26,29,30,31,32,33,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,62]
 classNew =  [27, 3, 4, 3, 3, 3,12,12,12,21,21,21,21,21,22,22,22,22,33,29,22,33,12,33,21,33,33,21,21,21,21,21,21,21,21,21,21, 4,12,21]
 param = {
     # 'inputAsset': path + 'class_filtered_Tp',   
     'assetCol': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVX" ,
     'assetColprob': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVY" ,
-    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fillV2',
-    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Spatial',
-    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/SpatialV3',
-    'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/TemporalV3',
+    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fillV3',
+    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Estavel',
+    'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/SpatialV3',
+    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/TemporalV3',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/FrequencyV3',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport',
     'asset_Map' : "projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1",
@@ -51,7 +53,7 @@ param = {
     'isImgCol': True,  
     'remapRaster': True,
     'inBacia': True,
-    'version': 22,
+    'version': 41,
     'sufixo': '_Cv', 
     'assetBiomas': 'projects/mapbiomas-workspace/AUXILIAR/biomas_IBGE_250mil', 
     'biome': 'CAATINGA', 
@@ -142,13 +144,14 @@ def iterandoXanoImCruda(imgAreaRef, imgMapp, limite):
     if param['remapRaster']:
         print(" 🚨 📢 we are to remap the raste 🚨 ")
 
-    for year in range(param['year_inic'], yearEnd + 1):
+    for year in range(param['year_inic'], yearEnd + 1):  # 
         bandAct = "classification_" + str(year) 
         if param['remapRaster']:
             mapToCalc = imgMapp.select(bandAct).remap(classMapB , classNew)
             areaTemp = calculateArea (mapToCalc, imgAreaRef, limite)
         else:
             areaTemp = calculateArea (imgMapp.select(bandAct), imgAreaRef, limite)        
+            return calculateArea (imgMapp.select(bandAct), imgAreaRef, limite)        
         areaTemp = areaTemp.map( lambda feat: feat.set('year', year))
         areaGeral = areaGeral.merge(areaTemp)      
     
@@ -194,16 +197,18 @@ if param['isImgCol']:
     if isFilter:
         imgsMaps = ee.ImageCollection(param['assetFilters'])
         if 'Temporal' in param['assetFilters']:
-            imgsMaps = imgsMaps.filter(ee.Filter.eq('janela', 5))
-            subfolder += 'J5'
+            # imgsMaps = imgsMaps.filter(ee.Filter.eq('janela', 5))
+            subfolder += 'J3'
             print(imgsMaps.size().getInfo())
             # idList = imgsMaps.reduceColumns(ee.Reducer.toList(), ['system:index']).get('list').getInfo()
             # for ids in idList:
             #     print("    ", ids)
         if 'Spatial' in param['assetFilters']:
-            imgsMaps = imgsMaps.filter(ee.Filter.eq('filter', 'spatial_use'))
+            # imgsMaps = imgsMaps.filter(ee.Filter.eq('filter', 'spatial_use'))
             subfolder += 'su'
             print(imgsMaps.size().getInfo())
+            # print()
+            # sys.exit()
         if 'Frequency' in param['assetFilters']:
             # neq ==>  'nat'   e  eq ===>  natUso
             # imgsMaps = imgsMaps.filter(ee.Filter.eq('type_filter', 'frequence_natUso'))
@@ -226,15 +231,16 @@ if param['isImgCol']:
     if getid_bacia:
         nameBands = 'classification'
         prefixo = ""
-        for model in ['GTB']:   # 'GTB', 'RF
-            if isFilter and model != 'RF':
-                mapClassMod = imgsMaps.filter(
-                                ee.Filter.eq('version', version))
-            else:
-                mapClassMod = imgsMaps.filter(
-                                ee.Filter.eq('version', version)).filter(
-                                    ee.Filter.eq('classifier', model))
-
+        propModel = 'classifier'
+        for model in ['GTB', 'RF']:   # 'GTB', 'RF
+            if isFilter:
+                propModel = 'model'            
+            mapClassMod = imgsMaps.filter(
+                            ee.Filter.eq('version', version)).filter(
+                                ee.Filter.eq(propModel, model))
+            # print(mapClassMod.first().getInfo())
+            print("show size ImCol ", mapClassMod.size().getInfo())
+            # sys.exit()
             print(f"########## 🔊 FILTERED BY VERSION {version} AND MODEL {model} 🔊 ###############") 
             sizeimgCol = mapClassMod.size().getInfo()
             print(" 🚨 número de mapas bacias ", sizeimgCol) 

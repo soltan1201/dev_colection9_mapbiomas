@@ -285,12 +285,14 @@ lst_paths = glob.glob(input_path_CSVs + '/*.csv')
 print(f' 📢 We load {len(lst_paths)} tables from folder  {input_path_CSVs.split("/")[-1]}')
 classificador = "GTB"
 mversion = ''
-modelos = ['GTB'] #  'RF',
+modelos = ['RF','GTB'] #  
 # 'Gap-fillV2','SpatialV2St1', 'FrequencyV2nat', 'FrequencyV2natUso','SpatialV2St3','TemporalV2J3'
-posclass = ['TemporalV3J4','TemporalV3J5','SpatialV3su']#  , 'FrequencyV3St1', 'SpatialV3St1', 'TemporalV3J3','TemporalV3J4','TemporalV3J5'  , 'FrequencyV3St2'['SpatialV2'] # , 'toExport''Gap-fill', 'Spatial', 'Temporal', 'Frequency'
-version_process = ['21'] # '5','9','10','11', '12', '15', '16', '17'
-modelos = posclass
-for nmodel in modelos[:]:
+#   'TemporalV3J3','TemporalV3J4','TemporalV3J5','SpatialV3','FrequencyV3', "Estavel" 
+posclass = ['SpatialV3su']#  'TemporalV3J4','TemporalV3J5','toExport', 'FrequencyV3St1', 'SpatialV3St1', 
+# 'TemporalV3J3','TemporalV3J4','TemporalV3J5'  , 'FrequencyV3St2'['SpatialV2'] # , 'Gap-fill', 'Spatial', 'Temporal', 'Frequency'
+version_process = ['40','41'] # '5','9','10','11', '12', '15', '16', '17',  '25'
+# modelos += posclass
+for nmodel in posclass[:]:
     for vers in version_process[:]:
         lst_df = []
         for cc, path in enumerate(lst_paths[:]): 
@@ -301,14 +303,13 @@ for nmodel in modelos[:]:
             version = partes[-2]
             posClass = None
             bacia = partes[3]
-            if len(partes) > 6:
-                # classificador = partes[-4]                
-                classificador = partes[5] # posClass
+            if "GTB_" + vers in path or "RF_" + vers in path:
+                classificador = partes[4]
             else:
-                classificador = partes[-3]
+                classificador = partes[5] # posClass
                 # bacia = partes[-4]
-            # if int(version) == 15:
-            #     print(f" {len(partes)} | {bacia} classificador {nmodel} <> {classificador}| and {version} => {vers} >> {vers == version}")
+            if int(version) == 30:
+                print(f" {len(partes)} | {bacia} classificador {nmodel} <> {classificador}| and {version} => {vers} >> {vers == version}")
             if str(nmodel) in str(classificador) and str(vers) == str(version): 
                 print("rodando ")
                 namecol = path.split("/")[-1]    
@@ -324,11 +325,11 @@ for nmodel in modelos[:]:
                 df_CSV['models'] = [classificador] * df_CSV.shape[0]
                 # add to list ofs Dataframes             
                 lst_df.append(df_CSV)
-
-        # sys.exit()
+        print(f"para o modelo {nmodel} we have {len(lst_df)}")
+        
         # if cc > 10:
         #     break
-        if len(lst_df) == 39:
+        if len(lst_df) >= 30:
             showPrints = False
             dfacc = pd.concat(lst_df, axis= 0)
             print("size dataframe modifies ", dfacc.shape)

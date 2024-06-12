@@ -33,42 +33,39 @@ class processo_filterFrequence(object):
     options = {
             'output_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/FrequencyV3/',
             # 'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/SpatialV3',
-            # 'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/TemporalV3',
-            'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fillV2',
+            'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/TemporalV3',
+            # 'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fillV2',
             'asset_bacias_buffer' : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/bacias_hidrograficaCaatbuffer5k',            
             'last_year' : 2023,
             'first_year': 1985
         }
 
-    def __init__(self, nameBacia):
+    def __init__(self, nameBacia, nmodel):
         self.id_bacias = nameBacia
-        self.versoutput = 20
-        self.versinput = 15
+        self.versoutput = 31
+        self.versinput = 31
+        self.nmodel = nmodel
         janela = 5
         self.step = 1
         self.geom_bacia = ee.FeatureCollection(self.options['asset_bacias_buffer']).filter(
                                                    ee.Filter.eq('nunivotto3', nameBacia)).first().geometry()   
-        # Bacias que foram até a classe 15 
-        listBaciasGap = [
-            '744', '752', '753', '754','756','757','758',
-            '7614', '7421', '764', '765', '776', '766',
-        ]
-        if nameBacia in listBaciasGap:
-            # filterGF_BACIA_744_GTB_V15
-            self.versinput = 15
-        else:
-            # filterGF_BACIA_755_GTB_V13
-            self.versinput = 13
+
         # filterSP_BACIA_778_V1     
         if "Spatial" in self.options['input_asset']:
-            self.name_imgClass = 'filterSP_BACIA_' + nameBacia + "_GTB_V" + str(self.versinput) + '_step' + str(self.step)
+            self.name_imgClass = 'filterSP_BACIA_' + nameBacia + f"_{self.nmodel}_V" + str(self.versinput) + '_step' + str(self.step)
         elif "Gap-fill" in self.options['input_asset']:
             self.name_imgClass = 'filterGF_BACIA_' + nameBacia + "_GTB_V" + str(self.versinput)
         else:
             self.name_imgClass = 'filterTP_BACIA_' + nameBacia+ f"_GTB_J{janela}_V" + str(self.versinput)
         
         print(" ⚠️  Loading " + self.name_imgClass)
-        self.imgClass = ee.Image(self.options['input_asset'] + "/" + self.name_imgClass)        
+        # self.imgClass = ee.Image(self.options['input_asset'] + "/" + self.name_imgClass)   
+
+        self.imgClass = ee.ImageCollection(self.options['input_asset']).filter(
+                                    ee.Filter.eq('id_bacia', nameBacia)).filter(
+                                        ee.Filter.eq('version',  self.versinput)).filter(
+                                            ee.Filter.eq('model', self.nmodel)).first()        
+        print(" image class ", self.imgClass.get('system:index').getInfo())
 
         self.lstbandNames = ['classification_' + str(yy) for yy in range(self.options['first_year'], self.options['last_year'] + 1)]
         self.years = [yy for yy in range(self.options['first_year'], self.options['last_year'] + 1)]
@@ -84,7 +81,7 @@ class processo_filterFrequence(object):
         self.florest_frequence = self.imgClass.eq(3).expression(exp)
         self.savana_frequence = self.imgClass.eq(4).expression(exp)
         self.grassland_frequence = self.imgClass.eq(12).expression(exp) 
-
+        # sys.exit()
         # self.maskpropNatural = self.imgClass.eq(3).Or(self.imgClass.eq(4)).Or(self.imgClass.eq(12)).expression(exp)
         
        
@@ -98,7 +95,7 @@ class processo_filterFrequence(object):
         # todo o quye esta na
         vegetation_map = ee.Image(0).where(maskNatCourrent.eq(1).And(self.grassland_frequence.gt(80)), 12)
         vegetation_map = vegetation_map.where(maskNatCourrent.eq(1).And(self.florest_frequence.gt(80)), 3)
-        vegetation_map = vegetation_map.where(maskNatCourrent.eq(1).And(self.savana_frequence.gt(30)), 4)
+        vegetation_map = vegetation_map.where(maskNatCourrent.eq(1).And(self.savana_frequence.gte(30)), 4)
                                         
 
         maskNatCourrent = maskNatCourrent.updateMask(vegetation_map.gt(0))
@@ -121,6 +118,7 @@ class processo_filterFrequence(object):
                             'type_filter', 'frequence',
                             'from', 'Gap-fill',
                             'collection', '9.0',
+                            'model', self.nmodel,
                             'step', self.step,
                             'id_bacia', self.id_bacias,
                             'sensor', 'Landsat',
@@ -128,7 +126,7 @@ class processo_filterFrequence(object):
                         )
 
         rasterFinal = ee.Image.cat(rasterFinal)
-        name_toexport = 'filterFQ_BACIA_'+ str(self.id_bacias) + "_V" + str(self.versoutput) + '_' + str(self.step)
+        name_toexport = 'filterFQ_BACIA_'+ str(self.id_bacias) + f"_{self.nmodel}_V" + str(self.versoutput) + '_' + str(self.step)
         self.processoExportar(rasterFinal, name_toexport)    
 
     ##### exporta a imagem classificada para o asset  ###
@@ -156,13 +154,14 @@ param = {
     'numeroLimit': 42,
     'conta' : {
         '0': 'caatinga01',
-        '5': 'caatinga02',
-        '10': 'caatinga03',
-        '16': 'caatinga04',
-        '22': 'caatinga05',        
-        '27': 'solkan1201',    
-        '32': 'solkanGeodatin',
-        '37': 'diegoUEFS' 
+        '2': 'caatinga02',
+        '4': 'caatinga03',
+        '6': 'caatinga04',
+        '8': 'caatinga05',        
+        '10': 'solkan1201',    
+        '12': 'solkanGeodatin',
+        '14': 'diegoUEFS' ,
+        '20': 'superconta'   
     }
 }
 
@@ -193,7 +192,7 @@ def gerenciador(cont):
 
 
 listaNameBacias = [
-    '7421','741', '7422','744','745','746','751','752', '7492',
+    '745','741', '7422','744','746','751','752', '7492','7421',
     '753', '754','755','756','757','758','759','7621','7622','763',
     '764','765','766','767','771','772','773', '7741','7742','775',
     '776','76111','76116','7612','7613','7614','7615',  '777','778',
@@ -201,22 +200,22 @@ listaNameBacias = [
 ]
 
 # listaNameBacias = [
-#     '744', '752', '753', '754','756','757','758','7614', '7421', 
-#     '764', '765', '776', '766',
+#     '76111', '756', '757', '758', '754', '7614', '7421'
 # ]
 
 # input_asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/TemporalV3/'
-# input_asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/FrequencyV3/'
-input_asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/SpatialV3'
+input_asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/FrequencyV3'
+# input_asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/SpatialV3'
 cont = 0
-version = 19
+version = 31
+modelo = 'GTB'
 # imgtmp = ee.ImageCollection(input_asset).filter(ee.Filter.eq('version', version))
 # print(" " ,imgtmp.size().getInfo())
 # sys.exit()
 knowMapSaved = False
-listBacFalta = [ '765', '773', '7741', '7615', '778']
+listBacFalta = []
 
-for cc, idbacia in enumerate(listaNameBacias[:]):
+for cc, idbacia in enumerate(listaNameBacias[1:]):
     if knowMapSaved:
         try:
             imgtmp = ee.ImageCollection(input_asset).filter(
@@ -231,8 +230,8 @@ for cc, idbacia in enumerate(listaNameBacias[:]):
             print(" ")
             print(f"--------- 📢 #{cc} PROCESSING BACIA {idbacia} ---------")
             print("----------------------------------------------")
-            cont = gerenciador(cont)
-            aplicando_FrequenceFilter = processo_filterFrequence(idbacia)
+            # cont = gerenciador(cont)
+            aplicando_FrequenceFilter = processo_filterFrequence(idbacia, modelo)
             aplicando_FrequenceFilter.iterandoFilterbyYear()
 
 if knowMapSaved:

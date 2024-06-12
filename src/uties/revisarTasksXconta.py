@@ -27,10 +27,10 @@ except:
 relatorios = open("relatorioTaskXContas.txt", 'a+')
 
 param = {
-    'cancelar' : False,
-    'unicaconta': True,
+    'cancelar' : True,
+    'unicaconta': False,
     'numeroTask': 37,
-    'numeroLimit': 40,
+    'numeroLimit': 9,
     'conta' : {
         '0': 'caatinga01',
         '1': 'caatinga02',
@@ -48,8 +48,7 @@ param = {
         # '10': 'Nerivaldo',
         # '12': 'rodrigo',
         # '13': 'ellen',
-        # '14': 'vinicius',
-        
+        # '14': 'vinicius',   
         
     }
 }
@@ -83,7 +82,7 @@ def gerenciador(cont):
     return cont
 
 if param['unicaconta']:
-    cont = 8
+    cont = 0
     cont = gerenciador(cont)
     if param['cancelar']:
         gee.cancel(opentasks=True)

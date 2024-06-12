@@ -24,16 +24,18 @@ from sklearn.metrics import f1_score, jaccard_score
 tqdm.pandas()
 
 nameBacias = [
-      '741', '7421','7422','744','745','746','751','752',  # '7492',
+      '741', '7421','7422','744','745','746','751','752', '7492',
       '753', '754','755','756','757','758','759','7621','7622','763',
       '764','765','766','767','771','772','773', '7741','7742','775',
-      '776','76111','76116','7612','7613','7614','7615',  # '777','778',
+      '776','76111','76116','7612','7613','7614','7615', '777','778',
       '7616','7617','7618','7619'
 ]
-modelos = ['GTB']# ,'RF'
+modelos = ['GTB' ,'RF']#
 # , 'Gap-fill', 'Spatial','Frequency' , 'Temporal','toExport', 
 # 'Gap-fillV2','SpatialV2St1', 'FrequencyV2nat','FrequencyV2natUso','SpatialV2St3','TemporalV2J3'
-posclass = ['TemporalV3J5'] #, 'FrequencyV3St1' , 'SpatialV3St1', 'TemporalV3J3','TemporalV3J4','TemporalV3J5' 
+#   'TemporalV3J3','TemporalV3J4','TemporalV3J5'
+posclass = ['SpatialV3su']# 'SpatialV3','FrequencyV3', "Estavel" 
+ #, 'FrequencyV3St1' , 'SpatialV3St1', 'TemporalV3J3','TemporalV3J4','TemporalV3J5' 
 modelos = posclass
 # get dir path of script 
 npath = os.getcwd()
@@ -42,9 +44,10 @@ npath = str(Path(npath).parents[1])
 print("path of CSVs Rois is \n ==>",  npath)
 pathcsvsMC = os.path.join(npath,'dados')
 pathcsvsMC = os.path.join(pathcsvsMC, 'conf_matrix')
-version_process = ['22'] # '5','9','10','11','12', '13, '15','16','17', '20'
+print("path of CSVs Matrix is \n ==>",  pathcsvsMC)
+version_process = ['40', '41'] # '5','9','10','11','12', '13, '15','16','17', '20'
 lstfilesCSVs = glob.glob(pathcsvsMC + '/*.csv')
-for model in posclass:
+for model in modelos:
     lstDF_models = []
     for vers in version_process:
         for cc, pathfile in enumerate(lstfilesCSVs):        

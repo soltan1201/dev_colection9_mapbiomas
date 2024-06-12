@@ -77,26 +77,30 @@ def processoExportar(ROIsFeat, nameT, porAsset):
 
 #nome das bacias que fazem parte do bioma
 nameBacias = [
-    '7421','741', '7422','744','745','746','751', '752', '7492',
-    '753', '754','755','756','757','758','759','7621','7622','763',
-    '764','766','771','772','773', '7742','775',  '7741',
-    '76111','76116','7612','7613','7614','7615',  '777','778',
-    '7616','7617','7618', '7619', '765', '767', '776',
-    # '7741', '776'
+    '741', '7421','7422','744','745','746','751','752','7492',
+    '753', '754','755','756','757','759','7621','7622','763', 
+    '764','765','766','771','772','7742', '773','775', '7741',
+    '776','76111','76116','7612','7613','7614','7615','777',
+    '778','7616','7617','7618', '7619', '767', '758', '773'
+
+    
 ] 
 
 param = {
     'lsBiomas': ['CAATINGA'],
     'asset_bacias': 'projects/mapbiomas-arida/ALERTAS/auxiliar/bacias_hidrografica_caatinga',
     'assetBiomas' : 'projects/mapbiomas-workspace/AUXILIAR/biomas_IBGE_250mil',
-    'assetpointLapig': 'projects/mapbiomas-workspace/VALIDACAO/mapbiomas_85k_col3_points_w_edge_and_edited_v2',    
+    'assetpointLapig23': 'projects/mapbiomas-workspace/VALIDACAO/mapbiomas_85k_col3_points_w_edge_and_edited_v2', 
+    'assetpointLapig24rc': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/mapbiomas_85k_col3_points_w_edge_and_edited_v3_Caat_reclass',   
     'limit_bacias': "users/CartasSol/shapes/bacias_limit",
+    'asset_caat_buffer': 'users/CartasSol/shapes/caatinga_buffer5km',
     'assetCol': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVX" ,
-    'assetColprob': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVP" ,
+    'assetColprob': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVY" ,
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Spatial',
     'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/SpatialV3',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/FrequencyV3',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fillV2',
+    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Estavel',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/TemporalV3',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport',
     # 'asset_Map' : "projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1",
@@ -109,7 +113,7 @@ param = {
     'anoFinal': 2022,  # 2019
     'numeroTask': 6,
     'numeroLimit': 2,
-    'changeAcount': False,
+    'changeAcount': True,
     'conta' : {
         '0': 'solkanGeodatin'              
     },
@@ -233,7 +237,6 @@ def getPointsAccuraciaFromIC (imClass, isImgCBa, ptosAccCorreg, modelo, thisvers
                     name =  'occTab_corr_Caatinga_' + param['asset_Map'].split('/')[-1]
                 # export by basin             
                 processoExportar(pointAccTemp, name, exportarAsset)
-
             else:
                 pointAll = ee.Algorithms.If(  
                             ee.Algorithms.IsEqual(ee.Number(ptoSize).eq(0), 1),
@@ -261,19 +264,24 @@ expPointLapig = False
 knowImgcolg = True
 param['isImgCol'] = True
 param['inBacia'] = True
-version = 22
+version = 41
 bioma250mil = ee.FeatureCollection(param['assetBiomas'])\
                     .filter(ee.Filter.eq('Bioma', 'Caatinga')).geometry()
 ## os pontos só serão aqueles que representam a Caatinga 
-ptsTrue = ee.FeatureCollection(param['assetpointLapig']).filterBounds(bioma250mil)
-pointTrue = ptsTrue.map(lambda feat: change_value_class(feat))
-print("Carregamos {} points ".format(pointTrue.size().getInfo()))  # pointTrue.size().getInfo()
-print("know the first points ", pointTrue.first().getInfo())
+caatingaBuffer = ee.FeatureCollection(param['asset_caat_buffer'])
 
 if expPointLapig:
+    ptsTrue = ee.FeatureCollection(param['assetpointLapig24rc']).filterBounds(caatingaBuffer)
+    pointTrue = ptsTrue.map(lambda feat: change_value_class(feat))
+    print("Carregamos {} points ".format(pointTrue.size().getInfo()))  # pointTrue.size().getInfo()
+    print("know the first points ", pointTrue.first().getInfo())
     processoExportar(ptsTrue, param['assetpointLapig'].split("/")[-1], False)
     processoExportar(pointTrue, param['assetpointLapig'].split("/")[-1] + '_reclass', False)
-    
+else:
+    pointTrue = ee.FeatureCollection(param['assetpointLapig24rc'])    
+    print("Carregamos {} points ".format(pointTrue.size().getInfo()))  # pointTrue.size().getInfo()
+    print("know the first points ", pointTrue.first().getInfo())
+
 if param['changeAcount']:
     gerenciador(0, param)
 
@@ -295,24 +303,24 @@ if param['isImgCol']:
     if isFilter:
         mapClass = ee.ImageCollection(param['assetFilters'])
         if 'Temporal' in param['assetFilters']:
-            mapClass = mapClass.filter(ee.Filter.eq('janela', 5))
-            subfolder += 'J5'
+            # mapClass = mapClass.filter(ee.Filter.eq('janela', 5))
+            subfolder += 'J3'
             print(mapClass.first().get('system:index').getInfo())
             # lstInf = mapClass.reduceColumns(ee.Reducer.toList(), ['id_bacia']).get('list').getInfo()
             # print(lstInf)
             # sys.exit()
         if 'Spatial' in param['assetFilters']:
-            mapClass = mapClass.filter(
-                            ee.Filter.eq('filter', 'spatial_use'))
+            # mapClass = mapClass.filter(
+            #                 ee.Filter.eq('filter', 'spatial_use'))
             subfolder += 'su'
             print(mapClass.size().getInfo())
             # sys.exit()
         if 'Frequency' in param['assetFilters']:
-            # mapClass = mapClass.filter(ee.Filter.eq('type_filter', 'frequence_natUso'))
-            
+            # mapClass = mapClass.filter(ee.Filter.eq('type_filter', 'frequence_natUso'))            
             subfolder += 'St1'
+
         if 'Gap-fill' in param['assetFilters']:
-            mapClass = mapClass.filter(ee.Filter.inList('version', [15,13]))
+            mapClass = mapClass.filter(ee.Filter.eq('version', version))
 
     else:
         if int(version) > 6:  # 
@@ -325,22 +333,20 @@ if param['isImgCol']:
     getid_bacia = mapClass.first().get('id_bacia').getInfo()
     print(f"we load bacia {getid_bacia}")
     
+    # sys.exit()
     if knowImgcolg:
         print(f"versions quantity = {mapClass.aggregate_histogram('version').getInfo()}")
     if getid_bacia:         
         nameBands = 'classification'
         prefixo = ""
-        for model in ['GTB']:   # 'GTB', 'RF'
-            if isFilter and model != 'RF':
-                mapClassMod = mapClass.filter(
-                                ee.Filter.eq('version', version))
-
-                print("   ", mapClassMod.size().getInfo())                
-
-            else:
-                mapClassMod = mapClass.filter(
+        propModel = 'classifier'
+        for model in ['GTB', 'RF']:   # 'GTB'
+            if isFilter:
+                propModel = 'model' 
+            mapClassMod = mapClass.filter(
                                 ee.Filter.eq('version', version)).filter(
-                                    ee.Filter.eq('classifier', model))
+                                    ee.Filter.eq(propModel, model))
+            
             print(f"########## 🔊 FILTERED BY VERSAO {version} AND MODEL {model} 🔊 ###############") 
             sizeimgCol = mapClassMod.size().getInfo()
             print(f"===  🚨 número de mapas bacias na Image Collection {sizeimgCol} no modelo  {model} =====") 

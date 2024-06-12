@@ -30,28 +30,30 @@ except:
 
 param = {      
     'output_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/SpatialV3/',
-    'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/FrequencyV3',
-    # 'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/TemporalV2',
+    # 'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/FrequencyV3',
+    # 'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/TemporalV3',
     # 'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fillV2/',
-    # 'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col8/CAATINGA/POS-CLASS/Spatial/',
+    'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/SpatialV3',
+    # 'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Estavel',
     'asset_bacias_buffer' : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/bacias_hidrograficaCaatbuffer5k',            
     'last_year' : 2023,
     'first_year': 1985,
     'janela': 3,
     'step': 1,
-    'versionOut' : 19,
-    'versionInp' : 18,
+    'versionOut' : 38,
+    'versionInp' : 37,
     'numeroTask': 6,
-    'numeroLimit': 42,
+    'numeroLimit': 90,
     'conta' : {
-        '0': 'caatinga01',
-        '5': 'caatinga02',
-        '10': 'caatinga03',
-        '16': 'caatinga04',
-        '22': 'caatinga05',        
-        '27': 'solkan1201',    
-        '32': 'solkanGeodatin',
-        '37': 'diegoUEFS'   
+        '0': 'caatinga01',   # 
+        '2': 'caatinga02',
+        '4': 'caatinga03',
+        '6': 'caatinga04',
+        '8': 'caatinga05',        
+        '10': 'solkan1201',    
+        '12': 'solkanGeodatin',
+        '14': 'diegoUEFS',
+        '16': 'superconta'     
     }
 }
 lst_bands_years = ['classification_' + str(yy) for yy in range(param['first_year'], param['last_year'] + 1)]
@@ -60,22 +62,25 @@ def buildingLayerconnectado(imgClasse):
     lst_band_conn = ['classification_' + str(yy) + '_conn' for yy in range(param['first_year'], param['last_year'] + 1)]
     # / add connected pixels bands
     imageFilledConnected = imgClasse.addBands(
-                                imgClasse.connectedPixelCount(10, True).rename(lst_band_conn))
+                                imgClasse.connectedPixelCount(200, True).rename(lst_band_conn))
 
     return imageFilledConnected
 
 
 def apply_spatialFilterConn (name_bacia, nmodel):
     frequencyNat = False
-    min_connect_pixel = 6
+    min_connect_pixel = 12
     geomBacia = ee.FeatureCollection(param['asset_bacias_buffer']).filter(
                 ee.Filter.eq('nunivotto3', name_bacia)).first().geometry()
 
 
     if 'Temporal' in param['input_asset']:
         name_imgClass = 'filterTP_BACIA_'+ name_bacia + f"_GTB_J{param['janela']}_V" + str(param['versionInp'])
-    else:
+    elif "Frequenc" in param['input_asset']:
         name_imgClass = 'filterFQ_BACIA_'+ name_bacia + "_V" + str(param['versionInp'])
+    elif 'Gap-fill' in param['input_asset']:
+        # filterGF_BACIA_745_GTB_V30
+        pass
 
     # imgClass = ee.Image(param['input_asset'] + "/" + name_imgClass)#.clip(geomBacia) 
     if frequencyNat:
@@ -86,9 +91,12 @@ def apply_spatialFilterConn (name_bacia, nmodel):
 
     imgClass = ee.ImageCollection(param['input_asset']).filter(
                             ee.Filter.eq('version', param['versionInp'])).filter(
-                                ee.Filter.eq('step', 2)).filter(
-                                    ee.Filter.eq('id_bacia', name_bacia )).first()
+                                    ee.Filter.eq('id_bacia', name_bacia ))
+
+    if "Temporal" in param['input_asset']:
+        imgClass = imgClass.filter(ee.Filter.eq('step', 2))
     
+    imgClass = imgClass.first()
     print('  show metedata imgClass', imgClass.get('system:index').getInfo())
     # print(imgClass.aggregate_histogram('system:index').getInfo())
     # sys.exit()
@@ -98,7 +106,7 @@ def apply_spatialFilterConn (name_bacia, nmodel):
         imgClass = buildingLayerconnectado(imgClass)
 
     for cc, yband_name in enumerate(lst_bands_years[:]):
-        moda_kernel = imgClass.select(yband_name).focal_mode(1, 'square', 'pixels')
+        moda_kernel = imgClass.select(yband_name).focal_mode(2 , 'square', 'pixels')
         moda_kernel = moda_kernel.updateMask(imgClass.select(yband_name+'_conn').lte(min_connect_pixel))
 
         if cc == 0:
@@ -172,21 +180,19 @@ listaNameBacias = [
     '7617','7618','7619','756','757','758','754', '7614', '7421'
 ]
 # listaNameBacias = [
-#     # '756','757','758','754',
-#     '7614', '7421'
-# ]
-# listaNameBacias = [
 #     '752', '766', '753', '776', '764', '765', '7621', '744', 
 #     '756','757','758','754','7614', '7421'
 # ]
+lstBacias = ['754', '7622','7741', '7615']
 changeAcount = False
 lstqFalta =  []
 cont = 0
-input_asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fill/'
-# input_asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Spatial/'
+# input_asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Estavel'
+# input_asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fillV2'
+input_asset = 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/SpatialV3'
 if changeAcount:
     cont = gerenciador(cont)
-version = 18
+version = 30
 modelo = 'GTB'
 listBacFalta = []
 knowMapSaved = False
@@ -194,14 +200,19 @@ for cc, idbacia in enumerate(listaNameBacias[:]):
     if knowMapSaved:
         try:
             nameMap = 'filterGF_BACIA_'+ str(idbacia) + "_V" + str(version)
-            # nameMap = 'filterSP_BACIA_'+ str(idbacia) + "_V" + str(version)
-            print(nameMap)
-            imgtmp = ee.Image(input_asset + nameMap)
-            print(f" {cc} loading ", nameMap, " ", len(imgtmp.bandNames().getInfo()), "bandas ")
+            # # nameMap = 'filterSP_BACIA_'+ str(idbacia) + "_V" + str(version)
+            # print(nameMap)
+            # imgtmp = ee.Image(input_asset + nameMap)
+            imgtmp = ee.ImageCollection(input_asset).filter(
+                            ee.Filter.eq('version', version)).filter(
+                                ee.Filter.eq('id_bacia', idbacia )).filter(
+                                    ee.Filter.eq('model', "RF")).first()
+            # print("know how many images exist ", imgtmp.size().getInfo())
+            print(f" {cc} loading {imgtmp.get('system:index').getInfo()}", len(imgtmp.bandNames().getInfo()), "bandas ")
         except:
             listBacFalta.append(idbacia)
     else: 
-        if idbacia not in lstqFalta:
+        if idbacia not in lstBacias:
             cont = gerenciador(cont)            
             print("----- PROCESSING BACIA {} -------".format(idbacia))        
             apply_spatialFilterConn(idbacia, modelo)

@@ -31,8 +31,8 @@ param = {
     'asset_bacias_buffer' : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/bacias_hidrograficaCaatbuffer5k',
     'assetMap': 'projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1',
     # 'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Frequency/',
-    'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/TemporalV3/',
-    'input_assetSp': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/SpatialV3/',
+    # 'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/TemporalV3/',
+    'input_asset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/SpatialV3/',
     'input_solo': 'users/diegocosta/doctorate/Bare_Soils_Caatinga',
     'outputAsset': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport/',
     'asset_florestErrNe' : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/shpExtras/shpExtraspoligons_rev_sombrasrelNer',
@@ -41,13 +41,14 @@ param = {
     'asset_restingaNeri' : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/shpExtras/poligons_region_restingaNeri',
     'asset_restingaRafa' : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/shpExtras/poligons_region_restingaRafa',
     'correct_past_to_Grass' : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/shpExtras/geom_correct21_12_7612_7613_76116',
-    'asset_mask_aflora':'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/layer_afloramento_cluster',
+    'asset_mask_aflora':'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/layer_afloramento_campo_cluster',
     'asset_campo_chapada': 'users/mapbiomascaatinga04/ROI_AREAS_CAMPO_CHAPADA',
     'asset_bioma_raster' : 'projects/mapbiomas-workspace/AUXILIAR/biomas-raster-41',
     'asset_uso_mata_atlantica': 'projects/ee-mapbiomascaatinga04/assets/bacias_mata_caatinga',
     'year_first': 1985,
     'year_end': 2023,
-    'version': 24,
+    'version': 41,
+    'versionOut': 26,
     'classMapB': [3, 4, 5, 9,12,13,15,18,19,20,21,22,23,24,25,26,29,30,31,32,33,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,62],
     'classNew':  [3, 4, 3, 3,12,12,21,21,21,21,21,22,22,22,22,33,29,22,33,12,33,21,33,33,21,21,21,21,21,21,21,21,21,21, 4,12,21],
     'numeroTask': 6,
@@ -65,15 +66,18 @@ param = {
     }
 }
 nameBacias = [
-    '741','7421','7422','744','745','746','7492','751','752','753',
-    '754','755','756','757','758','759','7621','7622','763','764',
-    '765','766','767','771','772','773', '7741','7742','775',
-    '776','777','778','76111',
-    '7614','7615','7616','7617','7618','7619', '7613' ,  '7612','76116',
+    '744','741','7421', '7422','745','746','7492','751','752',
+    '753','755','758','759','7621','7622','764','765','766',
+    '767','771','7741','772','7742','773','775', '777', '778',
+    '76111','76116','7612','7614','7615','7616','7617','7618','7619', 
+    '7613','756','757','763','776', '754',
 ]
 nameBaciasRodadas = [
-    '753', '755', '772','7741','757'
-]
+    '741', '7421', '7422', '744', '745', '746', '7492', '751', '752', 
+    '753', '754', '755', '756', '7612', '7613', '7614', '7615', '7616', 
+    '7617', '7618', '7619', '7621', '7622', '763', '764', '765', '766', 
+    '767', '7741', '7742', '775', '776', '777', '778'
+] 
 
 
 dict_class = {
@@ -269,7 +273,7 @@ def corregir_pixels_BetwenColecao(imgClass_temp, bufferBacia, CC, nameBac):
     return imgClassFinal
 
 def corregir_pixels_Aflora(imgClass_temp, bufferBacia, maskAflo, nameBac):
-    rec_maskAflo = maskAflo.clip(bufferBacia)
+    rec_maskAflo = maskAflo.clip(bufferBacia).unmask(0)
 
     lstBandNames = ['classification_' + str(yy) for yy in range(param['year_first'], param['year_end'] + 1)]
     imgClassFinal = ee.Image().toByte();
@@ -277,16 +281,15 @@ def corregir_pixels_Aflora(imgClass_temp, bufferBacia, maskAflo, nameBac):
     for yyear in range(param['year_first'], param['year_end'] + 1):
         print("###### change pixels Afloramento in year [{}] ########".format(yyear))
         bandaAct = 'classification_' + str(yyear)
-        imgClasBand = ee.Image(imgClass_temp.select(bandaAct)).remap(
-                            param['classMapB'], param['classNew'])
+        imgClasBand = ee.Image(imgClass_temp.select(bandaAct)) # .remap(param['classMapB'], param['classNew'])
 
-        imgClasBand = imgClasBand.where(rec_maskAflo.eq(1), rec_maskAflo.multiply(29))
+        imgClasBand = imgClasBand.where(rec_maskAflo.gt(0), rec_maskAflo)
         bandaAct = 'classification_' + str(yyear)
         imgClassFinal = imgClassFinal.addBands(imgClasBand.rename(bandaAct))
 
     imgClassFinal = imgClassFinal.select(lstBandNames)
     imgClassFinal = imgClassFinal.set(
-                        'version', param['version'], 'biome', 'CAATINGA',
+                        'version', param['versionOut'], 'biome', 'CAATINGA',
                         'collection', '9.0', 'id_bacia', nameBac,
                         'sensor', 'Landsat', 'source','geodatin',
                         'system:footprint', bufferBacia
@@ -326,7 +329,7 @@ def corregir_pixels_inPol_Restinga(imgClass_temp, bufferBacia, polRestinga,nameB
 
     imgClassFinal = imgClassFinal.select(lstBandNames)
     imgClassFinal = imgClassFinal.set(
-                        'version', param['version'], 'biome', 'CAATINGA',
+                        'version', param['versionOut'], 'biome', 'CAATINGA',
                         'collection', '9.0', 'id_bacia', nameBac,
                         'sensor', 'Landsat', 'source','geodatin',
                         'system:footprint', bufferBacia # imgClass_temp.get('system:footprint')
@@ -402,7 +405,7 @@ def integration_soil_layer(imgClass_temp, bufferBacia, nameBac):
 
     imgClassFinal = imgClassFinal.select(lstBandNames)
     imgClassFinal = imgClassFinal.set(
-                        'version', param['version'], 'biome', 'CAATINGA',
+                        'version', param['versionOut'], 'biome', 'CAATINGA',
                         'collection', '9.0', 'id_bacia', nameBac,
                         'sensor', 'Landsat', 'source','geodatin',
                         'system:footprint', bufferBacia 
@@ -438,7 +441,7 @@ def corregir_pixels_campos_chapada(imgClass_temp, bufferBacia, maskChapada, name
 
     imgClassFinal = imgClassFinal.select(lstBandNames)
     imgClassFinal = imgClassFinal.set(
-                        'version', param['version'], 'biome', 'CAATINGA',
+                        'version', param['versionOut'], 'biome', 'CAATINGA',
                         'collection', '9.0', 'id_bacia', nameBac,
                         'sensor', 'Landsat', 'source','geodatin',
                         'system:footprint', bufferBacia
@@ -523,13 +526,15 @@ limit_regions_MA = ee.FeatureCollection(param['asset_uso_mata_atlantica'])
 
 geoBacias = ee.FeatureCollection(param['asset_bacias_buffer'])
 # nameBacias = ['745'] # ,'746','778''76116'
-cont = 0
-if changeCount:
-    cont = gerenciador(cont)
+versaoinput = 41
+versaoOutput = 26
+cont = 16
+# if changeCount:
+#     cont = gerenciador(cont)
 list_corr = []
 for nameBa in  nameBacias[:]:
     
-    if nameBa in nameBaciasRodadas:
+    if nameBa not in nameBaciasRodadas:
 
         print(f"########## 🔊 LOADING BASIN {nameBa} IN VERSAO {param['version']} 🔊 ###############")         
         # name_imgClass = 'filter_BACIA_' + nameBa + "_" + dict_version[dict_Bacia_version[nameBa]]  
@@ -539,18 +544,15 @@ for nameBa in  nameBacias[:]:
         # name_imgClass = f"filterTP_BACIA_{nameBa}_GTB_J5_V{param['version']}"
         # name_imgClass = 'filterFQ_BACIA_' + str(nameBa) + "_V" + str(param['version'])   input_assetSp
         # filterTP_BACIA_778_GTB_J5_V22
-        name_imgClass = f"filterTP_BACIA_{nameBa}_GTB_J5_V22"
-        imgClass = ee.Image(param['input_asset'] + name_imgClass).select(lstBands[:-1])  
-
-        name_imgClassSp = f"filterSPU_BACIA_{nameBa}_GTB_V{param['version']}"
-        imgClassSp = ee.Image(param['input_assetSp'] + name_imgClassSp) 
-        imgClass = imgClass.addBands(imgClassSp)
+        # name_imgClass = f"filterTP_BACIA_{nameBa}_GTB_J5_V"
+        # imgClass = ee.Image(param['input_asset'] + name_imgClass).select(lstBands[:-1])  
+        # filterSPU_BACIA_746_GTB_V41
+        name_imgClassSp = f"filterSPU_BACIA_{nameBa}_GTB_V{versaoinput}"
+        imgClass = ee.Image(param['input_asset'] + name_imgClassSp) 
         bandasImgMap = imgClass.bandNames().getInfo()
         print("Bacia ", nameBa, " => numero de bandas ", len(bandasImgMap))
         # print(bandasImgMap)
-
-        limBacia = geoBacias.filter(ee.Filter.eq('nunivotto3', nameBa)).geometry()
-        
+        limBacia = geoBacias.filter(ee.Filter.eq('nunivotto3', nameBa)).geometry()        
         # print(lst_keyBacias)
         # print("entrar no loop ", nameBa in lst_keyBacias)
         # sys.exit()
@@ -572,7 +574,7 @@ for nameBa in  nameBacias[:]:
         if nameBa in lst_bacias_uso_MA:
             imgBaClass = corregir_pixels_uso(imgBaClass, limBacia, limit_regions_MA, nameBa) 
 
-        # print("know bandas ", imgBaClass.bandNames().getInfo())
-        name_mapExp = 'BACIA_' + str(nameBa) + "_mixed_V244"# + str(23) 
-        processoExportar(imgBaClass.clip(limBacia).select('classification_2023'),  name_mapExp, limBacia)
+        print("know bandas ", imgBaClass.bandNames().getInfo())
+        name_mapExp = f'BACIA_{nameBa}_mixed_V{versaoOutput}' 
+        processoExportar(imgBaClass.clip(limBacia),  name_mapExp, limBacia)
         cont = gerenciador(cont)

@@ -385,10 +385,12 @@ def calculate_indices_x_blocos(image):
 param = {    
     'bioma': "CAATINGA", #nome do bioma setado nos metadados
     'biomas': ["CAATINGA","CERRADO", "MATAATLANTICA"],
-    'asset_bacias': "projects/mapbiomas-arida/ALERTAS/auxiliar/bacias_hidrografica_caatinga",
-    'asset_bacias_buffer' : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/bacias_hidrograficaCaatbuffer5k',
+    'asset_bacias': "projects/mapbiomas-arida/ALERTAS/auxiliar/bacias_hidrografica_caatinga49div",
+    'asset_bacias_buffer' : 'projects/mapbiomas-arida/ALERTAS/auxiliar/bacias_hidrografica_caatinga49divbuffer5k',
+    'asset_bacias_buffer42' : 'projects/mapbiomas-workspace/AMOSTRAS/col7/CAATINGA/bacias_hidrograficaCaatbuffer5k',
     'asset_IBGE': 'users/SEEGMapBiomas/bioma_1milhao_uf2015_250mil_IBGE_geo_v4_revisao_pampa_lagoas',
-    'assetOut': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVY/',
+    # 'assetOut': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVY/',
+    'assetOut': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVZ/',
     'assetROIs': {'id':'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN2clusterNN'},
     'assetROIsExt': {'id':'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/cROIsN2manualNN'}, 
     'assetROIgrade': {'id': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/ROIs/roisGradesgrouped'},   
@@ -403,17 +405,17 @@ param = {
     'sufix': "_01",    
     'lsBandasMap': [],
     'numeroTask': 6,
-    'numeroLimit': 42,
+    'numeroLimit': 50,
     'conta' : {
         '0': 'caatinga01',   # 
-        '4': 'caatinga02',
-        '8': 'caatinga03',
-        '12': 'caatinga04',
-        '16': 'caatinga05',        
-        '20': 'solkan1201',    
-        '24': 'solkanGeodatin',
-        '28': 'diegoUEFS',
-        '32': 'superconta'     
+        '5': 'caatinga02',
+        '10': 'caatinga03',
+        '15': 'caatinga04',
+        '20': 'caatinga05',        
+        '25': 'solkan1201',    
+        '30': 'solkanGeodatin',
+        '35': 'diegoUEFS',
+        '40': 'superconta'   
     },
     'pmtRF': {
         'numberOfTrees': 165, 
@@ -580,8 +582,8 @@ def process_reduce_ROIsXclass(featColROIs, featColROIsbase ,lstclassVal, dfProp,
     nFeatColROIs = ee.FeatureCollection([])
     lstBac21 = ["76111","76116","7742","757","758","759","771","772","773","775","776","777"]
     # lstBac3 = ['766', '776', '764', '765', '7621', '744']
-    lstLitoral = ['758','761','756','755','754', '76111']
-
+    listLitoral = ["7584","7612","7561","755","7564","7541","7544"]
+    lstLitoral = ['758','761','756','755','754']
     for ccclass in lstclassVal:
         # print("classse ", ccclass)
         if ccclass in [15, 18]:
@@ -607,21 +609,17 @@ def process_reduce_ROIsXclass(featColROIs, featColROIsbase ,lstclassVal, dfProp,
             
         except:
             valpropCC = 0.01
-        
-        if str(mbacia) in ['7614','7421', '744'] and ccclass == 4:
-            valpropCC = 0.3
-            dictQtLimit[ccclass] = 1500
+
+        if str(mbacia) in lstLitoral and ccclass == 4:
+            valpropCC = 0.05
+            dictQtLimit[ccclass] = 400
+
+        if str(mbacia) in ['754','756', '7614','7421'] and ccclass == 4:
+            valpropCC = 0.2
+            dictQtLimit[ccclass] = 1300
         if str(mbacia) in ['753', '752'] and ccclass == 4:
             valpropCC = 0.2
             dictQtLimit[ccclass] = 800
-        if str(mbacia) in lstLitoral and ccclass == 4:
-            valpropCC = 0.1
-            dictQtLimit[ccclass] = 900
-            if str(mbacia) in ['76111']:
-                valpropCC = 0.1
-                dictQtLimit[ccclass] = 650
-
-
         # print(" valpropCC ", valpropCC)
         tmpROIs = featColROIs.filter(ee.Filter.eq('class', int(ccclass))).randomColumn('random')
         threhold = ee.Number(dictQtLimit[ccclass]).multiply(valpropCC).divide(tmpROIs.size())
@@ -650,6 +648,13 @@ def process_reduce_ROIsXclass(featColROIs, featColROIsbase ,lstclassVal, dfProp,
         nFeatColROIs = nFeatColROIs.merge(tmpROIs).merge(tmpROIff)
     
     return nFeatColROIs
+
+def reduce_duplicidade(mList):
+    tmplist = []
+    for kk in mList:
+        if kk not in tmplist:
+            tmplist.append(kk)
+    return tmplist
 
 def GetPolygonsfromFolder(nBacias, lstClasesBacias, yyear):    
     # print("lista de classe ", lstClasesBacias)
@@ -752,6 +757,7 @@ dictPmtroArv = {
     ]
 }
 
+tesauroBasin = arqParams.tesauroBasin
 lstSat = ["l5","l7","l8"];
 pathJson = getPathCSV("regJSON/")
 ftcol_bacias = ee.FeatureCollection(param['asset_bacias'])
@@ -765,8 +771,8 @@ imagens_mosaic = imagens_mosaico.map(lambda img: process_re_escalar_img(img))
 # ftcol_baciasbuffer = ee.FeatureCollection(param['asset_bacias_buffer'])
 # print(imagens_mosaic.first().bandNames().getInfo())
 #nome das bacias que fazem parte do bioma7619
-nameBacias = arqParams.listaNameBacias
-print("carregando {} bacias hidrograficas ".format(len(nameBacias)))
+# nameBacias = arqParams.listaNameBacias
+# print("carregando {} bacias hidrograficas ".format(len(nameBacias)))
 # sys.exit()
 #lista de anos
 list_anos = [k for k in range(param['anoInicial'], param['anoFinal'] + 1)]
@@ -790,18 +796,28 @@ def iterandoXBacias( _nbacia, myModel, makeProb):
 
     dfareasCC = pd.read_csv('areaXclasse_CAATINGA_Col71_red.csv')
     print("df areas CC ", dfareasCC.columns)
-    dfareasCC = dfareasCC[dfareasCC['Bacia'] == _nbacia]
+    dfareasCC = dfareasCC[dfareasCC['Bacia'] == tesauroBasin[_nbacia]]
     print(" dfareasCC shape table ", dfareasCC.shape)
-    
-    baciabuffer = ee.FeatureCollection(param['asset_bacias_buffer']).filter(
-                            ee.Filter.eq('nunivotto3', _nbacia)).first().geometry()
-    
-    lsNamesBaciasViz = arqParams.dictBaciasViz[_nbacia]
+    if _nbacia in ['761111', '761112']:        
+        # asset_bacias_buffer42
+        baciabuffer = ee.FeatureCollection(param['asset_bacias_buffer42']).filter(
+                            ee.Filter.eq('nunivotto4', tesauroBasin[_nbacia])).first().geometry()
+    else:
+        baciabuffer = ee.FeatureCollection(param['asset_bacias_buffer']).filter(
+                            ee.Filter.eq('nunivotto4', _nbacia)).first().geometry()
+    # print("know about the geometry ", baciabuffer.getInfo())
+    # sys.exit()
+    lsNamesBaciasViz = arqParams.basinVizinhasNew[_nbacia]
     print("lista de Bacias vizinhas", lsNamesBaciasViz)
+    lsNamesBaciasVizConv = [tesauroBasin[kk] for kk in lsNamesBaciasViz]
     lstSoViz = [kk for kk in lsNamesBaciasViz if kk != _nbacia]
     print("lista de bacias ", lstSoViz)
+    lstSoVizConv = [tesauroBasin[kk] for kk in lstSoViz]
+    print("Lista de bacias convertidas ", lstSoVizConv) 
+    lstSoVizConv = reduce_duplicidade(lstSoVizConv)
+
     # lista de classe por bacia 
-    lstClassesUn = param['dict_classChangeBa'][_nbacia]
+    lstClassesUn = param['dict_classChangeBa'][tesauroBasin[_nbacia]]
     # sys.exit()
     imglsClasxanos = ee.Image().byte()
     imglsClasxanos_prob = ee.Image().byte()
@@ -821,25 +837,25 @@ def iterandoXBacias( _nbacia, myModel, makeProb):
             # print(" ", dfareasccYY.head(9))
 
         if ano < 2023:
-            keyDictFeat = _nbacia + "_" + str(ano) 
+            keyDictFeat = tesauroBasin[_nbacia] + "_" + str(ano) 
             bandas_lst = dictFeatureImp[keyDictFeat][:]
             # print(lsNamesBacias)
-            if (_nbacia in ['778']) or (_nbacia == '764' and ano == 1995):
+            if (tesauroBasin[_nbacia] in ['778']) or (tesauroBasin[_nbacia] == '764' and ano == 1995):
                 print(" entrou a coletar")
-                ROIs_toTrain = GetPolygonsfromFolder(lsNamesBaciasViz, lstClassesUn, ano) 
+                ROIs_toTrain = GetPolygonsfromFolder(lsNamesBaciasVizConv, lstClassesUn, ano) 
                 
             else:
-                nameFeatROIs = 'joined_ROIs_' + _nbacia + "_" + str(ano) + '_wl'
+                nameFeatROIs = 'joined_ROIs_' + tesauroBasin[_nbacia] + "_" + str(ano) + '_wl'
                 print("loading Rois JOINS = ", nameFeatROIs)
                 ROIs_toTrain = ee.FeatureCollection(param['asset_joinsGrBa'] + '/' + nameFeatROIs)       
                 ROIs_toTrain = ROIs_toTrain.filter(ee.Filter.inList('class', lstClassesUn))                 
-                ROIs_toTrainViz = GetPolygonsfromFolder(lstSoViz, lstClassesUn, ano)
+                ROIs_toTrainViz = GetPolygonsfromFolder(lstSoVizConv, lstClassesUn, ano)
                 ROIs_toTrain = process_reduce_ROIsXclass(ROIs_toTrain, ROIs_toTrainViz, lstClassesUn, dfareasccYY, _nbacia)
                 ROIs_toTrain = ROIs_toTrain.map(lambda feat: feat.set('class', ee.Number(feat.get('class')).toInt8()))
 
         # sys.exit()
         # excluindo a classe 12
-        if '745' == _nbacia:
+        if '745' == tesauroBasin[_nbacia]:
             ROIs_toTrain = ROIs_toTrain.filter(ee.Filter.neq('class', 12))
         # bandas_ROIs = [kk for kk in ROIs_toTrain.first().propertyNames().getInfo()]  
         # print()    
@@ -1046,25 +1062,27 @@ arqFeitos = open(path_MGRS, 'a+')
 # sys.exit()
 
 # 100 arvores
-nameBacias = [
-    # '745','741', '7422','746','7492','751','752','753',
-    #  '757', '759','7621','7622','763','764',
-    # '765', '766','767','771',
-    # '772', '773', '7741','776','7742',
-    # '775','777','778',
-    '744','754','755','756','758', '76111',
-    # '76116','7612', '7614','7421',
-    # '7615','7616', '7617','7618','7619', '7613'
-]
 # nameBacias = [
-#     '758','761','756','755','754'
+    # '744','745','741', '7422','746','7492','751','752','753',
+    # '754','756', '755', '757','758', '759','7621','7622','763','764',
+    # '765', '766','767','771', '772', '773', '7741','776','7742',
+    # '775','777','778','76111','76116','7612', '7614','7421',
+    # '7615','7616', '7617','7618','7619', '7613'
 # ]
-
-modelo = "RF"# "GTB"# "RF"
+# lista de 49 bacias 
+nameBacias = [
+    # "7754","7691","7581","7625","7584","751","7614","752","7616",
+    # "745","7424","773","7612","7613","7618","7561","755","7617","7564",
+    "761111","7741","7422","76116","7761","7671","7615","7411",
+    "7764","757","771","7712","766","7746","753","764","7541","7721","772",
+    "7619","7443","765","7544","7438","763","7591","7592","7622","746"
+]
+# "761112",
+modelo = "GTB"# "GTB"# "RF"
 knowMapSaved = False
 listBacFalta = []
-cont = 32
-cont = gerenciador(cont)
+cont = 15
+# cont = gerenciador(cont)
 for _nbacia in nameBacias[:]:
     if knowMapSaved:
         try:
@@ -1074,9 +1092,9 @@ for _nbacia in nameBacias[:]:
         except:
             listBacFalta.append(_nbacia)
     else:        
-        print("-------------------.kmkl-------------------------------------")
-        print("--------    classificando bacia " + _nbacia + "-----------------")   
-        print("--------------------------------------------------------") 
+        print("-------------------.kmkl---------------------------------------------")
+        print("--------    classificando bacia nova " + _nbacia + tesauroBasin[_nbacia] + "-----------------")   
+        print("---------------------------------------------------------------------") 
         iterandoXBacias(_nbacia, modelo, False) 
         arqFeitos.write(_nbacia + '\n')
         cont = gerenciador(cont) 
