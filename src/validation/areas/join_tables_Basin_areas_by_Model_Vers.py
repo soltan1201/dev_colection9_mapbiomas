@@ -112,8 +112,8 @@ if processCol9:
     # posclass = ['FrequencyV2natUso','SpatialV2St3','TemporalV2J3'] # , 
     # 'SpatialV3', 'FrequencyV3St1', "Estavel" 'toExport', 'Gap-fill', 'Spatial', 'Temporal', 'Frequency',
     # 'SpatialV3su', 'TemporalV3J3','TemporalV3J4','TemporalV3J5'
-    posclass = ["SpatialV3su"] # , ,''TemporalV3J4',FrequencyV3St1' 'FrequencyV3St2'. 'SpatialV3St1', 
-    version_process = ['40', '41'] # '5','9','10','11', '12', '15''16', '17',18, '22', '25'
+    posclass = ["toExport"] # , ,''TemporalV3J4',FrequencyV3St1' 'FrequencyV3St2'. 'SpatialV3St1', 
+    version_process = ['31'] # '5','9','10','11', '12', '15''16', '17',18, '22', '25'
     modelos = posclass
     for nmodel in modelos[:]:
         for vers in version_process:

@@ -34,10 +34,10 @@ modelos = ['GTB' ,'RF']#
 # , 'Gap-fill', 'Spatial','Frequency' , 'Temporal','toExport', 
 # 'Gap-fillV2','SpatialV2St1', 'FrequencyV2nat','FrequencyV2natUso','SpatialV2St3','TemporalV2J3'
 #   'TemporalV3J3','TemporalV3J4','TemporalV3J5'
-posclass = ['SpatialV3su']# 'SpatialV3','FrequencyV3', "Estavel" 
+posclass = ['toExport']# 'SpatialV3','FrequencyV3', "Estavel" 
  #, 'FrequencyV3St1' , 'SpatialV3St1', 'TemporalV3J3','TemporalV3J4','TemporalV3J5' 
 modelos = posclass
-# get dir path of script 
+# get dir path of sc, 'RF'ript 
 npath = os.getcwd()
 # get dir folder before to path scripts 
 npath = str(Path(npath).parents[1])
@@ -45,7 +45,7 @@ print("path of CSVs Rois is \n ==>",  npath)
 pathcsvsMC = os.path.join(npath,'dados')
 pathcsvsMC = os.path.join(pathcsvsMC, 'conf_matrix')
 print("path of CSVs Matrix is \n ==>",  pathcsvsMC)
-version_process = ['40', '41'] # '5','9','10','11','12', '13, '15','16','17', '20'
+version_process = ['31'] # '5','9','10','11','12', '13, '15','16','17', '20', '41', '40', '43', '
 lstfilesCSVs = glob.glob(pathcsvsMC + '/*.csv')
 for model in modelos:
     lstDF_models = []

@@ -47,5 +47,7 @@ var text = "";
     📚 livros
     🛠️ herramientas
     📝 writers
+    💭 nuvens
+    ✅  ok
 */
 

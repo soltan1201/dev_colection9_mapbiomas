@@ -289,6 +289,9 @@ dict e lista de cores amppliada
     '29': 'Afloramento Rochoso', 
     '33': "Corpo D'água"
 
+semiarido em array 
+https://code.earthengine.google.com/dabcb48c195387667899621bf83e6fa6
+
 
 acuracia Col8 
 https://mapbiomas-shinny-accuracy.shinyapps.io/MapBiomas_Col8b_EN_v2/

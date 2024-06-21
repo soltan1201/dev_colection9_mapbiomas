@@ -254,8 +254,7 @@ if (selBacia === 'all'){
     imgMapCol9FQjoin = imgMapCol9FQ.min().updateMask(biomaRaster);
     imgMapCol9TPJ3join = imgMapCol9TPJ3.min().updateMask(biomaRaster);
     imgMapCol9TPJ4join = imgMapCol9TPJ4.min().updateMask(biomaRaster);
-    imgMapCol9TPJ5join = imgMapCol9TPJ5.min().updateMask(biomaRaster);
-    
+    imgMapCol9TPJ5join = imgMapCol9TPJ5.min().updateMask(biomaRaster);    
     // imgMapmixedJoin = imgMapmixed.min().updateMask(biomaRaster);
 
 }else{

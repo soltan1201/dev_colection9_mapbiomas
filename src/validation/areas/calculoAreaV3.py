@@ -25,10 +25,10 @@ sys.setrecursionlimit(1000000000)
 #nome das bacias que fazem parte do bioma
 nameBacias = [
     '741', '7421','7422','744','745','746','751','752','7492',
-    '753', '754','755','756','757','759','7621','7622','763', '758',
+    '753', '754','755','756','757','759','7621','7622','763', 
     '764','765','766','771','772', '7741','7742','775', '773',
-    '776','76111','76116','7612','7613','7614','7615','777',
-    '778','7616','7617','7618', '7619', '767', '758', '773'
+    '776','76111','76116','7612','7613','7615','777','758',
+    '778','7616','7617','7618', '7619', '767', '758', '773','7614',
 ] 
 # nameBacias = [
 #     '763','7618'
@@ -44,8 +44,8 @@ param = {
     'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/SpatialV3',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/TemporalV3',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/FrequencyV3',
-    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport',
-    'asset_Map' : "projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1",
+    'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport',
+    # 'asset_Map' : "projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1",
     # 'asset_Map': 'projects/mapbiomas-workspace/public/collection7_1/mapbiomas_collection71_integration_v1',
     'asset_bacias': 'projects/mapbiomas-arida/ALERTAS/auxiliar/bacias_hidrografica_caatinga',
     'collection': '9.0',
@@ -53,7 +53,7 @@ param = {
     'isImgCol': True,  
     'remapRaster': True,
     'inBacia': True,
-    'version': 41,
+    'version': 31,
     'sufixo': '_Cv', 
     'assetBiomas': 'projects/mapbiomas-workspace/AUXILIAR/biomas_IBGE_250mil', 
     'biome': 'CAATINGA', 
@@ -196,6 +196,7 @@ pixelArea = ee.Image.pixelArea().divide(10000)
 if param['isImgCol']:
     if isFilter:
         imgsMaps = ee.ImageCollection(param['assetFilters'])
+        # print('imgsMaps ', imgsMaps.aggregate_histogram('version').getInfo())
         if 'Temporal' in param['assetFilters']:
             # imgsMaps = imgsMaps.filter(ee.Filter.eq('janela', 5))
             subfolder += 'J3'
@@ -232,12 +233,12 @@ if param['isImgCol']:
         nameBands = 'classification'
         prefixo = ""
         propModel = 'classifier'
-        for model in ['GTB', 'RF']:   # 'GTB', 'RF
+        for model in ['GTB']:   # 'GTB', 'RF, 'RF'
             if isFilter:
                 propModel = 'model'            
             mapClassMod = imgsMaps.filter(
-                            ee.Filter.eq('version', version)).filter(
-                                ee.Filter.eq(propModel, model))
+                            ee.Filter.eq('version', version))#.filter(
+                                # ee.Filter.eq(propModel, model))
             # print(mapClassMod.first().getInfo())
             print("show size ImCol ", mapClassMod.size().getInfo())
             # sys.exit()

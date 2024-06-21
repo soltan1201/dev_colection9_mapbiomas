@@ -288,9 +288,9 @@ mversion = ''
 modelos = ['RF','GTB'] #  
 # 'Gap-fillV2','SpatialV2St1', 'FrequencyV2nat', 'FrequencyV2natUso','SpatialV2St3','TemporalV2J3'
 #   'TemporalV3J3','TemporalV3J4','TemporalV3J5','SpatialV3','FrequencyV3', "Estavel" 
-posclass = ['SpatialV3su']#  'TemporalV3J4','TemporalV3J5','toExport', 'FrequencyV3St1', 'SpatialV3St1', 
+posclass = ['toExport']#  'TemporalV3J4','TemporalV3J5','toExport', 'FrequencyV3St1', 'SpatialV3St1', 
 # 'TemporalV3J3','TemporalV3J4','TemporalV3J5'  , 'FrequencyV3St2'['SpatialV2'] # , 'Gap-fill', 'Spatial', 'Temporal', 'Frequency'
-version_process = ['40','41'] # '5','9','10','11', '12', '15', '16', '17',  '25'
+version_process = ['31'] # '5','9','10','11', '12', '15', '16', '17',  '25','40','41'
 # modelos += posclass
 for nmodel in posclass[:]:
     for vers in version_process[:]:

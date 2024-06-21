@@ -397,7 +397,7 @@ param = {
     'classMapB': [3, 4, 5, 9,12,13,15,18,19,20,21,22,23,24,25,26,29,30,31,32,33,36,37,38,39,40,41,42,43,44,45],
     'classNew': [3, 4, 3, 3,12,12,21,21,21,21,21,22,22,22,22,33,29,22,33,12,33, 21,33,33,21,21,21,21,21,21,21],
     'asset_mosaic': 'projects/nexgenmap/MapBiomas2/LANDSAT/BRAZIL/mosaics-2',
-    'version': 30,
+    'version': 31,
     'anoInicial': 1985,
     'anoFinal': 2023,
     'sufix': "_01",    
@@ -406,14 +406,14 @@ param = {
     'numeroLimit': 42,
     'conta' : {
         '0': 'caatinga01',   # 
-        '4': 'caatinga02',
-        '8': 'caatinga03',
-        '12': 'caatinga04',
-        '16': 'caatinga05',        
-        '20': 'solkan1201',    
-        '24': 'solkanGeodatin',
-        '28': 'diegoUEFS',
-        '32': 'superconta'     
+        '5': 'caatinga02',
+        '10': 'caatinga03',
+        '15': 'caatinga04',
+        '20': 'caatinga05',        
+        '25': 'solkan1201',    
+        '30': 'solkanGeodatin',
+        '35': 'diegoUEFS',
+        # '32': 'superconta'     
     },
     'pmtRF': {
         'numberOfTrees': 165, 
@@ -1047,23 +1047,18 @@ arqFeitos = open(path_MGRS, 'a+')
 
 # 100 arvores
 nameBacias = [
-    # '745','741', '7422','746','7492','751','752','753',
-    #  '757', '759','7621','7622','763','764',
-    # '765', '766','767','771',
-    # '772', '773', '7741','776','7742',
-    # '775','777','778',
-    '744','754','755','756','758', '76111',
-    # '76116','7612', '7614','7421',
-    # '7615','7616', '7617','7618','7619', '7613'
+    '745','741', '7422','746','7492','751','752','753',
+    '757', '759','7621','7622','763','764','765', '766',
+    '767','771','772', '773', '7741','776','7742','775',
+    '777','778','744','754','755','756','758', '76111',
+    '76116','7612', '7614','7421','7615','7616','7617',
+    '7618','7619', '7613'
 ]
-# nameBacias = [
-#     '758','761','756','755','754'
-# ]
 
-modelo = "RF"# "GTB"# "RF"
+modelo = "GTB"# "GTB"# "RF"
 knowMapSaved = False
 listBacFalta = []
-cont = 32
+cont = 0
 cont = gerenciador(cont)
 for _nbacia in nameBacias[:]:
     if knowMapSaved:
@@ -1077,7 +1072,7 @@ for _nbacia in nameBacias[:]:
         print("-------------------.kmkl-------------------------------------")
         print("--------    classificando bacia " + _nbacia + "-----------------")   
         print("--------------------------------------------------------") 
-        iterandoXBacias(_nbacia, modelo, False) 
+        iterandoXBacias(_nbacia, modelo, True) 
         arqFeitos.write(_nbacia + '\n')
         cont = gerenciador(cont) 
 arqFeitos.close()

@@ -97,12 +97,12 @@ param = {
     'assetCol': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVX" ,
     'assetColprob': "projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/ClassVY" ,
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Spatial',
-    'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/SpatialV3',
+    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/SpatialV3',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/FrequencyV3',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Gap-fillV2',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/Estavel',
     # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/POS-CLASS/TemporalV3',
-    # 'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport',
+    'assetFilters': 'projects/mapbiomas-workspace/AMOSTRAS/col9/CAATINGA/Classifier/toExport',
     # 'asset_Map' : "projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1",
     # 'assetCol6': path_asset + "class_filtered/maps_caat_col6_v2_4",
     'classMapB': [3, 4, 5, 9,12,13,15,18,19,20,21,22,23,24,25,26,29,30,31,32,33,36,39,40,41,46,47,48,49,50,62],
@@ -264,7 +264,7 @@ expPointLapig = False
 knowImgcolg = True
 param['isImgCol'] = True
 param['inBacia'] = True
-version = 41
+version = 31
 bioma250mil = ee.FeatureCollection(param['assetBiomas'])\
                     .filter(ee.Filter.eq('Bioma', 'Caatinga')).geometry()
 ## os pontos só serão aqueles que representam a Caatinga 
@@ -340,12 +340,12 @@ if param['isImgCol']:
         nameBands = 'classification'
         prefixo = ""
         propModel = 'classifier'
-        for model in ['GTB', 'RF']:   # 'GTB'
+        for model in ['GTB']:   # 'GTB', 'RF'
             if isFilter:
                 propModel = 'model' 
             mapClassMod = mapClass.filter(
-                                ee.Filter.eq('version', version)).filter(
-                                    ee.Filter.eq(propModel, model))
+                                ee.Filter.eq('version', version))# .filter(
+                                    # ee.Filter.eq(propModel, model))
             
             print(f"########## 🔊 FILTERED BY VERSAO {version} AND MODEL {model} 🔊 ###############") 
             sizeimgCol = mapClassMod.size().getInfo()
